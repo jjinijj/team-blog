@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
@@ -11,8 +11,16 @@ type Screen = 'main' | 'editor' | 'detail';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
-  const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string | null> (null);
+  const [posts, setPosts] = useState<Post[]>(()=>{
+    const saved = localStorage.getItem('blog-posts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(()=>{
+    localStorage.setItem('blog-posts', JSON.stringify(posts));
+    console.log('save : ', JSON.stringify(posts));
+  },[posts]);
 
   const goToEditor = () => {
     setCurrentScreen('editor');
