@@ -109,15 +109,15 @@ const StyleButtonGroup = styled.div`
   gap : 8px;
 `;
 
-const StyleButton = styled.div<{isActive: boolean}>`
+const StyleButton = styled.div<{$isActive: boolean}>`
   padding: 8px 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: ${(props) => (props.isActive ? '#007bff' : '#fff')};
-  color: ${(props) => (props.isActive ? '#fff' : '#333')};
+  background-color: ${(props) => (props.$isActive ? '#007bff' : '#fff')};
+  color: ${(props) => (props.$isActive ? '#fff' : '#333')};
   font-weight: bold;
 
   &: hover {
@@ -142,21 +142,21 @@ const InputField = styled.input`
 `;
 
 const TextArea = styled.textarea<{
-  fontSize: number;
-  isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
+  $fontSize: number;
+  $isBold: boolean;
+  $isItalic: boolean;
+  $isUnderline: boolean;
 }>`
   width: 100%;
   min-height: 400px;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: ${(props) => props.fontSize}px;
-  font-weight: ${(props) => props.isBold ? 'bold' : 'normal'};
-  font-style: ${(props) => props.isItalic ? 'italic' : 'normal' };
-  text-decoration: ${(props) => (props.isUnderline ? 'underline' : 'none')};
-  -webkit-text-decoration: ${(props) => (props.isUnderline ? 'underline' : 'none')};
+  font-size: ${(props) => props.$fontSize}px;
+  font-weight: ${(props) => props.$isBold ? 'bold' : 'normal'};
+  font-style: ${(props) => props.$isItalic ? 'italic' : 'normal' };
+  text-decoration: ${(props) => (props.$isUnderline ? 'underline' : 'none')};
+  -webkit-text-decoration: ${(props) => (props.$isUnderline ? 'underline' : 'none')};
   font-family: inherit;
   box-sizing: border-box;
   resize: vertical;
@@ -221,21 +221,21 @@ function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
           <Label>글자 스타일</Label>
           <StyleButtonGroup>
             <StyleButton
-              isActive = {isBold}
+              $isActive = {isBold}
               onClick={() => setIsBold(!isBold)}
               title="굵게"
               >
                 B
             </StyleButton>
             <StyleButton
-              isActive = {isItalic}
+              $isActive = {isItalic}
               onClick={() => setIsItalic(!isItalic)}
               title="기울임"
               >
                 I
             </StyleButton>
             <StyleButton
-              isActive = {isUnderline}
+              $isActive = {isUnderline}
               onClick={() => setIsUnderline(!isUnderline)}
               title="밑줄"
               >
@@ -247,10 +247,10 @@ function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
         <TextArea
           placeholder="내용을 입력하세요" 
           value={content}
-          fontSize={fontSize}
-          isBold = {isBold}
-          isItalic = {isItalic}
-          isUnderline = {isUnderline}
+          $fontSize={fontSize}
+          $isBold = {isBold}
+          $isItalic = {isItalic}
+          $isUnderline = {isUnderline}
           onChange={(e) => setContent(e.target.value)}
         />
       </EditorArea>
