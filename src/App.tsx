@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
+import PostDetailScreen from './screens/PostDetailScreen';
 import { Post } from './types/Post';
-import { title } from 'process';
-import { EXPRESSIONWRAPPER_TYPES } from '@babel/types';
 
-type Screen = 'main' | 'editor';
+
+type Screen = 'main' | 'editor' | 'detail';
 
 
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string | null> (null);
 
   const goToEditor = () => {
     setCurrentScreen('editor');
@@ -19,6 +20,11 @@ function App() {
 
   const goToMain = () => {
     setCurrentScreen('main');
+  };
+
+  const goToDetail = (postId : string) => {
+    setSelectedPostId(postId);
+    setCurrentScreen('detail');
   };
 
   const handleAddPost = (title: string, content: string) => {
@@ -33,10 +39,19 @@ function App() {
     goToMain();
   };
 
+  const selectedPost = posts.find((post) => post.id === selectedPostId);
+
   return (
     <>
-      {currentScreen === 'main' && <MainScreen onGoToEditor={goToEditor} posts = {posts}/>}
-      {currentScreen === 'editor' && <EditorScreen onGoToMain={goToMain} onAddPost={handleAddPost}/>}
+      {currentScreen === 'main' && (
+        <MainScreen onGoToEditor={goToEditor} posts = {posts} onViewPost={goToDetail}/>
+      )}
+      {currentScreen === 'editor' && (
+        <EditorScreen onGoToMain={goToMain} onAddPost={handleAddPost}/>
+      )}
+      { currentScreen === 'detail' && selectedPost && (
+        <PostDetailScreen post={selectedPost} onGoToMain={goToMain}/>
+      )}
     </>
   );
 }

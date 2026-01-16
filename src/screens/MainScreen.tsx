@@ -1,9 +1,10 @@
 import styled from 'styled-components';
-import { Post } from '../types/Post';
+import type { Post } from '../types/Post';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
   posts: Post[];
+  onViewPost: (postId : string)=> void;
 }
 
 const Container = styled.div`
@@ -72,6 +73,7 @@ const PostItem = styled.div`
   border-radius: 8px;
   background-color: #fafafa;
   transition: all 0.3s ease;
+  cursor : pointer;
 
   &:hover{
     border-color: #ddd;
@@ -103,7 +105,7 @@ const PostDate = styled.span`
   color: #999;
 `;
 
-function MainScreen({ onGoToEditor, posts }: MainScreenProps) {
+function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
   return (
     <Container>
       <Header>
@@ -116,7 +118,7 @@ function MainScreen({ onGoToEditor, posts }: MainScreenProps) {
         : (
           <PostList>
             { posts.map((post) => (
-              <PostItem key = {post.id}>
+              <PostItem key = {post.id} onClick={() => onViewPost(post.id)}>
                 <PostTitle>{post.title}</PostTitle>
                 <PostContent>{post.content}</PostContent>
                 <PostDate>{post.createdAt}</PostDate>
