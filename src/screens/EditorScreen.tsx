@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import styled from 'styled-components';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
+  onAddPost: (title: string, content: string) => void; 
 }
 
 const Container = styled.div`
@@ -101,10 +103,19 @@ const TextArea = styled.textarea`
   }
 `;
 
-function EditorScreen({ onGoToMain }: EditorScreenProps) {
+function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+
   const handlePublish = () => {
-    // 나중에 구현
-    alert('등록 기능은 다음 단계에서 구현됩니다!');
+    if(!title.trim()){
+      alert('제목을 입력해주세요.')
+
+    } else if(!content.trim()){
+      alert('내용을 입력해주세요.')
+    } else {
+      onAddPost(title, content);
+    }
   };
 
   return (
@@ -118,8 +129,17 @@ function EditorScreen({ onGoToMain }: EditorScreenProps) {
       </Header>
 
       <EditorArea>
-        <InputField type="text" placeholder="제목을 입력하세요" />
-        <TextArea placeholder="내용을 입력하세요" />
+        <InputField 
+          type="text" 
+          placeholder="제목을 입력하세요" 
+          value={ title }
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <TextArea
+          placeholder="내용을 입력하세요" 
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
       </EditorArea>
     </Container>
   );
