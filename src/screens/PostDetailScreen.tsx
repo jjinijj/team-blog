@@ -66,11 +66,19 @@ const PostMeta = styled.div`
   border-bottom: 1px solid #eee;
 `;
 
-const PostContent = styled.div<{fontSize : number}>`
+const PostContent = styled.div<{
+    fontSize : number
+    isBold: boolean
+    isItalic: boolean
+    isUnderline: boolean
+}>`
   font-size: 16px;
   color: #333;
   line-height: 1.8;
   font-size: ${(props) => props.fontSize}px;
+  font-weight: ${(props) => (props.isBold ? 'bold' : 'normal')};
+  font-style: ${(props) => (props.isItalic ? 'italic' : 'normal')};
+  text-decoration: ${(props) => (props.isUnderline ? 'underline' : 'none')};
   white-space: pre-wrap;
   word-break: break-word;
 `;
@@ -91,6 +99,9 @@ const PostDetailScreen = ({post, onGoToMain} : PostDetailProps) => {
                 <PostMeta>{post.createdAt}</PostMeta>
                 <PostContent
                     fontSize={post.fontSize}
+                    isBold={post.isBold}
+                    isItalic={post.isItalic}
+                    isUnderline = {post.isUnderline}
                 >
                     {post.content}
                 </PostContent>

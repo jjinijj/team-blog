@@ -3,5 +3,10 @@ export interface Post{
     title: string;
     content: string;
     fontSize: number;
+    
+    isBold : boolean;
+    isItalic: boolean;
+    isUnderline: boolean;
+    
     createdAt: string;
 }
