@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
-  onAddPost: (title: string, content: string) => void; 
+  onAddPost: (title: string, content: string, fontSize: number) => void; 
 }
 
 const Container = styled.div`
@@ -69,6 +69,35 @@ const EditorArea = styled.div`
   padding: 40px;
 `;
 
+const OptionSection = styled.div`
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const Label = styled.label`
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  min-width: 100px;
+`;
+
+const Select = styled.select`
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius:L 4px;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  }
+`;
+
+
 const InputField = styled.input`
   width: 100%;
   padding: 12px;
@@ -85,13 +114,13 @@ const InputField = styled.input`
   }
 `;
 
-const TextArea = styled.textarea`
+const TextArea = styled.textarea<{fontSize: number}>`
   width: 100%;
   min-height: 400px;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: ${(props) => props.fontSize}px;
   font-family: inherit;
   box-sizing: border-box;
   resize: vertical;
@@ -106,6 +135,7 @@ const TextArea = styled.textarea`
 function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [fontSize, setFontSize] = useState(16);
 
   const handlePublish = () => {
     if(!title.trim()){
@@ -114,7 +144,7 @@ function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
     } else if(!content.trim()){
       alert('내용을 입력해주세요.')
     } else {
-      onAddPost(title, content);
+      onAddPost(title, content, fontSize);
     }
   };
 
@@ -135,9 +165,23 @@ function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
           value={ title }
           onChange={(e) => setTitle(e.target.value)}
         />
+
+        <OptionSection>
+          <Label>글자 크기 : </Label>
+          <Select value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))}>
+            <option value = {12}>12px</option>
+            <option value = {14}>14px</option>
+            <option value = {16}>16px</option>
+            <option value = {18}>18px</option>
+            <option value = {20}>20px</option>
+            <option value = {24}>24px</option>
+          </Select>
+        </OptionSection>
+        
         <TextArea
           placeholder="내용을 입력하세요" 
           value={content}
+          fontSize={fontSize}
           onChange={(e) => setContent(e.target.value)}
         />
       </EditorArea>

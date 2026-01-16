@@ -27,11 +27,12 @@ function App() {
     setCurrentScreen('detail');
   };
 
-  const handleAddPost = (title: string, content: string) => {
+  const handleAddPost = (title: string, content: string, fontSize: number) => {
     const newPost: Post = {
       id: Date.now().toString(),
       title,
       content,
+      fontSize: fontSize,
       createdAt: new Date().toLocaleDateString('ko-KR'),
     }
 

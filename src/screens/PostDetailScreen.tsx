@@ -66,10 +66,11 @@ const PostMeta = styled.div`
   border-bottom: 1px solid #eee;
 `;
 
-const PostContent = styled.div`
+const PostContent = styled.div<{fontSize : number}>`
   font-size: 16px;
   color: #333;
   line-height: 1.8;
+  font-size: ${(props) => props.fontSize}px;
   white-space: pre-wrap;
   word-break: break-word;
 `;
@@ -88,7 +89,11 @@ const PostDetailScreen = ({post, onGoToMain} : PostDetailProps) => {
             <ContentArea>
                 <PostTitle>{post.title}</PostTitle>
                 <PostMeta>{post.createdAt}</PostMeta>
-                <PostContent>{post.content}</PostContent>
+                <PostContent
+                    fontSize={post.fontSize}
+                >
+                    {post.content}
+                </PostContent>
             </ContentArea>
         </Container>
     );
