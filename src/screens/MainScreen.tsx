@@ -1,7 +1,10 @@
 import styled from 'styled-components';
+import type { Post } from '../types/Post';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
+  posts: Post[];
+  onViewPost: (postId : string)=> void;
 }
 
 const Container = styled.div`
@@ -52,7 +55,57 @@ const ContentArea = styled.div`
   color: #999;
 `;
 
-function MainScreen({ onGoToEditor }: MainScreenProps) {
+const EmptyMessage = styled.p`
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+`;
+
+const PostList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const PostItem = styled.div`
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+  cursor : pointer;
+
+  &:hover{
+    border-color: #ddd;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const PostTitle = styled.h2`
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 10px 0;
+`;
+
+const PostContent = styled.p`
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const PostDate = styled.span`
+  font-size: 12px;
+  color: #999;
+`;
+
+function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
   return (
     <Container>
       <Header>
@@ -61,7 +114,18 @@ function MainScreen({ onGoToEditor }: MainScreenProps) {
       </Header>
 
       <ContentArea>
-        <p>아직 글이 없습니다.</p>
+        { posts.length === 0 ? (<EmptyMessage>아직 글이 없습니다.</EmptyMessage> )
+        : (
+          <PostList>
+            { posts.map((post) => (
+              <PostItem key = {post.id} onClick={() => onViewPost(post.id)}>
+                <PostTitle>{post.title}</PostTitle>
+                <PostContent>{post.content}</PostContent>
+                <PostDate>{post.createdAt}</PostDate>
+              </PostItem>
+            ))}
+          </PostList>
+        )}
       </ContentArea>
     </Container>
   );
