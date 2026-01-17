@@ -58,6 +58,12 @@ function App() {
     goToMain();
   };
 
+  const handleEditPost = (postId : string) => {
+
+    alert('수정 기능 추가 예정');
+
+  };
+
   const selectedPost = posts.find((post) => post.id === selectedPostId);
 
   return (
@@ -69,7 +75,7 @@ function App() {
         <EditorScreen onGoToMain={goToMain} onAddPost={handleAddPost}/>
       )}
       { currentScreen === 'detail' && selectedPost && (
-        <PostDetailScreen post={selectedPost} onGoToMain={goToMain}/>
+        <PostDetailScreen post={selectedPost} onGoToMain={goToMain} onEdit={handleEditPost}/>
       )}
     </>
   );

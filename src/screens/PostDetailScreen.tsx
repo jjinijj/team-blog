@@ -4,6 +4,7 @@ import type { Post } from "../types/Post";
 interface PostDetailProps {
     post: Post;
     onGoToMain: () => void;
+    onEdit: (postId: string) => void;
 }
 
 const Container = styled.div`
@@ -28,18 +29,30 @@ const Title = styled.h1`
     margin: 0;
 `;
 
-const BackButton = styled.button`
+const Button = styled.button`
     padding: 12px 24px;
-    background-color: #6c757d;
-    color: white;
     border: none;
     border-radius: 8px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+`;
+
+const BackButton = styled(Button)`
+    background-color: #6c757d;
+    color: white;
 
     :&hover {
         background-color: #5a6268
+    }
+`;
+
+const EditButton = styled(Button)`
+    background-color: #0056b3;
+    color: white;
+
+    &:hover{
+        background-color: #004085;
     }
 `;
 
@@ -84,7 +97,7 @@ const PostContent = styled.div<{
 `;
 
 
-const PostDetailScreen = ({post, onGoToMain} : PostDetailProps) => {
+const PostDetailScreen = ({post, onGoToMain, onEdit} : PostDetailProps) => {
     return(
         <Container>
             <Header>
@@ -92,6 +105,9 @@ const PostDetailScreen = ({post, onGoToMain} : PostDetailProps) => {
                 <BackButton onClick={onGoToMain}>
                         뒤로가기
                 </BackButton>
+                <EditButton onClick={() => onEdit(post.id)}>
+                        수정
+                </EditButton>
             </Header>
 
             <ContentArea>
@@ -108,7 +124,6 @@ const PostDetailScreen = ({post, onGoToMain} : PostDetailProps) => {
             </ContentArea>
         </Container>
     );
-
 }
 
 export default PostDetailScreen;
