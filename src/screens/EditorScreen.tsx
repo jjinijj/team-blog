@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { Post } from '../types/Post';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -11,6 +12,7 @@ interface EditorScreenProps {
     isItalic: boolean,
     isUnderline: boolean,
   ) => void; 
+  editingPost?: Post;
 }
 
 const Container = styled.div`
@@ -168,13 +170,15 @@ const TextArea = styled.textarea<{
   }
 `;
 
-function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [fontSize, setFontSize] = useState(16);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
+function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps) {
+  const [title, setTitle] = useState(editingPost?.title || '');
+  const [content, setContent] = useState(editingPost?.content ||'');
+  const [fontSize, setFontSize] = useState(editingPost?.fontSize ||16);
+  const [isBold, setIsBold] = useState(editingPost?.isBold ||false);
+  const [isItalic, setIsItalic] = useState(editingPost?.isItalic ||false);
+  const [isUnderline, setIsUnderline] = useState(editingPost?.isUnderline ||false);
+
+  const isEditing = !!editingPost;
 
   const handlePublish = () => {
     if(!title.trim()){
@@ -190,10 +194,10 @@ function EditorScreen({ onGoToMain, onAddPost }: EditorScreenProps) {
   return (
     <Container>
       <Header>
-        <Title>글 작성</Title>
+        <Title>{isEditing? '글 수정' : '글 작성'}</Title>
         <ButtonGroup>
           <CancelButton onClick={onGoToMain}>취소</CancelButton>
-          <PublishButton onClick={handlePublish}>등록</PublishButton>
+          <PublishButton onClick={handlePublish}>{isEditing ? '수정' : '등록'}</PublishButton>
         </ButtonGroup>
       </Header>
 
