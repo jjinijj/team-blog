@@ -5,6 +5,7 @@ interface PostDetailProps {
     post: Post;
     onGoToMain: () => void;
     onEdit: (postId: string) => void;
+    onDelete: (postId: string) => void;
 }
 
 const Container = styled.div`
@@ -19,6 +20,7 @@ const Header = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 20px;
     margin-bottom: 40px;
 `;
 
@@ -27,6 +29,7 @@ const Title = styled.h1`
     font-weight = bold;
     color: #333;
     margin: 0;
+    margin-right: auto;
 `;
 
 const Button = styled.button`
@@ -53,6 +56,15 @@ const EditButton = styled(Button)`
 
     &:hover{
         background-color: #004085;
+    }
+`;
+
+const DeleteButton = styled(Button)`
+    background-color: #fb0000ff;
+    color: white;
+
+    &:hover{
+        background-color: #c80000ff;
     }
 `;
 
@@ -97,17 +109,21 @@ const PostContent = styled.div<{
 `;
 
 
-const PostDetailScreen = ({post, onGoToMain, onEdit} : PostDetailProps) => {
+const PostDetailScreen = ({post, onGoToMain, onEdit, onDelete} : PostDetailProps) => {
     return(
         <Container>
             <Header>
                 <Title>글 보기</Title>
-                <BackButton onClick={onGoToMain}>
-                        뒤로가기
-                </BackButton>
                 <EditButton onClick={() => onEdit(post.id)}>
                         수정
                 </EditButton>
+                <DeleteButton onClick={() => onDelete(post.id)}>
+                        삭제
+                </DeleteButton>
+                <BackButton onClick={onGoToMain}>
+                        뒤로가기
+                </BackButton>
+                
             </Header>
 
             <ContentArea>
