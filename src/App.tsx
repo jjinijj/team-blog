@@ -43,6 +43,15 @@ function App() {
     setCurrentScreen('editor')
   };
 
+  const handleDeletePost = (postId : string) => {
+    
+    if(window.confirm('글을 삭제하시겠습니까?')){
+      setPosts(posts.filter((post)=> postId !== post.id));
+
+      goToMain();
+    }
+  };
+
   const handleAddPost = (
     title: string, 
     content: string, 
@@ -96,7 +105,12 @@ function App() {
           />
       )}
       { currentScreen === 'detail' && selectedPost && (
-        <PostDetailScreen post={selectedPost} onGoToMain={goToMain} onEdit={handleEditPost}/>
+        <PostDetailScreen 
+          post={selectedPost} 
+          onGoToMain={goToMain}  
+          onEdit={handleEditPost}
+          onDelete={handleDeletePost}
+          />
       )}
     </>
   );
