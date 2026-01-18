@@ -7,6 +7,8 @@ export interface Post{
     isBold : boolean;
     isItalic: boolean;
     isUnderline: boolean;
+
+    textColor: string;
     
     createdAt: string;
 }
