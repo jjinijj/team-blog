@@ -1,10 +1,12 @@
 import styled from 'styled-components';
 import type { Post } from '../types/Post';
+import { useState } from 'react';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
   posts: Post[];
   onViewPost: (postId : string)=> void;
+  onDeletePost: (deletePosts : Post[]) => void;
 }
 
 const Container = styled.div`
@@ -20,6 +22,7 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   margin-bottom: 40px;
 `;
 
@@ -28,20 +31,42 @@ const Title = styled.h1`
   font-weight: bold;
   color: #333;
   margin: 0;
+  margin-right: auto;
 `;
 
-const WriteButton = styled.button`
+const Button = styled.button`
   padding: 12px 24px;
-  background-color: #007bff;
-  color: white;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+`;
+
+const WriteButton = styled(Button)`
+  background-color: #007bff;
+  color: white;
 
   &:hover {
     background-color: #0056b3;
+  }
+`;
+
+const SelectButton = styled(Button)`
+  background-color: #16a34a;
+  color: white;
+
+  &:hover {
+    background-color: #15803d;
+  }
+`;
+
+const DeleteButton = styled(Button)`
+  background-color: #dc3545;
+  color: white;
+
+  &:hover {
+    background-color: #c82333;
   }
 `;
 
@@ -67,7 +92,16 @@ const PostList = styled.div`
   gap: 20px;
 `;
 
+const PostListItem = styled.div`
+  display: flex;  
+  align-items: center;
+  gap: 15px;
+`;
+
 const PostItem = styled.div`
+  flex: 1;
+  align-items: center;
+  gap: 15px;
   padding: 20px;
   border: 1px solid #eee;
   border-radius: 8px;
@@ -105,12 +139,59 @@ const PostDate = styled.span`
   color: #999;
 `;
 
-function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
+function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScreenProps) {
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedPosts, setSelectedPosts] = useState<Post[]>([]);
+
+  const handleSelectPostMode = () => {
+    setIsSelectMode(!isSelectMode);
+
+    if(!isSelectMode){
+      setSelectedPosts([]);
+    }
+  };
+
+  const handleDeletePosts = () => {
+
+    if(window.confirm('선택된 항목들을 삭제하겠습니까?')){
+      onDeletePost(selectedPosts);
+      setIsSelectMode(false);
+    }
+
+  };
+  
+  const handleSelectPost = (selectPost: Post) => { 
+    const post = selectedPosts.find((post)=> post.id === selectPost.id);
+    if(post){
+      setSelectedPosts(selectedPosts.filter((post)=> post.id !== selectPost.id));
+    }else{
+      setSelectedPosts(prev => [selectPost, ...prev])
+    }
+  };
+
   return (
     <Container>
       <Header>
         <Title>Team Blog</Title>
-        <WriteButton onClick={onGoToEditor}>글쓰기</WriteButton>
+        {!isSelectMode && (
+          <WriteButton 
+            onClick={onGoToEditor}
+          >
+            글쓰기
+          </WriteButton>
+        )}
+        {isSelectMode && (
+          <DeleteButton
+            onClick={ handleDeletePosts}>
+            삭제
+          </DeleteButton>
+        )}
+        <SelectButton 
+          onClick={handleSelectPostMode}
+          >
+            {isSelectMode ? '취소' : '선택'}
+        </SelectButton>
+        
       </Header>
 
       <ContentArea>
@@ -118,11 +199,26 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
         : (
           <PostList>
             { posts.map((post) => (
+              <PostListItem
+                key = {post.id}
+              >
+                {isSelectMode && (<input 
+                  type='checkbox'
+                  checked={selectedPosts.some((p) => p.id === post.id)}  // ← React 상태 동기화
+                  onChange={ () => {handleSelectPost(post)}}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    cursor: 'pointer'
+                }}
+                />)}
               <PostItem key = {post.id} onClick={() => onViewPost(post.id)}>
+                
                 <PostTitle>{post.title}</PostTitle>
                 <PostContent>{post.content}</PostContent>
                 <PostDate>{post.createdAt}</PostDate>
               </PostItem>
+              </PostListItem>
             ))}
           </PostList>
         )}

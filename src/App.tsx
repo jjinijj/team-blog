@@ -40,7 +40,7 @@ function App() {
 
   const handleEditPost = (postId : string) => {
     setEditingPostId(postId);
-    setCurrentScreen('editor')
+    setCurrentScreen('editor');
   };
 
   const handleDeletePost = (postId : string) => {
@@ -50,6 +50,10 @@ function App() {
 
       goToMain();
     }
+  };
+
+  const handleDeletePosts = (deletePosts : Post[]) => {
+    setPosts(prev => prev.filter(post => !deletePosts.includes(post)));
   };
 
   const handleAddPost = (
@@ -95,7 +99,12 @@ function App() {
   return (
     <>
       {currentScreen === 'main' && (
-        <MainScreen onGoToEditor={goToEditor} posts = {posts} onViewPost={goToDetail}/>
+        <MainScreen 
+          onGoToEditor={goToEditor} 
+          posts = {posts}
+          onViewPost={goToDetail}
+          onDeletePost={handleDeletePosts}
+        />
       )}
       {currentScreen === 'editor' && (
         <EditorScreen 
