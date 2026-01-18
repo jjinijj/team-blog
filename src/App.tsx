@@ -63,6 +63,7 @@ function App() {
     isBold: boolean,
     isItalic: boolean,
     isUnderline: boolean,
+    textColor: string,
   ) => {
     if(editingPostId){
       // 수정모드
@@ -75,7 +76,8 @@ function App() {
           fontSize,
           isBold,
           isItalic,
-          isUnderline
+          isUnderline,
+          textColor,
       } : post));
     }else{
         const newPost: Post = {
@@ -86,6 +88,7 @@ function App() {
         isBold: isBold,
         isItalic: isItalic,
         isUnderline: isUnderline,
+        textColor: textColor,
         createdAt: new Date().toLocaleDateString('ko-KR'),
       }
       setPosts([newPost, ...posts]);

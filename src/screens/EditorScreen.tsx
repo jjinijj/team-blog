@@ -11,6 +11,7 @@ interface EditorScreenProps {
     isBold : boolean,
     isItalic: boolean,
     isUnderline: boolean,
+    textColor: string,
   ) => void; 
   editingPost?: Post;
 }
@@ -95,7 +96,7 @@ const Label = styled.label`
 const Select = styled.select`
   padding: 8px 12px;
   border: 1px solid #ddd;
-  border-radius:L 4px;
+  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
 
@@ -111,7 +112,7 @@ const StyleButtonGroup = styled.div`
   gap : 8px;
 `;
 
-const StyleButton = styled.div<{$isActive: boolean}>`
+const StyleButton = styled.button<{$isActive: boolean}>`
   padding: 8px 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -123,7 +124,7 @@ const StyleButton = styled.div<{$isActive: boolean}>`
   font-weight: bold;
 
   &: hover {
-    border-color: #007bff
+    border-color: #007bff;
   }
 `;
 
@@ -148,6 +149,7 @@ const TextArea = styled.textarea<{
   $isBold: boolean;
   $isItalic: boolean;
   $isUnderline: boolean;
+  $fontColor: string;
 }>`
   width: 100%;
   min-height: 400px;
@@ -159,6 +161,7 @@ const TextArea = styled.textarea<{
   font-style: ${(props) => props.$isItalic ? 'italic' : 'normal' };
   text-decoration: ${(props) => (props.$isUnderline ? 'underline' : 'none')};
   -webkit-text-decoration: ${(props) => (props.$isUnderline ? 'underline' : 'none')};
+  color: ${(props) => props.$fontColor};
   font-family: inherit;
   box-sizing: border-box;
   resize: vertical;
@@ -177,6 +180,7 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
   const [isBold, setIsBold] = useState(editingPost?.isBold ||false);
   const [isItalic, setIsItalic] = useState(editingPost?.isItalic ||false);
   const [isUnderline, setIsUnderline] = useState(editingPost?.isUnderline ||false);
+  const [textColor, setTextColor] = useState(editingPost?.textColor || '#000000');
 
   const isEditing = !!editingPost;
 
@@ -187,7 +191,7 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
     } else if(!content.trim()){
       alert('내용을 입력해주세요.')
     } else {
-      onAddPost(title, content, fontSize, isBold, isItalic, isUnderline);
+      onAddPost(title, content, fontSize, isBold, isItalic, isUnderline,textColor);
     }
   };
 
@@ -210,7 +214,7 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
         />
 
         <OptionSection>
-          <Label>글자 크기 : </Label>
+          <Label>글자 크기</Label>
           <Select value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))}>
             <option value = {12}>12px</option>
             <option value = {14}>14px</option>
@@ -247,7 +251,19 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
             </StyleButton>
           </StyleButtonGroup>
         </OptionSection>
-
+        <OptionSection>
+          <Label>글자 색상</Label>
+          <input 
+          type = 'color'
+          value = {textColor}
+          onChange={(e) => setTextColor(e.target.value)}
+          style={{
+            width: '40px',
+            height: '30px',
+            cursor: 'pointer',
+          }}
+        />
+        </OptionSection>
         <TextArea
           placeholder="내용을 입력하세요" 
           value={content}
@@ -255,6 +271,7 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
           $isBold = {isBold}
           $isItalic = {isItalic}
           $isUnderline = {isUnderline}
+          $fontColor={textColor}
           onChange={(e) => setContent(e.target.value)}
         />
       </EditorArea>
