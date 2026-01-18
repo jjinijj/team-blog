@@ -70,6 +70,28 @@ const DeleteButton = styled(Button)`
   }
 `;
 
+const OptionSection = styled.div`
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+`;
+
+const Select = styled.select`
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  }
+`;
+
 const ContentArea = styled.div`
   max-width: 800px;
   margin: 0 auto;
@@ -100,6 +122,8 @@ const PostListItem = styled.div`
 
 const PostItem = styled.div`
   flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 15px;
   padding: 20px;
@@ -142,6 +166,17 @@ const PostDate = styled.span`
 function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScreenProps) {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedPosts, setSelectedPosts] = useState<Post[]>([]);
+  const [sortOrder, setSortOrder] = useState('newer');
+
+  const getSortedPosts = () => {
+
+    const sorted = [...posts];
+    if(sortOrder === 'newer'){
+      return sorted.sort((a, b) => b.id.localeCompare(a.id));
+    }else{
+      return sorted.sort((a, b) => a.id.localeCompare(b.id));
+    }
+  }
 
   const handleSelectPostMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -195,13 +230,20 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
       </Header>
 
       <ContentArea>
+        <OptionSection>
+          <label>정렬</label>
+          <Select
+            value={sortOrder} 
+            onChange={(e) => { setSortOrder(e.target.value)}}>
+            <option value = {'newer'}>최신순</option>
+            <option value = {'older'}>오래된순</option>
+          </Select>
+        </OptionSection>
         { posts.length === 0 ? (<EmptyMessage>아직 글이 없습니다.</EmptyMessage> )
         : (
           <PostList>
-            { posts.map((post) => (
-              <PostListItem
-                key = {post.id}
-              >
+            { getSortedPosts().map((post) => (
+              <PostListItem key = {post.id}>
                 {isSelectMode && (<input 
                   type='checkbox'
                   checked={selectedPosts.some((p) => p.id === post.id)}  // ← React 상태 동기화
@@ -212,12 +254,11 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
                     cursor: 'pointer'
                 }}
                 />)}
-              <PostItem key = {post.id} onClick={() => onViewPost(post.id)}>
-                
-                <PostTitle>{post.title}</PostTitle>
-                <PostContent>{post.content}</PostContent>
-                <PostDate>{post.createdAt}</PostDate>
-              </PostItem>
+                <PostItem onClick={() => onViewPost(post.id)}>
+                  <PostTitle>{post.title}</PostTitle>
+                  <PostContent>{post.content}</PostContent>
+                  <PostDate>{post.createdAt}</PostDate>
+                </PostItem>
               </PostListItem>
             ))}
           </PostList>
