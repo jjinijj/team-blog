@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import type { Post } from '../types/Post';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
@@ -67,6 +67,39 @@ const DeleteButton = styled(Button)`
 
   &:hover {
     background-color: #c82333;
+  }
+`;
+
+const SearchButton = styled(Button)`
+  background-color: #3894f7ff;;
+  color: white;
+
+  &:hover {
+    background-color: #2971bcff;;;
+  }
+`;
+
+const SearchInputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  margin-bottom: 20px;
+  justify-content: space-between;
+`;
+
+const SearchInput = styled.input`
+  width: 200px;
+  height: 35px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
   }
 `;
 
@@ -167,16 +200,30 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedPosts, setSelectedPosts] = useState<Post[]>([]);
   const [sortOrder, setSortOrder] = useState('newer');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const intputRef = useRef<HTMLInputElement>(null);
 
   const getSortedPosts = () => {
 
-    const sorted = [...posts];
+    const sorted = (keyword === '' ? [...posts] : getSearchedPosts());
     if(sortOrder === 'newer'){
       return sorted.sort((a, b) => b.id.localeCompare(a.id));
     }else{
       return sorted.sort((a, b) => a.id.localeCompare(b.id));
     }
   }
+
+  const handleSearchClick = () =>{
+    setKeyword(searchKeyword.trim());
+
+    if(intputRef.current){
+      intputRef.current.focus();
+      intputRef.current.setSelectionRange(
+        intputRef.current.value.length,
+        intputRef.current.value.length);
+    }
+  };
 
   const handleSelectPostMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -204,6 +251,17 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
     }
   };
 
+  const getSearchedPosts = () => {
+    const totalPosts = [...posts];
+    const searched = totalPosts.filter((post)=>post.title.includes(keyword) || post.content.includes(keyword));
+
+    if(searched){
+      return searched;
+    }else{
+      return [];
+    }
+  }
+
   return (
     <Container>
       <Header>
@@ -230,15 +288,40 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
       </Header>
 
       <ContentArea>
-        <OptionSection>
-          <label>정렬</label>
-          <Select
-            value={sortOrder} 
-            onChange={(e) => { setSortOrder(e.target.value)}}>
-            <option value = {'newer'}>최신순</option>
-            <option value = {'older'}>오래된순</option>
-          </Select>
-        </OptionSection>
+        <SearchInputWrapper>
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'center'
+          }}>
+            <SearchInput
+              type ='text'
+              placeholder='검색어를 입력하세요'
+              value={searchKeyword}
+              ref = {intputRef}
+              onChange={(e) =>setSearchKeyword(e.target.value)}
+            />
+            <SearchButton
+              onClick={handleSearchClick}
+            >
+              🔍
+            </SearchButton>
+          </div>
+          <div
+            style={{
+              display:'flex',
+              alignItems:'center',
+              gap:'10px'
+            }}>
+            <label>정렬</label>
+            <Select
+              value={sortOrder} 
+              onChange={(e) => { setSortOrder(e.target.value)}}>
+              <option value = {'newer'}>최신순</option>
+              <option value = {'older'}>오래된순</option>
+            </Select>
+          </div>
+        </SearchInputWrapper>
         { posts.length === 0 ? (<EmptyMessage>아직 글이 없습니다.</EmptyMessage> )
         : (
           <PostList>
