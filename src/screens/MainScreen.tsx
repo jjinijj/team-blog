@@ -103,14 +103,6 @@ const SearchInput = styled.input`
   }
 `;
 
-const OptionSection = styled.div`
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: flex-end;
-`;
-
 const Select = styled.select`
   padding: 8px 12px;
   border: 1px solid #ddd;
