@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { Post } from '../types/Post';
 
@@ -13,6 +14,17 @@ interface EditorScreenProps {
     isUnderline: boolean,
     textColor: string,
   ) => void; 
+  onUpdatePost?: (
+    postId: string,
+    title: string, 
+    content: string, 
+    fontSize: number,
+    isBold : boolean,
+    isItalic: boolean,
+    isUnderline: boolean,
+    textColor: string,
+  ) => void; 
+  posts?: Post[];
   editingPost?: Post;
 }
 
@@ -173,16 +185,36 @@ const TextArea = styled.textarea<{
   }
 `;
 
-function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps) {
-  const [title, setTitle] = useState(editingPost?.title || '');
-  const [content, setContent] = useState(editingPost?.content ||'');
-  const [fontSize, setFontSize] = useState(editingPost?.fontSize ||16);
-  const [isBold, setIsBold] = useState(editingPost?.isBold ||false);
-  const [isItalic, setIsItalic] = useState(editingPost?.isItalic ||false);
-  const [isUnderline, setIsUnderline] = useState(editingPost?.isUnderline ||false);
-  const [textColor, setTextColor] = useState(editingPost?.textColor || '#000000');
+function EditorScreen({ 
+  onGoToMain, 
+  onAddPost, 
+  onUpdatePost,
+  posts,
+  editingPost }: EditorScreenProps) {
 
-  const isEditing = !!editingPost;
+    const {id} = useParams<{id : string}>();
+
+    const postToEdit = id && posts ? posts.find(post => post.id === id) : editingPost;
+
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [fontSize, setFontSize] = useState(16);
+    const [isBold, setIsBold] = useState(false);
+    const [isItalic, setIsItalic] = useState(false);
+    const [isUnderline, setIsUnderline] = useState(false);
+    const [textColor, setTextColor] = useState('#000000');
+
+    useEffect(()=>{
+      if(postToEdit){
+        setTitle(postToEdit.title);
+        setContent(postToEdit.content);
+        setFontSize(postToEdit.fontSize);
+        setIsBold(postToEdit.isBold);
+        setIsItalic(postToEdit.isItalic);
+        setIsUnderline(postToEdit.isUnderline);
+        setTextColor(postToEdit.textColor);
+      }
+    },[postToEdit]);
 
   const handlePublish = () => {
     if(!title.trim()){
@@ -191,17 +223,24 @@ function EditorScreen({ onGoToMain, onAddPost, editingPost }: EditorScreenProps)
     } else if(!content.trim()){
       alert('내용을 입력해주세요.')
     } else {
-      onAddPost(title, content, fontSize, isBold, isItalic, isUnderline,textColor);
+      if(postToEdit && onUpdatePost){
+        // 기존 글 업데이트
+        onUpdatePost(postToEdit.id,title, content, fontSize, isBold, isItalic, isUnderline,textColor);
+
+      }else if(onAddPost){
+        // 새 글 작성
+        onAddPost(title, content, fontSize, isBold, isItalic, isUnderline,textColor);
+      }
     }
   };
 
   return (
     <Container>
       <Header>
-        <Title>{isEditing? '글 수정' : '글 작성'}</Title>
+        <Title>{postToEdit? '글 수정' : '새 글 작성'}</Title>
         <ButtonGroup>
           <CancelButton onClick={onGoToMain}>취소</CancelButton>
-          <PublishButton onClick={handlePublish}>{isEditing ? '수정' : '등록'}</PublishButton>
+          <PublishButton onClick={handlePublish}>{postToEdit ? '수정' : '등록'}</PublishButton>
         </ButtonGroup>
       </Header>
 

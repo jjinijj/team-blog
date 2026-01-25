@@ -4,14 +4,11 @@ import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import { Post } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
-
-type Screen = 'main' | 'editor' | 'detail';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('main');
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null); 
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const navigate = useNavigate();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -28,32 +25,12 @@ function App() {
     loadPosts();
   }, []);
 
-  const goToEditor = () => {
-    setEditingPostId(null);
-    setCurrentScreen('editor');
-  };
-
-  const goToMain = () => {
-    setCurrentScreen('main');
-    setEditingPostId(null);
-  };
-
-  const goToDetail = (postId: string) => {
-    setSelectedPostId(postId);
-    setCurrentScreen('detail');
-  };
-
-  const handleEditPost = (postId: string) => {
-    setEditingPostId(postId);
-    setCurrentScreen('editor');
-  };
-
   const handleDeletePost = async (postId: string) => {
     if (window.confirm('글을 삭제하시겠습니까?')) {
       try {
         await deletePost(postId);
         setPosts(posts.filter((post) => postId !== post.id));
-        goToMain();
+        navigate('/');
       } catch (error) {
         console.error('글 삭제 실패:', error);
         alert('글 삭제에 실패했습니다.');
@@ -84,86 +61,114 @@ function App() {
     isUnderline: boolean,
     textColor: string,
   ) => {
-    if (editingPostId) {
-      // 수정 모드
-      const updatedPost: Post = {
-        id: editingPostId,
-        title,
-        content,
-        fontSize,
-        isBold,
-        isItalic,
-        isUnderline,
-        textColor,
-        createdAt: new Date().toLocaleDateString('ko-KR'),
-      };
 
-      try {
-        await updatePost(updatedPost);
-        setPosts(posts.map((post) => 
-          post.id === editingPostId 
-            ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor }
-            : post
-        ));
-        goToMain();
-      } catch (error) {
-        console.error('업데이트 실패:', error);
-        alert('글 수정에 실패했습니다.');
-      }
-    } else {
-      // 새 글 작성 모드
-      const newPost: Post = {
-        id: Date.now().toString(),
-        title,
-        content,
-        fontSize,
-        isBold,
-        isItalic,
-        isUnderline,
-        textColor,
-        createdAt: new Date().toLocaleDateString('ko-KR'),
-      };
+    // 새 글 작성 모드
+    const newPost: Post = {
+      id: Date.now().toString(),
+      title,
+      content,
+      fontSize,
+      isBold,
+      isItalic,
+      isUnderline,
+      textColor,
+      createdAt: new Date().toLocaleDateString('ko-KR'),
+    };
 
-      try {
-        await createPost(newPost);
-        setPosts([newPost, ...posts]);
-        goToMain();
-      } catch (error) {
-        console.error('글 생성 실패:', error);
-        alert('글 생성에 실패했습니다.');
-      }
+    try {
+      await createPost(newPost);
+      setPosts([newPost, ...posts]);
+      navigate(`/post/${newPost.id}`);
+    } catch (error) {
+      console.error('글 생성 실패:', error);
+      alert('글 생성에 실패했습니다.');
     }
   };
 
-  const selectedPost = posts.find((post) => post.id === selectedPostId);
-  const editingPost = posts.find((post) => post.id === editingPostId);
+  const handleUpdatePost = async (
+    postId: string,
+    title: string, 
+    content: string, 
+    fontSize: number,
+    isBold: boolean,
+    isItalic: boolean,
+    isUnderline: boolean,
+    textColor: string,
+  ) => {
+
+    // 수정 모드
+    const updatedPost: Post = {
+      id: postId,
+      title,
+      content,
+      fontSize,
+      isBold,
+      isItalic,
+      isUnderline,
+      textColor,
+      createdAt: new Date().toLocaleDateString('ko-KR'),
+    };
+
+    try {
+      await updatePost(updatedPost);
+      setPosts(posts.map((post) => 
+        post.id === postId 
+          ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor }
+          : post
+      ));
+      navigate(`/post/${postId}`);
+    } catch (error) {
+      console.error('업데이트 실패:', error);
+      alert('글 수정에 실패했습니다.');
+    }
+  }
 
   return (
-    <>
-      {currentScreen === 'main' && (
-        <MainScreen 
-          onGoToEditor={goToEditor} 
-          posts={posts}
-          onViewPost={goToDetail}
-          onDeletePost={handleDeleteMultiplePosts}
+    <Routes>
+      <Route
+        path = "/"
+        element = {
+          <MainScreen 
+            posts={posts}
+            onViewPost={(postId) => navigate(`/post/${postId}`)}
+            onGoToEditor={()=> navigate('/write')} 
+            onDeletePost={handleDeleteMultiplePosts}
+          />
+        }
+      />
+      <Route
+        path = "/write"
+        element = {
+          <EditorScreen 
+            onGoToMain={()=>navigate('/')} 
+            onAddPost={handleAddPost}
+            editingPost={undefined}
         />
-      )}
-      {currentScreen === 'editor' && (
-        <EditorScreen 
-          onGoToMain={goToMain} 
-          onAddPost={handleAddPost}
-          editingPost={editingPost}
-        />
-      )}
-      {currentScreen === 'detail' && selectedPost && (
-        <PostDetailScreen 
-          post={selectedPost} 
-          onGoToMain={goToMain}  
-          onEdit={handleEditPost}
-          onDelete={handleDeletePost}
-        />
-      )}
-    </>
+        }
+      />
+      <Route
+        path = "/edit/:id"
+        element = {
+          <EditorScreen 
+            posts={posts}
+            onGoToMain={()=>navigate('/')} 
+            onAddPost={handleAddPost}
+            onUpdatePost={handleUpdatePost}
+          />
+        }
+      />
+      <Route
+        path = "/post/:id"
+        element = {
+          <PostDetailScreen 
+            posts={posts} 
+            onGoToMain={()=>navigate('/')}  
+            onEdit={(postId)=>navigate(`edit/${postId}`)}
+            onDelete={handleDeletePost}
+          />
+        }
+      />
+    </Routes>
   );
 }
 

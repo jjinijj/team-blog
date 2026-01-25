@@ -1,8 +1,9 @@
 import styled from "styled-components";
 import type { Post } from "../types/Post";
+import { useParams } from "react-router-dom";
 
 interface PostDetailProps {
-    post: Post;
+    posts: Post[];
     onGoToMain: () => void;
     onEdit: (postId: string) => void;
     onDelete: (postId: string) => void;
@@ -110,8 +111,36 @@ const PostContent = styled.div<{
   word-break: break-word;
 `;
 
+const NotFound = styled.div`
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #666;
+    `;
 
-const PostDetailScreen = ({post, onGoToMain, onEdit, onDelete} : PostDetailProps) => {
+
+const PostDetailScreen = ({posts, onGoToMain, onEdit, onDelete} : PostDetailProps) => {
+    
+    const {id} = useParams<{id:string}>();
+    const post = posts.find(p => p.id === id);
+
+    // id가 일치하는 글이 없는 경우
+    if(!post){
+        return(
+            <Container>
+                <Header>
+                    <BackButton onClick = {onGoToMain}>
+                        뒤로가기
+                    </BackButton>
+                </Header>
+                <NotFound>
+                    글을 찾을 수 없습니다.
+                </NotFound>
+            </Container>
+
+        );
+    }
+    
     return(
         <Container>
             <Header>
