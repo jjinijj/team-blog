@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
+import { parseMarkdown } from '../utils/markdown';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -22,7 +23,7 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
               className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
             >
               <span>←</span>
-              <span className="text-sm font-medium">Back to Feed</span>
+              <span className="text-sm font-medium">목록으로</span>
             </button>
           </div>
         </header>
@@ -43,7 +44,7 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
           >
             <span>←</span>
-            <span className="text-sm font-medium">Back to Feed</span>
+            <span className="text-sm font-medium">목록으로</span>
           </button>
           
           <div className="flex items-center gap-3">
@@ -51,13 +52,13 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
               onClick={() => onEdit(post.id)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
             >
-              Edit
+              수정
             </button>
             <button
               onClick={() => onDelete(post.id)}
               className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
             >
-              Delete
+              삭제
             </button>
           </div>
         </div>
@@ -101,49 +102,47 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             className="text-lg leading-relaxed"
             style={{
               fontSize: `${post.fontSize}px`,
-              fontWeight: post.isBold ? 'bold' : 'normal',
-              fontStyle: post.isItalic ? 'italic' : 'normal',
-              textDecoration: post.isUnderline ? 'underline' : 'none',
               color: post.textColor,
-              whiteSpace: 'pre-wrap',
             }}
-          >
-            {post.content}
-          </div>
+            dangerouslySetInnerHTML={{ __html: parseMarkdown(post.content) }}
+          />
         </article>
-
-        {/* Divider */}
-        <div className="border-t border-gray-100 pt-12 mb-8">
-          <div className="flex items-center justify-center gap-4">
-            <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-              👍 Helpful
-            </button>
-            <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-              ❤️ Love it
-            </button>
-            <button className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-              💡 Insightful
-            </button>
+        {/* Comments Section */}
+        <section className="border-t border-gray-100 pt-12 pb-24">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold">댓글 (0)</h3>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>정렬:</span>
+              <button className="font-medium text-gray-900 flex items-center">
+                최신순 <span className="ml-1">▼</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-center gap-4 py-8">
-          <button
-            onClick={() => onEdit(post.id)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-          >
-            <span>✏️</span>
-            <span>Edit Post</span>
-          </button>
-          <button
-            onClick={() => onDelete(post.id)}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
-          >
-            <span>🗑️</span>
-            <span>Delete Post</span>
-          </button>
-        </div>
+          {/* Comment Input */}
+          <div className="flex gap-4 mb-10">
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">
+              A
+            </div>
+            <div className="flex-1">
+              <textarea
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                placeholder="댓글을 입력하세요..."
+                rows={3}
+              />
+              <div className="flex justify-end mt-2">
+                <button className="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
+                  댓글 작성
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* No Comments Yet */}
+          <div className="text-center py-12 text-gray-400">
+            <p className="text-sm">아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</p>
+          </div>
+        </section>
       </main>
     </div>
   );
