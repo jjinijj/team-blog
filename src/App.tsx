@@ -60,6 +60,7 @@ function App() {
     isItalic: boolean,
     isUnderline: boolean,
     textColor: string,
+    isMarkdown: boolean,
   ) => {
 
     // 새 글 작성 모드
@@ -73,6 +74,7 @@ function App() {
       isUnderline,
       textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
+      isMarkdown: isMarkdown,
     };
 
     try {
@@ -94,6 +96,7 @@ function App() {
     isItalic: boolean,
     isUnderline: boolean,
     textColor: string,
+    isMarkdown: boolean,
   ) => {
 
     // 수정 모드
@@ -107,13 +110,14 @@ function App() {
       isUnderline,
       textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
+      isMarkdown: isMarkdown,
     };
 
     try {
       await updatePost(updatedPost);
       setPosts(posts.map((post) => 
         post.id === postId 
-          ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor }
+          ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown }
           : post
       ));
       navigate(`/post/${postId}`);

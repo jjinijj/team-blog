@@ -12,6 +12,7 @@ interface EditorScreenProps {
     isItalic: boolean,
     isUnderline: boolean,
     textColor: string,
+    isMarkdown: boolean,
   ) => void;
   onUpdatePost?: (
     postId: string,
@@ -22,6 +23,7 @@ interface EditorScreenProps {
     isItalic: boolean,
     isUnderline: boolean,
     textColor: string,
+    isMarkdown: boolean,
   ) => void;
   posts?: Post[];
   editingPost?: Post;
@@ -55,6 +57,7 @@ function EditorScreen({
       setIsItalic(postToEdit.isItalic);
       setIsUnderline(postToEdit.isUnderline);
       setTextColor(postToEdit.textColor);
+      setEditorMode(postToEdit.isMarkdown ? 'markdown' : 'richtext')
     }
   }, [postToEdit]);
 
@@ -64,10 +67,12 @@ function EditorScreen({
     } else if (!content.trim()) {
       alert('내용을 입력해주세요.');
     } else {
+
+      const isMarkdown = editorMode === 'markdown' ? true : false;
       if (postToEdit && onUpdatePost) {
-        onUpdatePost(postToEdit.id, title, content, fontSize, isBold, isItalic, isUnderline, textColor);
+        onUpdatePost(postToEdit.id, title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown);
       } else if (onAddPost) {
-        onAddPost(title, content, fontSize, isBold, isItalic, isUnderline, textColor);
+        onAddPost(title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown);
       }
     }
   };
@@ -117,8 +122,13 @@ function EditorScreen({
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm mb-8 py-2 border-b border-gray-100 flex items-center gap-1">
               <button
                 onClick={() => setIsBold(!isBold)}
+                disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
-                  isBold ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                  editorMode === 'markdown' 
+                    ? 'opacity-30 cursor-not-allowed' 
+                    : isBold 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'hover:bg-gray-100'
                 }`}
                 title="Bold"
               >
@@ -126,8 +136,13 @@ function EditorScreen({
               </button>
               <button
                 onClick={() => setIsItalic(!isItalic)}
+                disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
-                  isItalic ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                  editorMode === 'markdown' 
+                    ? 'opacity-30 cursor-not-allowed' 
+                    : isBold 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'hover:bg-gray-100'
                 }`}
                 title="Italic"
               >
@@ -135,8 +150,13 @@ function EditorScreen({
               </button>
               <button
                 onClick={() => setIsUnderline(!isUnderline)}
+                disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
-                  isUnderline ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                  editorMode === 'markdown' 
+                    ? 'opacity-30 cursor-not-allowed' 
+                    : isBold 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'hover:bg-gray-100'
                 }`}
                 title="Underline"
               >
@@ -150,7 +170,14 @@ function EditorScreen({
                 <select
                   value={fontSize}
                   onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="text-xs px-2 py-1 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={editorMode === 'markdown'}
+                  className={`p-2 rounded transition-colors ${
+                    editorMode === 'markdown' 
+                      ? 'opacity-30 cursor-not-allowed' 
+                      : isBold 
+                        ? 'bg-blue-100 text-blue-600' 
+                        : 'hover:bg-gray-100'
+                  }`}
                 >
                   <option value={12}>12px</option>
                   <option value={14}>14px</option>
@@ -170,6 +197,7 @@ function EditorScreen({
                   value={textColor}
                   onChange={(e) => setTextColor(e.target.value)}
                   className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                  disabled={editorMode === 'markdown'}
                 />
               </div>
               {/* Markdown/Rich Text Toggle */}
@@ -198,7 +226,6 @@ function EditorScreen({
                 </div>
               </div>
             </div>
-
             {/* Content */}
             <div className="space-y-6">
               <input
@@ -224,13 +251,13 @@ function EditorScreen({
                   placeholder="이야기를 들려주세요..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  style={{
+                  style={editorMode === 'richtext' ? {
                     fontSize: `${fontSize}px`,
                     fontWeight: isBold ? 'bold' : 'normal',
                     fontStyle: isItalic ? 'italic' : 'normal',
                     textDecoration: isUnderline ? 'underline' : 'none',
                     color: textColor,
-                  }}
+                  } : undefined}  // 마크다운 모드일 때는 스타일 적용 안 함
                 />
               </div>
             </div>
