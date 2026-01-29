@@ -11,4 +11,6 @@ export interface Post{
     textColor: string;
     
     createdAt: string;
+
+    isMarkdown: boolean;
 }
