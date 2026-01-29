@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
-import { parseMarkdown } from '../utils/markdown';
+import { MarkdownRenderer } from '../utils/markdownRender';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -70,6 +70,14 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
         <header className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <span className="text-gray-500 text-sm">{post.createdAt}</span>
+            {/* 모드 표시 뱃지 */}
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              post.isMarkdown 
+                ? 'bg-purple-100 text-purple-600' 
+                : 'bg-blue-100 text-blue-600'
+            }`}>
+              {post.isMarkdown ? 'Markdown' : 'Rich Text'}
+            </span>
           </div>
           
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-8 tracking-tight">
@@ -96,17 +104,28 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
           </div>
         </header>
 
-        {/* Article Content */}
-        <article className="prose prose-slate prose-lg max-w-none mb-16">
-          <div
-            className="text-lg leading-relaxed"
-            style={{
-              fontSize: `${post.fontSize}px`,
-              color: post.textColor,
-            }}
-            dangerouslySetInnerHTML={{ __html: parseMarkdown(post.content) }}
-          />
+        {/* Article Content - 마크다운/리치텍스트 분기 */}
+        <article className="prose prose-slate prose-lg max-w-none mb-16 prose-h1:text-4xl prose-h2:text-2xl prose-p:text-base">
+          {post.isMarkdown ? (
+            // 마크다운 모드: MarkdownRenderer 사용
+            <MarkdownRenderer markdown={post.content} />
+          ) : (
+            // 리치텍스트 모드: 스타일 적용
+            <div
+              className="leading-relaxed whitespace-pre-wrap"
+              style={{
+                fontSize: `${post.fontSize}px`,
+                fontWeight: post.isBold ? 'bold' : 'normal',
+                fontStyle: post.isItalic ? 'italic' : 'normal',
+                textDecoration: post.isUnderline ? 'underline' : 'none',
+                color: post.textColor,
+              }}
+            >
+              {post.content}
+            </div>
+          )}
         </article>
+
         {/* Comments Section */}
         <section className="border-t border-gray-100 pt-12 pb-24">
           <div className="flex items-center justify-between mb-8">
