@@ -44,6 +44,7 @@ function EditorScreen({
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [textColor, setTextColor] = useState('#000000');
+  const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('richtext');
 
   useEffect(() => {
     if (postToEdit) {
@@ -170,6 +171,31 @@ function EditorScreen({
                   onChange={(e) => setTextColor(e.target.value)}
                   className="w-8 h-8 rounded cursor-pointer border border-gray-200"
                 />
+              </div>
+              {/* Markdown/Rich Text Toggle */}
+              <div className="ml-auto flex items-center gap-4">
+                <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                  <button
+                    onClick={() => setEditorMode('markdown')}
+                    className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded transition-colors ${
+                      editorMode === 'markdown'
+                        ? 'text-blue-500 bg-white shadow-sm border border-gray-200'
+                        : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    Markdown
+                  </button>
+                  <button
+                    onClick={() => setEditorMode('richtext')}
+                    className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded transition-colors ${
+                      editorMode === 'richtext'
+                        ? 'text-blue-500 bg-white shadow-sm border border-gray-200'
+                        : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    Rich Text
+                  </button>
+                </div>
               </div>
             </div>
 

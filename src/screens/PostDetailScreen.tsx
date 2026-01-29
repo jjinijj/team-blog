@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
-import { parseMarkdown } from '../utils/markdown';
+import { MarkdownRenderer } from '../utils/markdownRender';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -97,15 +97,14 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
         </header>
 
         {/* Article Content */}
-        <article className="prose prose-slate prose-lg max-w-none mb-16">
-          <div
-            className="text-lg leading-relaxed"
-            style={{
-              fontSize: `${post.fontSize}px`,
-              color: post.textColor,
-            }}
-            dangerouslySetInnerHTML={{ __html: parseMarkdown(post.content) }}
-          />
+        <article 
+        className="
+          prose prose-slate prose-lg max-w-none mb-16
+          prose-h1:text-4xl
+          prose-h2:text-2xl
+          prose-p:text-base
+        ">
+          < MarkdownRenderer markdown={post.content} />
         </article>
         {/* Comments Section */}
         <section className="border-t border-gray-100 pt-12 pb-24">
