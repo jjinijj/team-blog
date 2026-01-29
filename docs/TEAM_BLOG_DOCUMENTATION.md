@@ -6,11 +6,13 @@
 
 ### 주요 특징
 - ✅ 글 작성/수정/삭제 (개별 + 다중 삭제)
-- ✅ 글자 크기, 스타일(굵기/기울임/밑줄), 색상 옵션
+- ✅ 마크다운 스타일 텍스트 포맷팅 (굵기/기울임/밑줄/취소선)
 - ✅ 글 검색 기능 (제목/내용)
 - ✅ 글 정렬 기능 (최신순/오래된순)
+- ✅ 댓글 기능
 - ✅ localStorage를 통한 데이터 영속성
-- ✅ 반응형 UI (styled-components)
+- ✅ 반응형 UI (Tailwind CSS)
+- 🔄 Supabase 연동 (진행 중)
 
 ---
 
@@ -20,12 +22,13 @@
 |------|------|
 | **Language** | TypeScript |
 | **Frontend Framework** | React 18 |
-| **Styling** | styled-components |
+| **Styling** | Tailwind CSS |
 | **State Management** | React Hooks (useState, useEffect) |
-| **Data Persistence** | localStorage |
-| **Build Tool** | Create React App |
+| **Data Persistence** | localStorage (Supabase 마이그레이션 진행 중) |
+| **Build Tool** | Vite |
 | **Deployment** | Vercel |
 | **Version Control** | Git/GitHub |
+| **Backend (진행 중)** | Supabase |
 
 ---
 
@@ -33,17 +36,22 @@
 
 ```
 team-blog/
-├── public/
+├── public/                      # 정적 파일
 ├── src/
 │   ├── App.tsx                 # 메인 앱, 상태 관리
 │   ├── types/
 │   │   └── Post.ts             # Post 인터페이스 정의
 │   ├── screens/
 │   │   ├── MainScreen.tsx       # 글 목록, 검색, 정렬
-│   │   ├── EditorScreen.tsx     # 글 작성/수정, 스타일 옵션
-│   │   └── PostDetailScreen.tsx # 글 상세 보기, 삭제
-│   ├── index.tsx
-│   └── App.css
+│   │   ├── EditorScreen.tsx     # 글 작성/수정, 마크다운 에디터
+│   │   └── PostDetailScreen.tsx # 글 상세 보기, 댓글, 삭제
+│   ├── utils/
+│   │   └── markdown.ts         # 마크다운 파싱 유틸리티
+│   ├── main.tsx                # Vite 진입점
+│   └── index.css               # Tailwind CSS imports
+├── index.html                   # Vite HTML 템플릿 (루트)
+├── tailwind.config.js          # Tailwind 설정
+├── vite.config.ts              # Vite 설정
 ├── package.json
 └── README.md
 ```
@@ -58,15 +66,16 @@ team-blog/
 export interface Post {
   id: string;              // 타임스탬프 기반 고유 ID
   title: string;           // 글 제목
-  content: string;         // 글 본문
-  fontSize: number;        // 글자 크기 (12-24px)
-  isBold: boolean;         # 굵기 여부
-  isItalic: boolean;       # 기울임 여부
-  isUnderline: boolean;    # 밑줄 여부
-  textColor: string;       # 글자 색상 (hex 색상코드)
-  createdAt: string;       # 작성일자 (YYYY-MM-DD 형식)
+  content: string;         // 글 본문 (마크다운 스타일 문법 포함)
+  createdAt: string;       // 작성일자 (YYYY-MM-DD 형식)
 }
 ```
+
+**마크다운 스타일 문법**:
+- `**텍스트**` → **굵게**
+- `*텍스트*` → *기울임*
+- `__텍스트__` → <u>밑줄</u>
+- `~~텍스트~~` → ~~취소선~~
 
 ---
 
@@ -102,12 +111,12 @@ export interface Post {
 ```
 EditorScreen (새로 쓰기 모드)
   ├─ 제목 입력
-  ├─ 본문 입력
-  ├─ 스타일 옵션 선택 (크기, 스타일, 색상)
+  ├─ 본문 입력 (마크다운 문법 사용)
+  ├─ 실시간 미리보기로 확인
   └─ "등록" 버튼 클릭
        ↓
 App.tsx: handleAddPost()
-  ├─ 새 Post 객체 생성 (id: Date.now())
+  ├─ 새 Post 객체 생성 (id: Date.now(), createdAt: 현재 날짜)
   ├─ setPosts([newPost, ...posts])
   └─ goToMain()
        ↓
@@ -199,26 +208,26 @@ MainScreen에 검색 결과만 표시
 
 **주요 기능**:
 1. **제목 입력** - 글 제목 입력
-2. **본문 입력** - 글 본문 입력 (실시간 스타일 미리보기)
-3. **글자 크기** - 12px ~ 24px 선택
-4. **글자 스타일** - Bold, Italic, Underline 토글
-5. **글자 색상** - color picker로 색상 선택
-6. **유효성 검사** - 제목/본문 필수 입력
-7. **수정 모드** - editingPost이 있으면 수정 모드
+2. **본문 입력** - 마크다운 스타일 문법으로 텍스트 포맷팅
+3. **실시간 미리보기** - 입력한 마크다운이 실제로 어떻게 렌더링되는지 확인
+4. **포맷 도구** - 버튼 클릭으로 마크다운 문법 자동 삽입
+   - 굵게 (`**텍스트**`)
+   - 기울임 (`*텍스트*`)
+   - 밑줄 (`__텍스트__`)
+   - 취소선 (`~~텍스트~~`)
+5. **유효성 검사** - 제목/본문 필수 입력
+6. **수정 모드** - editingPost이 있으면 수정 모드
 
 **상태**:
 ```typescript
 - title: string
-- content: string
-- fontSize: number (기본값: 16)
-- isBold: boolean (기본값: false)
-- isItalic: boolean (기본값: false)
-- isUnderline: boolean (기본값: false)
-- textColor: string (기본값: '#000000')
+- content: string  // 마크다운 문법이 포함된 텍스트
 ```
 
 **특징**:
-- textarea에서 실시간 스타일 프리뷰
+- textarea에서 마크다운 문법 입력
+- 실시간 미리보기로 렌더링 결과 확인
+- 커스텀 파싱 유틸리티로 마크다운 → HTML 변환
 - 수정 모드 시 기존 데이터로 폼 미리 채우기
 - "등록" 또는 "수정" 버튼 동적 표시
 
@@ -230,10 +239,11 @@ MainScreen에 검색 결과만 표시
 
 **주요 기능**:
 1. **글 상세 표시** - 제목, 내용, 작성일 표시
-2. **스타일 적용** - 저장된 스타일(크기, 굵기, 색상 등) 반영
-3. **수정 버튼** - EditorScreen으로 이동 (수정 모드)
-4. **삭제 버튼** - 개별 글 삭제 (확인 후)
-5. **뒤로가기** - MainScreen으로 이동
+2. **마크다운 렌더링** - 마크다운 문법을 HTML로 변환하여 표시
+3. **댓글 섹션** - 댓글 작성 및 조회
+4. **수정 버튼** - EditorScreen으로 이동 (수정 모드)
+5. **삭제 버튼** - 개별 글 삭제 (확인 후)
+6. **뒤로가기** - MainScreen으로 이동
 
 **Props**:
 ```typescript
@@ -244,6 +254,11 @@ interface PostDetailScreenProps {
   onDelete: (postId: string) => void; // 삭제
 }
 ```
+
+**마크다운 파싱**:
+- 커스텀 파싱 유틸리티로 마크다운 문법 → HTML 변환
+- `dangerouslySetInnerHTML`로 안전하게 렌더링
+- 지원 문법: 굵기, 기울임, 밑줄, 취소선
 
 ---
 
@@ -267,10 +282,10 @@ interface PostDetailScreenProps {
 - goToDetail(postId)      // 상세 보기 화면으로
 
 // 글 관리
-- handleAddPost(...)      // 글 추가/수정 (editingPostId로 구분)
-- handleEditPost(postId)  // 수정 모드 진입
-- handleDeletePost(postId)        // 개별 삭제
-- handleDeletePosts(posts)        // 다중 삭제
+- handleAddPost(title, content)          // 글 추가/수정 (editingPostId로 구분)
+- handleEditPost(postId)                  // 수정 모드 진입
+- handleDeletePost(postId)                // 개별 삭제
+- handleDeletePosts(posts)                // 다중 삭제
 
 // 데이터 조회
 - selectedPost = posts.find(post => post.id === selectedPostId)
@@ -294,57 +309,132 @@ useEffect(() => {
 
 ---
 
-## 8. 스타일링 (styled-components)
+## 8. 스타일링 (Tailwind CSS)
 
 ### 주요 특징
-- **컴포넌트 기반** - 각 UI 요소를 styled component로 정의
-- **Props 기반 동적 스타일** - `${(props) => ...}` 문법으로 동적 스타일
-- **Transient Props** - `$` prefix로 DOM에 전달되지 않는 props
-- **색상 통일** - 
-  - Primary: #007bff (파란색)
-  - Success: #28a745 (초록색)
-  - Danger: #dc3545 (빨간색)
-  - Select: #16a34a (진한 초록색)
+- **유틸리티 우선** - 클래스 이름으로 스타일 직접 적용
+- **반응형 디자인** - `sm:`, `md:`, `lg:` 접두사로 반응형 처리
+- **일관된 디자인 시스템** - Tailwind의 사전 정의된 색상, 간격 사용
+- **빠른 개발** - 별도 CSS 파일 없이 JSX에서 바로 스타일링
 
-### 주요 스타일 컴포넌트
+### 주요 색상 팔레트
 
 ```typescript
-// MainScreen
-- Container           // 전체 컨테이너
-- Header              // 상단 헤더
-- Title               // 제목
-- WriteButton         // 글쓰기 버튼
-- SelectButton        // 선택 버튼
-- DeleteButton        // 삭제 버튼
-- PostList            // 글 목록
-- PostListItem        // 글 항목 (체크박스 포함)
-- PostItem            // 글 상세 정보
-- PostTitle           // 글 제목
-- PostContent         // 글 내용 (3줄 클립)
-- PostDate            // 작성일
+// Primary (파란색)
+- bg-blue-600 / hover:bg-blue-700
+- text-blue-600
 
-// EditorScreen
-- TextArea<Props>     // 본문 입력창 (동적 스타일)
-  - fontSize
-  - isBold
-  - isItalic
-  - isUnderline
-  - textColor
+// Success (초록색)
+- bg-green-600 / hover:bg-green-700
+- text-green-600
 
-// PostDetailScreen
-- PostContent<Props>  // 글 표시 (저장된 스타일 적용)
-  - fontSize
-  - isBold
-  - isItalic
-  - isUnderline
-  - textColor
+// Danger (빨간색)
+- bg-red-600 / hover:bg-red-700
+- text-red-600
+
+// Neutral (회색)
+- bg-gray-100 / bg-gray-200
+- text-gray-600 / text-gray-900
+- border-gray-300
+```
+
+### 주요 스타일 패턴
+
+```typescript
+// 버튼
+className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+
+// 입력 필드
+className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+// 카드
+className="bg-white p-4 rounded-lg shadow hover:shadow-md transition cursor-pointer"
+
+// 컨테이너
+className="max-w-4xl mx-auto p-4"
+```
+
+### 반응형 디자인
+
+```typescript
+// 모바일 우선 접근
+- 기본: 모바일 스타일
+- sm:  (640px+): 작은 태블릿
+- md:  (768px+): 태블릿
+- lg:  (1024px+): 데스크톱
+- xl:  (1280px+): 큰 데스크톱
+
+// 예시
+className="text-sm md:text-base lg:text-lg"
+className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
 ```
 
 ---
 
-## 9. 주요 기능 상세 설명
+## 9. 마크다운 파싱 시스템
 
-### 9.1 검색 기능
+### 개요
+커스텀 마크다운 파싱 유틸리티를 직접 구현하여 텍스트 포맷팅 기능 제공
+
+### 지원 문법
+
+| 문법 | 결과 | HTML |
+|------|------|------|
+| `**텍스트**` | **굵게** | `<strong>텍스트</strong>` |
+| `*텍스트*` | *기울임* | `<em>텍스트</em>` |
+| `__텍스트__` | <u>밑줄</u> | `<u>텍스트</u>` |
+| `~~텍스트~~` | ~~취소선~~ | `<del>텍스트</del>` |
+
+### 파싱 흐름
+
+```
+사용자 입력: "이것은 **굵은** 텍스트입니다."
+     ↓
+parseMarkdown() 함수 호출
+     ↓
+정규식으로 마크다운 문법 감지
+     ↓
+HTML 태그로 변환
+     ↓
+출력: "이것은 <strong>굵은</strong> 텍스트입니다."
+     ↓
+dangerouslySetInnerHTML로 렌더링
+```
+
+### 보안 고려사항
+
+- **제한된 문법만 지원**: script, iframe 등 위험한 태그 불가
+- **입력 검증**: 허용된 마크다운 문법만 HTML로 변환
+- **XSS 방지**: 사용자 입력을 직접 HTML로 삽입하지 않고 파싱 과정 거침
+
+### 구현 파일
+
+```typescript
+// src/utils/markdown.ts
+export const parseMarkdown = (text: string): string => {
+  let html = text;
+  
+  // 굵게
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  
+  // 기울임
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  
+  // 밑줄
+  html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+  
+  // 취소선
+  html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  
+  return html;
+};
+```
+
+---
+
+## 10. 주요 기능 상세 설명
+
+### 10.1 검색 기능
 
 **동작 방식**:
 1. input에 검색어 입력 → `searchKeyword` 상태 업데이트
@@ -368,7 +458,7 @@ const getSearchedPosts = () => {
 
 ---
 
-### 9.2 정렬 기능
+### 10.2 정렬 기능
 
 **동작 방식**:
 1. Select 드롭다운에서 "최신순" 또는 "오래된순" 선택
@@ -395,7 +485,7 @@ const getSortedPosts = () => {
 
 ---
 
-### 9.3 다중 삭제 기능
+### 10.3 다중 삭제 기능
 
 **동작 방식**:
 1. "선택" 버튼 클릭 → 선택 모드 진입 (체크박스 표시)
@@ -413,7 +503,7 @@ const handleDeletePosts = (deletePosts: Post[]) => {
 
 ---
 
-### 9.4 localStorage 영속성
+### 10.4 localStorage 영속성
 
 **특징**:
 - 앱 새로고침 시에도 글 유지
@@ -436,7 +526,7 @@ useEffect(() => {
 
 ---
 
-## 10. 배포
+## 11. 배포
 
 ### 현재 배포 상태
 - **플랫폼**: Vercel
@@ -446,10 +536,23 @@ useEffect(() => {
 
 ### 배포 프로세스
 1. 로컬에서 코드 수정
-2. `git add . && git commit -m "..."` 커밋
-3. `git push origin main` 푸시
-4. Vercel이 자동으로 감지하여 빌드 및 배포
-5. 1-2분 후 배포 완료
+2. (선택) `npm run build`로 로컬 빌드 테스트
+3. `git add . && git commit -m "..."` 커밋
+4. `git push origin main` 푸시
+5. Vercel이 자동으로 감지하여 Vite 빌드 및 배포
+6. 1-2분 후 배포 완료
+
+### Vite 빌드 명령어
+```bash
+# 개발 서버
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드 결과 미리보기
+npm run preview
+```
 
 ### Vercel 대시보드
 ```
@@ -458,55 +561,81 @@ https://vercel.com → team-blog 프로젝트 → Deployments
 
 ---
 
-## 11. 향후 개선 사항
+## 12. 향후 개선 사항
 
-### Phase 2: Supabase 연동
-- [ ] Supabase 프로젝트 생성
+### Phase 2: Supabase 연동 (진행 중 🔄)
+- [x] Supabase 프로젝트 생성
 - [ ] PostgreSQL 테이블 설계
 - [ ] React 클라이언트 설정
 - [ ] localStorage → Supabase API로 전환
-- [ ] 팀원 공유 기능 (모두가 같은 글 볼 수 있음)
+- [ ] 실시간 협업 기능 (모두가 같은 글 볼 수 있음)
+- [ ] 인증 시스템 통합
 
-### Phase 3: React Router
+### Phase 3: 추가 기능
+- [ ] 댓글 시스템 개선 (답글, 좋아요)
+- [ ] 글 카테고리/태그
+- [ ] 이미지 업로드 기능
+- [ ] 마크다운 에디터 개선 (더 많은 문법 지원)
+- [ ] 글 추천 기능
+- [ ] 사용자 프로필
+
+### Phase 4: React Router
 - [ ] URL 기반 라우팅 추가
 - [ ] 각 화면별 URL 설정
 - [ ] 브라우저 뒤로가기 기능
 - [ ] SEO 개선
 
-### Phase 4: 추가 기능
+### Phase 5: 성능 최적화
 - [ ] 페이징 (글이 많을 때)
-- [ ] 글 카테고리/태그
-- [ ] 댓글 기능
-- [ ] 글 추천 기능
-- [ ] 사용자 인증 (누가 글을 작성했는지)
+- [ ] 가상 스크롤링
+- [ ] 이미지 최적화
+- [ ] 코드 스플리팅
 
 ---
 
-## 12. 문제 해결
+## 13. 문제 해결
 
-### 문제: 색상이 textarea에서 미리보기 안 됨
-**원인**: textarea의 color 속성 제약
-**해결**: 상세 페이지에서만 색상 확인 가능
+### 문제: Create React App에서 Vite로 마이그레이션
+**원인**: CRA는 더 이상 권장되지 않음, 빌드 속도 느림
+**해결**: 
+- Vite로 마이그레이션
+- `package.json` 스크립트 업데이트
+- `index.html` 위치 변경 (public/ → 루트)
+- 환경변수 접두사 변경 (REACT_APP_ → VITE_)
 
-### 문제: 검색 후 실시간 반영됨
-**원인**: searchKeyword 직접 사용
-**해결**: keyword 상태로 분리, 버튼 클릭 시에만 업데이트
+### 문제: styled-components에서 Tailwind CSS로 전환
+**원인**: 더 빠른 개발 속도와 일관된 디자인 시스템 필요
+**해결**:
+- Tailwind CSS 설치 및 설정
+- 모든 styled-components를 className으로 변환
+- tailwind.config.js 설정
 
-### 문제: PostItem 레이아웃 깨짐
-**원인**: flex 설정 누락
-**해결**: PostItem에 `flex: 1` 추가로 남은 공간 모두 차지
+### 문제: 의존성 충돌 (dependency conflicts)
+**원인**: 패키지 버전 불일치
+**해결**: 
+- `npm install --legacy-peer-deps` 사용
+- 또는 `package.json`에서 버전 명시적으로 관리
+
+### 문제: 마크다운 파싱 및 XSS 방지
+**원인**: 사용자 입력을 HTML로 렌더링할 때 보안 이슈
+**해결**:
+- 커스텀 파싱 유틸리티 직접 구현
+- 제한된 마크다운 문법만 지원 (굵기, 기울임, 밑줄, 취소선)
+- `dangerouslySetInnerHTML` 사용 시 입력값 검증
 
 ---
 
-## 13. 참고 자료
+## 14. 참고 자료
 
 - [React 공식 문서](https://react.dev)
 - [TypeScript 핸드북](https://www.typescriptlang.org/docs/)
-- [styled-components 문서](https://styled-components.com)
+- [Vite 공식 문서](https://vitejs.dev)
+- [Tailwind CSS 문서](https://tailwindcss.com/docs)
+- [Supabase 문서](https://supabase.com/docs)
 - [Vercel 배포 가이드](https://vercel.com/docs)
 
 ---
 
-**문서 작성일**: 2026년 1월 20일
-**최종 업데이트**: 2026년 1월 20일
-**버전**: 1.0.0
+**문서 작성일**: 2026년 1월 20일  
+**최종 업데이트**: 2026년 1월 29일  
+**버전**: 2.0.0 (Vite + Tailwind CSS 마이그레이션)
