@@ -69,8 +69,41 @@ export const MarkdownRenderer = ({markdown}:{markdown:string}) => {
                                 <code>{block.value}</code>
                             </pre>
                         );
-                    
-                        
+                    case "table":
+                        return (
+                            <div key={i} className="my-6 overflow-x-auto">
+                                <table className="min-w-full border-collapse border border-gray-300">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                            {block.headers.map((header, idx) => (
+                                                <th 
+                                                    key={idx}
+                                                    className="border border-gray-300 px-4 py-2 font-semibold text-gray-700"
+                                                    style={{ textAlign: block.align[idx] || 'left' }}
+                                                >
+                                                    {renderInline(header)}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {block.rows.map((row, rowIdx) => (
+                                            <tr key={rowIdx} className="hover:bg-gray-50">
+                                                {row.map((cell, cellIdx) => (
+                                                    <td 
+                                                        key={cellIdx}
+                                                        className="border border-gray-300 px-4 py-2 text-gray-800"
+                                                        style={{ textAlign: block.align[cellIdx] || 'left' }}
+                                                    >
+                                                        {renderInline(cell)}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
                 }
             })}
         </>
@@ -96,8 +129,8 @@ const renderInline = (text:string) : React.ReactNode[] => {
             case "u":
                 return <u key = {i}>{node.value}</u>
             case "code":
-                return <code key ={i}>{node.value}</code>
-            case "link":  // ← 추가
+                return <code key ={i} className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono">{node.value}</code>
+            case "link":
                 return (
                     <a 
                     key={i} 

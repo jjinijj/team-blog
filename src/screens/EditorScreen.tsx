@@ -203,6 +203,19 @@ function EditorScreen({
               {/* Markdown/Rich Text Toggle */}
               <div className="ml-auto flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                  {/* 항상 공간 차지, 마크다운 모드일 때만 보임 */}
+                  <button
+                    onClick={() => window.open('https://github.com/jjinijj/team-blog/blob/develop/docs/MARKDOWN_GUIDE.md', '_blank')}
+                    className={`p-1 transition-colors text-gray-400 hover:text-blue-600
+                    }`}
+                    title="마크다운 사용법 보기"
+                    disabled={editorMode !== 'markdown'}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  
                   <button
                     onClick={() => setEditorMode('markdown')}
                     className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded transition-colors ${
@@ -213,6 +226,7 @@ function EditorScreen({
                   >
                     Markdown
                   </button>
+                  
                   <button
                     onClick={() => setEditorMode('richtext')}
                     className={`px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded transition-colors ${
