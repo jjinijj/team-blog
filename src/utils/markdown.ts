@@ -10,6 +10,7 @@ export type BlockNode =
 | {type: 'hr'}
 | {type: 'p'; value: string}
 | {type: 'code'; value: string}
+| {type: 'table'; headers: string[]; align: ('left' | 'center' | 'right')[]; rows: string[][]}
 ;
 
 export type InlineNode = 
@@ -44,6 +45,52 @@ export const parseMarkdown = (markdown:string) : BlockNode[] => {
             nodes.push({type: 'code', value: code.trimEnd()});
             i++;
             continue;
+        }
+
+        if(line.trim().startsWith('|') && line.trim().endsWith('|')){
+            //최소 3중 필요 : 헤더, 구분선, 데이터
+            if(i + 2 < lines.length){
+                const headerLine = lines[i].trim();
+                const separatorLine = lines[i + 1].trim();
+
+                // 구분선 확인 (|-----|-----|)
+                if(separatorLine.match(/^\|[\s:-]|$/)){
+                    //헤더 파싱
+                    const headers = headerLine.split('|')
+                                                .filter(cell => cell.trim())
+                                                .map(cell => cell.trim());
+                    
+                    // 정렬 정보 파싱
+                    const align = separatorLine.split('|')
+                                                .filter(cell => cell.trim())
+                                                .map(cell => {
+                                                    const trimmed = cell.trim();
+                                                    if(trimmed.startsWith(':') && trimmed.endsWith(':')){
+                                                        return 'center' as const;
+                                                    }else if(trimmed.endsWith(':')){
+                                                        return 'right' as const;
+                                                    }else {
+                                                        return 'left' as const;
+                                                    }
+                                                });
+
+                    // 데이터 행 파싱
+                    i +=2;
+                    const rows: string[][] = [];
+
+                    while(i < lines.length && lines[i].trim().startsWith('|') && lines[i].endsWith('|')){
+                        const row = lines[i].trim()
+                                            .split('|')
+                                            .filter(cell => cell.trim())
+                                            .map(cell => cell.trim());
+                        rows.push(row);
+                        i++;
+                    }
+
+                    nodes.push({type:'table', headers, align, rows});
+                    continue;
+                }
+            }
         }
 
         // 제목4
@@ -161,7 +208,7 @@ export const parseInline = (text: string): InlineNode[] => {
             }
             i++;
             let code = '';
-            while(text[i] !== '`'){
+            while(i < text.length && text[i] !== '`'){
                 code += text[i++];
             }
             result.push({type: 'code', value: code})
@@ -246,7 +293,7 @@ export const parseInline = (text: string): InlineNode[] => {
 
             i+= 3;
             let boldAndItalic = '';
-            while(!text.startsWith('***', i)){
+            while(i < text.length && !text.startsWith('***', i)){
                 boldAndItalic += text[i++];
             }
             result.push({type:'strongAndEm', value: boldAndItalic});
@@ -263,7 +310,7 @@ export const parseInline = (text: string): InlineNode[] => {
 
             i+= 2;
             let bold = '';
-            while(!text.startsWith('**', i)){
+            while(i < text.length && !text.startsWith('**', i)){
                 bold += text[i++];
             }
             result.push({type:'strong', value: bold});
@@ -280,7 +327,7 @@ export const parseInline = (text: string): InlineNode[] => {
 
             i+=1;
             let italic = '';
-            while(!text.startsWith('*', i)){
+            while(i < text.length && !text.startsWith('*', i)){
                 italic += text[i++];
             }
             result.push({type:'em', value: italic});
@@ -297,7 +344,7 @@ export const parseInline = (text: string): InlineNode[] => {
 
             i+=2;
             let underline = '';
-            while(!text.startsWith('__', i)){
+            while(i < text.length && !text.startsWith('__', i)){
                 underline += text[i++];
             }
             result.push({type:'u', value: underline});
