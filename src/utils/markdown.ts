@@ -10,6 +10,7 @@ export type BlockNode =
 | {type: 'hr'}
 | {type: 'p'; value: string}
 | {type: 'code'; value: string}
+| {type: 'table'; headers: string[]; align: ('left' | 'center' | 'right')[]; rows: string[][]}
 ;
 
 export type InlineNode = 
@@ -44,6 +45,52 @@ export const parseMarkdown = (markdown:string) : BlockNode[] => {
             nodes.push({type: 'code', value: code.trimEnd()});
             i++;
             continue;
+        }
+
+        if(line.trim().startsWith('|') && line.trim().endsWith('|')){
+            //최소 3중 필요 : 헤더, 구분선, 데이터
+            if(i + 2 < lines.length){
+                const headerLine = lines[i].trim();
+                const separatorLine = lines[i + 1].trim();
+
+                // 구분선 확인 (|-----|-----|)
+                if(separatorLine.match(/^\|[\s:-]|$/)){
+                    //헤더 파싱
+                    const headers = headerLine.split('|')
+                                                .filter(cell => cell.trim())
+                                                .map(cell => cell.trim());
+                    
+                    // 정렬 정보 파싱
+                    const align = separatorLine.split('|')
+                                                .filter(cell => cell.trim())
+                                                .map(cell => {
+                                                    const trimmed = cell.trim();
+                                                    if(trimmed.startsWith(':') && trimmed.endsWith(':')){
+                                                        return 'center' as const;
+                                                    }else if(trimmed.endsWith(':')){
+                                                        return 'right' as const;
+                                                    }else {
+                                                        return 'left' as const;
+                                                    }
+                                                });
+
+                    // 데이터 행 파싱
+                    i +=2;
+                    const rows: string[][] = [];
+
+                    while(i < lines.length && lines[i].trim().startsWith('|') && lines[i].endsWith('|')){
+                        const row = lines[i].trim()
+                                            .split('|')
+                                            .filter(cell => cell.trim())
+                                            .map(cell => cell.trim());
+                        rows.push(row);
+                        i++;
+                    }
+
+                    nodes.push({type:'table', headers, align, rows});
+                    continue;
+                }
+            }
         }
 
         // 제목4
