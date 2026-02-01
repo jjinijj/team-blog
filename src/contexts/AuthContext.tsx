@@ -70,13 +70,38 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
         }
     };
 
-    //TODO 동작 수정
+    const signIn = async(email: string, password: string) => {
+        try{
+            const {error} = await supabase.auth.signInWithPassword({
+                email, password
+            });
+
+            if(error){
+                return {error};
+            }
+
+            return {error: null};
+        }catch(err){
+            return {
+                error : new Error('로그인 중 오류가 발생했습니다.')
+            };
+        }
+    };
+
+    const signOut = async() =>{
+        try{
+            await supabase.auth.signOut();
+        }catch(err){
+            console.error('로그아웃 중 오류: ', err)
+        }
+    }
+
     const value = {
         user,
         loading,
         signUp: signUp,
-        signIn: async () => ({error: null}),
-        signOut: async() => {},
+        signIn: signIn,
+        signOut: signOut,
     };
 
     return(
