@@ -48,6 +48,9 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
                 .eq('email',email).single();
 
             if(checkError || !allowedEmail){
+                console.log(email);
+                console.log(checkError);
+                console.log(allowedEmail);
                 return{
                     error: new Error('허용되지 않은 이메일입니다. 관리자에게 문의하세요.')
                 };

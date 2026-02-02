@@ -8,11 +8,10 @@ import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } fro
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-// 인증이 필요한 앱 컨텐츠
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -129,11 +128,18 @@ function AppContent() {
     }
   };
 
- 
-
-  // 로그인됨 - 기존 앱 로직
   return (
     <Routes>
+      {/* 로그인 화면 */}
+      <Route path="/login"
+             element={
+             <AuthScreen
+              goToMain={() => navigate('/')}
+            />
+          }
+        />
+      
+      {/* 메인 화면 */}
       <Route
         path="/"
         element={
@@ -145,6 +151,8 @@ function AppContent() {
           />
         }
       />
+      
+      {/* 글쓰기 */}
       <Route
         path="/write"
         element={
@@ -155,6 +163,8 @@ function AppContent() {
           />
         }
       />
+      
+      {/* 글 수정 */}
       <Route
         path="/edit/:id"
         element={
@@ -166,6 +176,8 @@ function AppContent() {
           />
         }
       />
+      
+      {/* 글 상세 */}
       <Route
         path="/post/:id"
         element={
@@ -181,7 +193,6 @@ function AppContent() {
   );
 }
 
-// AuthProvider로 감싸기
 function App() {
   return (
     <AuthProvider>

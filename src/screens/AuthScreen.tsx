@@ -3,7 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 type AuthMode = 'login' | 'signup';
 
-export default function AuthScreen() {
+interface AuthScreenProp {
+    goToMain : () => void;
+
+}
+
+const AuthScreen = ({goToMain} : AuthScreenProp) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +44,7 @@ export default function AuthScreen() {
     }
 
     try {
-      const { error } = mode === 'login' 
+      const { error } = mode === 'login'
         ? await signIn(email, password)
         : await signUp(email, password);
 
@@ -51,6 +56,13 @@ export default function AuthScreen() {
     } finally {
       setLoading(false);
     }
+    
+    if(mode === 'signup'){
+        window.confirm('회원가입이 완료되었습니다.');
+    }
+    
+    goToMain();
+
   };
 
   const toggleMode = () => {
@@ -70,12 +82,12 @@ export default function AuthScreen() {
           </svg>
         </div>
         <h1 className="text-gray-900 tracking-tight text-[32px] font-bold leading-tight">
-          {mode === 'login' ? 'Welcome back' : 'Join our team'}
+          {mode === 'login' ? '다시 오신 것을 환영합니다' : '팀에 합류하세요'}
         </h1>
         <p className="text-gray-600 text-base font-normal">
           {mode === 'login' 
-            ? 'Sign in to your account to continue' 
-            : 'Create an account to get started'}
+            ? '계속하려면 로그인하세요' 
+            : '시작하려면 계정을 만드세요'}
         </p>
       </div>
 
@@ -85,7 +97,7 @@ export default function AuthScreen() {
         <div className="flex flex-col w-full">
           <label className="flex flex-col w-full">
             <p className="text-gray-900 text-sm font-semibold leading-normal pb-2 uppercase tracking-wider">
-              Email Address
+              이메일 주소
             </p>
             <input
               className="form-input flex w-full rounded-lg text-gray-900 focus:outline-0 focus:ring-2 focus:ring-blue-600/20 border border-gray-300 bg-white focus:border-blue-600 h-14 placeholder:text-gray-400 p-[15px] text-base font-normal transition-all"
@@ -102,13 +114,13 @@ export default function AuthScreen() {
         <div className="flex flex-col w-full">
           <div className="flex items-center justify-between pb-2">
             <p className="text-gray-900 text-sm font-semibold leading-normal uppercase tracking-wider">
-              Password
+              비밀번호
             </p>
           </div>
           <div className="relative flex w-full items-stretch rounded-lg">
             <input
               className="form-input flex w-full rounded-lg text-gray-900 focus:outline-0 focus:ring-2 focus:ring-blue-600/20 border border-gray-300 bg-white focus:border-blue-600 h-14 placeholder:text-gray-400 p-[15px] pr-12 text-base font-normal transition-all"
-              placeholder="Enter your password"
+              placeholder="비밀번호를 입력하세요"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -128,11 +140,11 @@ export default function AuthScreen() {
         {mode === 'signup' && (
           <div className="flex flex-col w-full">
             <p className="text-gray-900 text-sm font-semibold leading-normal pb-2 uppercase tracking-wider">
-              Confirm Password
+              비밀번호 확인
             </p>
             <input
               className="form-input flex w-full rounded-lg text-gray-900 focus:outline-0 focus:ring-2 focus:ring-blue-600/20 border border-gray-300 bg-white focus:border-blue-600 h-14 placeholder:text-gray-400 p-[15px] text-base font-normal transition-all"
-              placeholder="Confirm your password"
+              placeholder="비밀번호를 다시 입력하세요"
               type={showPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -155,7 +167,7 @@ export default function AuthScreen() {
           className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-blue-600 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="truncate">
-            {loading ? '처리 중...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
+            {loading ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입'}
           </span>
         </button>
 
@@ -163,7 +175,7 @@ export default function AuthScreen() {
         <div className="relative flex items-center py-4">
           <div className="flex-grow border-t border-gray-300"></div>
           <span className="flex-shrink mx-4 text-gray-500 text-xs font-medium uppercase tracking-widest">
-            or
+            또는
           </span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
@@ -172,18 +184,20 @@ export default function AuthScreen() {
         <div className="flex flex-col items-center gap-4">
           <p className="text-gray-600 text-sm">
             {mode === 'login' 
-              ? "Don't have an account?" 
-              : "Already have an account?"}
+              ? "계정이 없으신가요?" 
+              : "이미 계정이 있으신가요?"}
           </p>
           <button
             type="button"
             onClick={toggleMode}
             className="flex min-w-[140px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-bold transition-all"
           >
-            {mode === 'login' ? 'Join Now' : 'Sign In'}
+            {mode === 'login' ? '가입하기' : '로그인'}
           </button>
         </div>
       </form>
     </div>
   );
 }
+
+export default AuthScreen;

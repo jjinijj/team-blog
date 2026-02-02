@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 
 interface MainScreenProps {
@@ -14,6 +16,9 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest'|'oldest'>('newest');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handleSelectPost = (post: Post) => {
     const isSelected = selectedPosts.find(p => p.id === post.id);
@@ -29,6 +34,25 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
       onDeletePost(selectedPosts);
       setIsSelectMode(false);
       setSelectedPosts([]);
+    }
+  };
+
+  // 글쓰기 버튼 클릭 시 로그인 체크
+  const handleWriteClick = () => {
+    if (!user) {
+      // 로그인 안되어 있으면 로그인 페이지로
+      navigate('/login');
+    } else {
+      // 로그인되어 있으면 글쓰기 페이지로
+      onGoToEditor();
+    }
+  };
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      await signOut();
+      setIsProfileOpen(false);
     }
   };
 
@@ -51,7 +75,7 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
                 <span className="text-lg">📝</span>
               </div>
@@ -59,69 +83,76 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
             </div>
           </div>
           
-          {/* Profile Button */}
+          {/* Profile Button or Login Button */}
           <div className="relative">
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold hover:shadow-lg transition-all"
-            >
-              A
-            </button>
-
-            {/* Profile Dropdown */}
-            {isProfileOpen && (
+            {user ? (
+              // 로그인됨 - 프로필 버튼
               <>
-                {/* Backdrop to close dropdown */}
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setIsProfileOpen(false)}
-                />
-                
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50">
-                  {/* User Info Section */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">Author</p>
-                    <p className="text-xs text-gray-500 mt-0.5">author@example.com</p>
-                  </div>
-                  
-                  {/* Menu Items */}
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      // TODO: 사용자 정보 페이지로 이동
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                  >
-                    <span>사용자 정보</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      // TODO: 내 글 필터링 기능
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                  >
-                    <span>내 글 보기</span>
-                  </button>
-                  
-                  <div className="my-1 h-px bg-gray-100" />
-                  
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      // TODO: 로그아웃 처리
-                      if (window.confirm('로그아웃 하시겠습니까?')) {
-                        console.log('로그아웃');
-                      }
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-                  >
-                    <span>로그아웃</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold hover:shadow-lg transition-all"
+                >
+                  {user.email?.[0].toUpperCase() || 'U'}
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <>
+                    {/* Backdrop to close dropdown */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsProfileOpen(false)}
+                    />
+                    
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50">
+                      {/* User Info Section */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-900">로그인됨</p>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
+                      </div>
+                      
+                      {/* Menu Items */}
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          // TODO: 사용자 정보 페이지로 이동
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <span>사용자 정보</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          // TODO: 내 글 필터링 기능
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <span>내 글 보기</span>
+                      </button>
+                      
+                      <div className="my-1 h-px bg-gray-100" />
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                      >
+                        <span>로그아웃</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
+            ) : (
+              // 로그인 안됨 - 로그인 버튼
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                로그인
+              </button>
             )}
           </div>
         </div>
@@ -278,7 +309,7 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
       {/* Floating Action Button - Write Post */}
       {!isSelectMode && (
         <button
-          onClick={onGoToEditor}
+          onClick={handleWriteClick}
           className="fixed bottom-8 right-8 w-14 h-14 bg-blue-500 text-white rounded-full shadow-2xl hover:bg-blue-600 hover:scale-110 transition-all flex items-center justify-center z-40"
           title="새 글 작성"
         >
