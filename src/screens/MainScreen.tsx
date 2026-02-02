@@ -270,7 +270,9 @@ function MainScreen({ onGoToEditor, posts, onViewPost, onDeletePost }: MainScree
                   <div className="group relative flex items-start gap-6 p-4 rounded-xl hover:bg-white transition-all border border-transparent hover:border-gray-200 cursor-pointer">
                     <div className="flex-1" onClick={() => !isSelectMode && onViewPost(post.id)}>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-xs font-medium text-gray-600">Author</span>
+                        <span className="text-xs font-medium text-gray-600">
+                          {post.author_email|| 'Unknown'}
+                        </span>
                         <span className="text-gray-300">•</span>
                         <span className="text-xs text-gray-500">{post.createdAt}</span>
                       </div>
