@@ -31,14 +31,32 @@ export const createPost = async (post: Post): Promise<Post> => {
 export const readPost = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select('*');
+        .select(`
+            *,
+            users!author_id (
+                email
+            )
+        `);
 
     if (error) {
         console.error('글 가져오기 실패:', error);
         throw error;
     }
 
-    return data;
+    return data.map((post: any) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        fontSize: post.fontSize,
+        isBold: post.isBold,
+        isItalic: post.isItalic,
+        isUnderline: post.isUnderline,
+        textColor: post.textColor,
+        createdAt: post.createdAt,
+        isMarkdown: post.isMarkdown,
+        author_id: post.author_id,
+        author_email: post.users?.email || null,
+    }));
 };
 
 // UPDATE

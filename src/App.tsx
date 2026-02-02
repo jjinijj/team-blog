@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
+import AuthScreen from './screens/AuthScreen';
 import { Post } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function App() {
+function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -62,8 +65,6 @@ function App() {
     textColor: string,
     isMarkdown: boolean,
   ) => {
-
-    // 새 글 작성 모드
     const newPost: Post = {
       id: Date.now().toString(),
       title,
@@ -75,6 +76,7 @@ function App() {
       textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
+      author_id: user?.id || null,
     };
 
     try {
@@ -98,8 +100,6 @@ function App() {
     textColor: string,
     isMarkdown: boolean,
   ) => {
-
-    // 수정 모드
     const updatedPost: Post = {
       id: postId,
       title,
@@ -111,6 +111,7 @@ function App() {
       textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
+      author_id: user?.id || null,
     };
 
     try {
@@ -125,54 +126,78 @@ function App() {
       console.error('업데이트 실패:', error);
       alert('글 수정에 실패했습니다.');
     }
-  }
+  };
 
   return (
     <Routes>
+      {/* 로그인 화면 */}
+      <Route path="/login"
+             element={
+             <AuthScreen
+              goToMain={() => navigate('/')}
+            />
+          }
+        />
+      
+      {/* 메인 화면 */}
       <Route
-        path = "/"
-        element = {
+        path="/"
+        element={
           <MainScreen 
             posts={posts}
             onViewPost={(postId) => navigate(`/post/${postId}`)}
-            onGoToEditor={()=> navigate('/write')} 
+            onGoToEditor={() => navigate('/write')} 
             onDeletePost={handleDeleteMultiplePosts}
           />
         }
       />
+      
+      {/* 글쓰기 */}
       <Route
-        path = "/write"
-        element = {
+        path="/write"
+        element={
           <EditorScreen 
-            onGoToMain={()=>navigate('/')} 
+            onGoToMain={() => navigate('/')} 
             onAddPost={handleAddPost}
             editingPost={undefined}
-        />
+          />
         }
       />
+      
+      {/* 글 수정 */}
       <Route
-        path = "/edit/:id"
-        element = {
+        path="/edit/:id"
+        element={
           <EditorScreen 
             posts={posts}
-            onGoToMain={()=>navigate('/')} 
+            onGoToMain={() => navigate('/')} 
             onAddPost={handleAddPost}
             onUpdatePost={handleUpdatePost}
           />
         }
       />
+      
+      {/* 글 상세 */}
       <Route
-        path = "/post/:id"
-        element = {
+        path="/post/:id"
+        element={
           <PostDetailScreen 
             posts={posts} 
-            onGoToMain={()=>navigate('/')}  
-            onEdit={(postId)=>navigate(`edit/${postId}`)}
+            onGoToMain={() => navigate('/')}  
+            onEdit={(postId) => navigate(`edit/${postId}`)}
             onDelete={handleDeletePost}
           />
         }
       />
     </Routes>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
