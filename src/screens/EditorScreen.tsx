@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
+import { useAuth } from '../contexts/AuthContext';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -47,6 +48,8 @@ function EditorScreen({
   const [isUnderline, setIsUnderline] = useState(false);
   const [textColor, setTextColor] = useState('#000000');
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('richtext');
+
+  const {user} = useAuth();
 
   useEffect(() => {
     if (postToEdit) {
@@ -255,7 +258,9 @@ function EditorScreen({
                   A
                 </div>
                 <span className="text-sm font-medium text-gray-500">
-                  작성자 <span className="text-gray-900">Author</span>
+                  작성자 <span className="text-gray-900">
+                    {user?.email || 'Unknown'}
+                  </span>
                 </span>
               </div>
               

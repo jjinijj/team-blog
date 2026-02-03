@@ -77,6 +77,7 @@ function AppContent() {
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
       author_id: user?.id || null,
+      author_email: user?.email || null,
     };
 
     try {
@@ -112,6 +113,7 @@ function AppContent() {
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
       author_id: user?.id || null,
+      author_email:user?.email || null,
     };
 
     try {
