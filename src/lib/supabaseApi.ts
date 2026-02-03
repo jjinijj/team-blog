@@ -16,6 +16,7 @@ export const createPost = async (post: Post): Promise<Post> => {
             textColor: post.textColor,
             createdAt: post.createdAt,
             isMarkdown: post.isMarkdown,
+            author_id: post.author_id,
         }])
         .select();
 
@@ -72,6 +73,7 @@ export const updatePost = async (post: Post): Promise<Post> => {
             isUnderline: post.isUnderline,
             textColor: post.textColor,
             isMarkdown: post.isMarkdown,
+            author_id: post.author_id,
         })
         .eq('id', post.id)
         .select();

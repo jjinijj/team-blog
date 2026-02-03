@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { MarkdownRenderer } from '../utils/markdownRender';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -12,6 +14,9 @@ interface PostDetailScreenProps {
 function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScreenProps) {
   const { id } = useParams<{ id: string }>();
   const post = posts.find(p => p.id === id);
+
+  const {user} = useAuth();
+  const navigate = useNavigate();
 
   if (!post) {
     return (
@@ -34,6 +39,9 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
     );
   }
 
+  console.log(post.author_id);
+  console.log(user?.id);
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
@@ -46,21 +54,24 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             <span>←</span>
             <span className="text-sm font-medium">목록으로</span>
           </button>
+          {/* 권한에 따라 표시 또는 숨기기*/}
+          {post.author_id === user?.id &&(
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onEdit(post.id)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+              >
+                수정
+              </button>
+              <button
+                onClick={() => onDelete(post.id)}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          )}
           
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => onEdit(post.id)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
-            >
-              수정
-            </button>
-            <button
-              onClick={() => onDelete(post.id)}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
-            >
-              삭제
-            </button>
-          </div>
         </div>
       </header>
 
@@ -87,11 +98,15 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
           <div className="flex items-center justify-between py-6 border-y border-gray-100">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                A
+                {post.author_email?.[0]?.toUpperCase() || 'U'}
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900">Author</span>
-                <span className="text-xs text-gray-500">Team Member</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {post.author_email || 'Unknown'}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {post.createdAt}
+                </span>
               </div>
             </div>
             
@@ -138,29 +153,36 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             </div>
           </div>
 
-          {/* Comment Input */}
-          <div className="flex gap-4 mb-10">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">
-              A
-            </div>
-            <div className="flex-1">
-              <textarea
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                placeholder="댓글을 입력하세요..."
-                rows={3}
-              />
-              <div className="flex justify-end mt-2">
-                <button className="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
-                  댓글 작성
-                </button>
+          {/* Comment Input - 로그인시에만 표시*/}
+          {user ? (
+            <div className="flex gap-4 mb-10">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">
+                {user.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1">
+                <textarea
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  placeholder="댓글을 입력하세요..."
+                  rows={3}
+                />
+                <div className="flex justify-end mt-2">
+                  <button className="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
+                    댓글 작성
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* No Comments Yet */}
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-sm">아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</p>
-          </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-xl">
+              <p className="text-sm text-gray-600 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-sm text-blue-500 font-semibold hover:underline"
+              >
+                로그인하기
+              </button>
+            </div>
+          )}
         </section>
       </main>
     </div>
