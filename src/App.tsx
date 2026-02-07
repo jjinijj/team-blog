@@ -7,7 +7,6 @@ import { Post } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import AdminScreen from './screens/AdminScreen';
 import AdminGuard from './component/admin/AdminGuard';
 import AdminLayout from './component/admin/AdminLayout';
 import Dashboard from './screens/admin/Dashboard';
@@ -155,7 +154,6 @@ function AppContent() {
             posts={posts}
             onViewPost={(postId) => navigate(`/post/${postId}`)}
             onGoToEditor={() => navigate('/write')} 
-            onDeletePost={handleDeleteMultiplePosts}
           />
         }
       />
