@@ -1,4 +1,4 @@
-import { Children, createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { User } from '@supabase/supabase-js';
 import { AuthState } from "../types/Auth"
@@ -21,23 +21,92 @@ interface AuthProviderProps{
 export const AuthProvider = ({children} : AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
 
-    useEffect(()=>{
-        // 초기 세션 확인
-        supabase.auth.getSession().then(({data:{session}}) => {
+    // ✅ Auth 완전 초기화 후 실행되도록 수정
+    const checkAdminStatus = async (userId: string) => {
+        console.log("🔴 [checkAdminStatus] 시작, userId:", userId);
+        
+        try {
+            
+            console.log("🟡 쿼리 시작");
+            
+            const { data, error } = await supabase
+                .from('users')
+                .select('is_admin')
+                .eq('id', userId)
+                .single();
+            
+            console.log("🟢 쿼리 완료!", { data, error });
+            
+            if (error) {
+                console.error("❌ [checkAdminStatus] 에러:", error);
+                setIsAdmin(false);
+                return;
+            }
+            
+            console.log("👤 [checkAdminStatus] is_admin:", data?.is_admin);
+            setIsAdmin(data?.is_admin ?? false);
+            
+        } catch (error) {
+            console.error("🔴 [checkAdminStatus] catch:", error);
+            setIsAdmin(false);
+        }
+        
+        console.log("🏁 [checkAdminStatus] 함수 끝");
+    };
+
+    useEffect(() => {
+        const initializeAuth = async () => {
+            try {
+                console.log("📌 Auth 초기화 시작");
+                
+                // 1. 세션 가져오기
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user ?? null);
+                console.log("📌 초기 세션:", session?.user?.email);
+                
+                // 2. 세션이 있으면 다음 이벤트 루프에서 isAdmin 확인
+                if (session?.user) {
+                    // ✅ setTimeout으로 Auth 완전 초기화 후 실행
+                    setTimeout(async () => {
+                        await checkAdminStatus(session.user.id);
+                    }, 0);
+                }
+                
+                setLoading(false);
+                console.log("✅ Auth 초기화 완료");
+                
+            } catch (error) {
+                console.error("❌ Auth 초기화 오류:", error);
+                setLoading(false);
+            }
+        };
+        
+        initializeAuth();
+        
+        // Auth 상태 변경 구독
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            console.log("🔄 Auth 상태 변경:", _event, session?.user?.email);
             setUser(session?.user ?? null);
+            
+            if (session?.user) {
+                // ✅ 여기도 setTimeout 추가
+                setTimeout(async () => {
+                    await checkAdminStatus(session.user.id);
+                }, 100);
+            } else {
+                setIsAdmin(false);
+            }
+            
             setLoading(false);
         });
-
-        // 세션 변경 구독(로그인/로그아웃 시 자동 업데이트)
-        const {data:{subscription}} = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        // 컴포넌트 언마운트 시 구독 해제
-        return () => {subscription.unsubscribe();}
-    },[])
+        
+        return () => { 
+            console.log("🔌 Auth 구독 해제");
+            subscription.unsubscribe(); 
+        }
+    }, []);
 
     const signUp = async(email: string, password: string) => {
         try{
@@ -45,12 +114,11 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
             const {data: allowedEmail, error: checkError} = await supabase
                 .from('allowed_emails')
                 .select('email')
-                .eq('email',email).single();
+                .eq('email',email)
+                .single();
 
             if(checkError || !allowedEmail){
-                console.log(email);
-                console.log(checkError);
-                console.log(allowedEmail);
+                console.log("화이트리스트 체크 실패:", {email, checkError, allowedEmail});
                 return{
                     error: new Error('허용되지 않은 이메일입니다. 관리자에게 문의하세요.')
                 };
@@ -58,7 +126,8 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
 
             // 2.회원가입 진행
             const {error: signUpError} = await supabase.auth.signUp({
-                email, password
+                email, 
+                password
             });
 
             if(signUpError){
@@ -76,7 +145,8 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
     const signIn = async(email: string, password: string) => {
         try{
             const {error} = await supabase.auth.signInWithPassword({
-                email, password
+                email, 
+                password
             });
 
             if(error){
@@ -94,6 +164,7 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
     const signOut = async() =>{
         try{
             await supabase.auth.signOut();
+            setIsAdmin(false);
         }catch(err){
             console.error('로그아웃 중 오류: ', err)
         }
@@ -102,9 +173,10 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
     const value = {
         user,
         loading,
-        signUp: signUp,
-        signIn: signIn,
-        signOut: signOut,
+        isAdmin,
+        signUp,
+        signIn,
+        signOut,
     };
 
     return(
@@ -114,7 +186,7 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
     );
 }
 
-// useAuth Hool
+// useAuth Hook
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if(context === undefined){
