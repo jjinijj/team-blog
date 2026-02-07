@@ -5,9 +5,14 @@ import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import { Post } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminScreen from './screens/AdminScreen';
+import AdminGuard from './component/admin/AdminGuard';
+import AdminLayout from './component/admin/AdminLayout';
+import Dashboard from './screens/admin/Dashboard';
+import WhitelistPage from './screens/admin/WhitelistPage';
+import PostManagePage from './screens/admin/PostManagePage';
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -193,13 +198,21 @@ function AppContent() {
         }
       />
 
-      {/* 관리자 페이지 */}
-      <Route
-        path="/admin"
-        element={
-          <AdminScreen/>
-        }
-      />
+      {/* 관리자 라우트 - 중첩 구조 */}
+          <Route path="/admin" element={<AdminGuard />}>
+            <Route element={<AdminLayout />}>
+              {/* /admin → /admin/dashboard로 리다이렉트 */}
+              <Route index element={<Navigate to="dashboard" replace />} />
+              
+              {/* 실제 관리자 페이지들 */}
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="whitelist" element={<WhitelistPage />} />
+              <Route path="posts" element={<PostManagePage />} />
+            </Route>
+          </Route>
+
+          {/* 404 - 존재하지 않는 경로는 홈으로 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
       
     </Routes>
