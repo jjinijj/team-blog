@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
+import { useAuth } from '../contexts/AuthContext';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -48,6 +49,28 @@ function EditorScreen({
   const [textColor, setTextColor] = useState('#000000');
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('richtext');
 
+  const {user, loading} = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(()=>{
+    if(loading){
+      return;
+    }
+
+    if(!user){
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if(postToEdit && user){
+      if(postToEdit.author_id !== user.id){
+        alert('본인이 작성한 글만 수정할 수 있습니다.');
+        navigate('/');
+      }
+    }
+  }, [user, loading, postToEdit, navigate]);
+
   useEffect(() => {
     if (postToEdit) {
       setTitle(postToEdit.title);
@@ -76,6 +99,24 @@ function EditorScreen({
       }
     }
   };
+
+  if(loading){
+    return(
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-gray-600">로딩 중...</div>
+      </div>
+    );
+  }
+
+  //  로딩 중일때는 아무것도 렌더링 안함(깜박임 방지)
+  if(!user){
+    return null;
+  }
+
+  //  권한 없을 시 아무것도 렌더링 안함
+  if(postToEdit && postToEdit.author_id !== user.id){
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
@@ -255,7 +296,9 @@ function EditorScreen({
                   A
                 </div>
                 <span className="text-sm font-medium text-gray-500">
-                  작성자 <span className="text-gray-900">Author</span>
+                  작성자 <span className="text-gray-900">
+                    {user?.email || 'Unknown'}
+                  </span>
                 </span>
               </div>
               
