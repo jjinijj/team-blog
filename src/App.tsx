@@ -7,6 +7,7 @@ import { Post } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AdminScreen from './screens/AdminScreen';
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -191,6 +192,16 @@ function AppContent() {
           />
         }
       />
+
+      {/* 관리자 페이지 */}
+      <Route
+        path="/admin"
+        element={
+          <AdminScreen/>
+        }
+      />
+
+      
     </Routes>
   );
 }

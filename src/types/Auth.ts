@@ -3,6 +3,7 @@ import { User } from "@supabase/supabase-js";
 export interface AuthState{
     user: User | null;
     loading: boolean;
+    isAdmin: boolean;
 }
 
 export interface LoginForData{
@@ -21,4 +22,5 @@ export interface AllowedEmail{
     email: string;
     added_at: string;
     added_by: string | null;
+    added_by_email?: string;
 }

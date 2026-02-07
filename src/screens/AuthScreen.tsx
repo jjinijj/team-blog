@@ -50,6 +50,14 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
 
       if (error) {
         setError(error.message);
+      }else{
+
+        if(mode === 'signup'){
+            alert('회원가입이 완료되었습니다.');
+            //goToMain();
+        }else if(mode === 'login'){
+            goToMain();
+        }
       }
     } catch (err) {
       setError('오류가 발생했습니다. 다시 시도해주세요.');
@@ -57,12 +65,8 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
       setLoading(false);
     }
     
-    if(mode === 'signup'){
-        alert('회원가입이 완료되었습니다.');
-    }
     
-    goToMain();
-
+    
   };
 
   const toggleMode = () => {
