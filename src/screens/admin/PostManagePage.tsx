@@ -197,14 +197,8 @@ const PostManagePage: React.FC = () => {
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                     Date Published
                   </th>
-                  {/* 선택 모드가 아닐 때만 액션 컬럼 표시 */}
-                  {!isSelectMode && (
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">
-                      Actions
-                    </th>
-                  )}
                   {/* 선택 모드일 때만 체크박스 컬럼 표시 */}
-                  {isSelectMode && (
+                  {isSelectMode ? (
                     <th className="px-6 py-4 w-12">
                       <input
                         type="checkbox"
@@ -213,7 +207,13 @@ const PostManagePage: React.FC = () => {
                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-600 cursor-pointer"
                       />
                     </th>
-                  )}
+                    ) 
+                    :
+                    (
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">
+                            Actions
+                        </th>
+                    )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -245,44 +245,43 @@ const PostManagePage: React.FC = () => {
                         {post.author_email || '알 수 없음'}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {formatDate(post.createdAt)}
+                        {(post.createdAt)}
                       </td>
                       {/* 선택 모드가 아닐 때만 액션 버튼 표시 */}
-                      {!isSelectMode && (
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => navigate(`/post/${post.id}`)}
-                              className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
-                              title="View"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                                visibility
-                              </span>
-                            </button>
-                            <button
-                              onClick={() => handleDeletePost(post.id, post.title)}
-                              className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                              title="Delete"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
-                                delete
-                              </span>
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                      {/* 선택 모드일 때만 체크박스 표시 */}
-                      {isSelectMode && (
+                    {isSelectMode ? (
                         <td className="px-6 py-4">
-                          <input
+                        <input
                             type="checkbox"
                             checked={selectedPosts.some(p => p.id === post.id)}
                             onChange={() => handleSelectPost(post)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-600 cursor-pointer"
-                          />
+                            />
                         </td>
-                      )}
+                    ) 
+                    : (
+                        <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1">
+                            <button
+                                onClick={() => navigate(`/post/${post.id}`)}
+                                className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
+                                title="View"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                                visibility
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => handleDeletePost(post.id, post.title)}
+                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                title="Delete"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                                delete
+                                </span>
+                            </button>
+                            </div>
+                        </td>
+                    )}
                     </tr>
                   ))
                 )}
