@@ -63,22 +63,12 @@ function AppContent() {
   const handleAddPost = async (
     title: string, 
     content: string, 
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
     isMarkdown: boolean,
   ) => {
     const newPost: Post = {
       id: Date.now().toString(),
       title,
       content,
-      fontSize,
-      isBold,
-      isItalic,
-      isUnderline,
-      textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
       author_id: user?.id || null,
@@ -99,22 +89,12 @@ function AppContent() {
     postId: string,
     title: string, 
     content: string, 
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
     isMarkdown: boolean,
   ) => {
     const updatedPost: Post = {
       id: postId,
       title,
       content,
-      fontSize,
-      isBold,
-      isItalic,
-      isUnderline,
-      textColor,
       createdAt: new Date().toLocaleDateString('ko-KR'),
       isMarkdown: isMarkdown,
       author_id: user?.id || null,
@@ -125,7 +105,7 @@ function AppContent() {
       await updatePost(updatedPost);
       setPosts(posts.map((post) => 
         post.id === postId 
-          ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown }
+          ? { ...post, title, content, isMarkdown }
           : post
       ));
       navigate(`/post/${postId}`);

@@ -1,8 +1,10 @@
 import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
+import DOMPurify from 'dompurify';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -39,8 +41,76 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
     );
   }
 
-  console.log(post.author_id);
-  console.log(user?.id);
+  // HTML Sanitize (XSS 방지)
+  const sanitizedContent = useMemo(() => {
+    if (!post || post.isMarkdown) return post?.content || '';
+
+    // Hook: style 속성의 안전한 CSS 속성만 허용
+    DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+      if (data.attrName === 'style') {
+        const value = data.attrValue;
+        
+        // 허용된 CSS 속성 목록
+        const allowedProps = [
+          'color',
+          'font-size',
+          'font-weight',
+          'font-style',
+          'text-decoration',
+        ];
+        
+        // 각 스타일을 파싱하여 허용된 것만 유지
+        const styles = value.split(';')
+          .map(style => {
+            const [prop, val] = style.split(':').map(s => s.trim());
+            
+            // 허용된 속성이고 값이 있으면 유지
+            if (prop && val && allowedProps.includes(prop)) {
+              // 추가 검증: color는 hex나 rgb만
+              if (prop === 'color') {
+                if (/^#[0-9a-fA-F]{3,6}$/.test(val) || /^rgb/.test(val)) {
+                  return `${prop}:${val}`;
+                }
+                return '';
+              }
+              
+              // font-size는 px 단위만
+              if (prop === 'font-size') {
+                if (/^\d+px$/.test(val)) {
+                  return `${prop}:${val}`;
+                }
+                return '';
+              }
+              
+              return `${prop}:${val}`;
+            }
+            return '';
+          })
+          .filter(Boolean);
+        
+        data.attrValue = styles.join(';');
+        
+        // 빈 style이면 속성 제거
+        if (!data.attrValue) {
+          data.keepAttr = false;
+        }
+      }
+    });
+
+    const clean = DOMPurify.sanitize(post.content, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 
+        'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'blockquote', 'code', 'pre'
+      ],
+      ALLOWED_ATTR: ['style'],
+    });
+
+    // Hook 제거 (다른 컴포넌트 영향 방지)
+    DOMPurify.removeHooks('uponSanitizeAttribute');
+
+    return clean;
+  }, [post]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -125,19 +195,11 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             // 마크다운 모드: MarkdownRenderer 사용
             <MarkdownRenderer markdown={post.content} />
           ) : (
-            // 리치텍스트 모드: 스타일 적용
+            // 리치텍스트 모드: HTML 렌더링
             <div
-              className="leading-relaxed whitespace-pre-wrap"
-              style={{
-                fontSize: `${post.fontSize}px`,
-                fontWeight: post.isBold ? 'bold' : 'normal',
-                fontStyle: post.isItalic ? 'italic' : 'normal',
-                textDecoration: post.isUnderline ? 'underline' : 'none',
-                color: post.textColor,
-              }}
-            >
-              {post.content}
-            </div>
+              className="rich-text-content leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            />
           )}
         </article>
 
