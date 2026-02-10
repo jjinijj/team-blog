@@ -197,9 +197,7 @@ export const EditorScreen = ({
   const handlePublish = () => {
     if (!title.trim()) {
       alert('제목을 입력해주세요.');
-    } else if (!content.trim()) {
-      alert('내용을 입력해주세요.');
-    } else {
+    } else{
 
       let finalContent = "";
       const isMarkdown = editorMode === 'markdown' ? true : false;
