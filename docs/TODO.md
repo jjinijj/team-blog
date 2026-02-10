@@ -60,17 +60,17 @@
 #### 3. 관리자 페이지
 **예상 소요**: 1-2시간
 
-- [ ] 관리자 권한 설정
-  - [ ] `users` 테이블에 `is_admin` 컬럼 추가
-  - [ ] 초기 관리자 설정
-- [ ] 관리자 페이지 UI (`/admin`)
-  - [ ] 이메일 화이트리스트 목록 조회
-  - [ ] 새 이메일 추가 폼
-  - [ ] 이메일 삭제 기능
-  - [ ] 추가한 날짜 표시
-- [ ] 권한 체크
-  - [ ] 관리자만 접근 가능하게 라우팅 보호
-  - [ ] 일반 사용자 접근 시 리다이렉트
+- [x] 관리자 권한 설정
+  - [x] `users` 테이블에 `is_admin` 컬럼 추가
+  - [x] 초기 관리자 설정
+- [x] 관리자 페이지 UI (`/admin`)
+  - [x] 이메일 화이트리스트 목록 조회
+  - [x] 새 이메일 추가 폼
+  - [x] 이메일 삭제 기능
+  - [x] 추가한 날짜 표시
+- [x] 권한 체크
+  - [x] 관리자만 접근 가능하게 라우팅 보호
+  - [x] 일반 사용자 접근 시 리다이렉트
 
 ---
 
@@ -79,25 +79,29 @@
 #### 4. 리치텍스트 에디터 개선
 **예상 소요**: 2-4시간
 
-- [ ] 에디터 모드 추가
-  - [ ] Post에 `editorMode: 'rich' | 'markdown'` 추가
-  - [ ] 기본값은 'rich'
-- [ ] 리치텍스트 툴바 개선
-  - [ ] 현재 폼 방식 → 인라인 툴바로 변경
-  - [ ] 텍스트 선택 시 포맷 적용
-  - [ ] 더 많은 포맷 옵션 추가
-    - [ ] 제목 (H1, H2, H3)
-    - [ ] 리스트 (순서/비순서)
-    - [ ] 링크
-    - [ ] 인용구
-- [ ] 마크다운 모드 추가
-  - [ ] 마크다운 입력 영역
-  - [ ] 실시간 프리뷰
-  - [ ] 마크다운 → HTML 변환
-  - [ ] 마크다운 파싱 로직
-- [ ] 모드 전환 UI
-  - [ ] 에디터 상단에 토글 버튼
-  - [ ] 모드 전환 시 안내 메시지
+- [x] 에디터 모드 추가
+  - [x] Post에 `isMarkdown: boolean` 추가
+  - [x] 기본값은 richtext
+- [x] 리치텍스트 툴바
+  - [x] 텍스트 선택 후 포맷 적용
+  - [x] Bold 적용/해제 (Selection API 기반 커스텀 구현)
+  - [x] Italic 적용/해제
+  - [x] Underline 적용/해제
+  - [x] Font Size 적용 (savedRange로 selection 복원)
+  - [x] Color 적용 (savedRange + removeStyleFromFragment 중첩 방지)
+- [x] 마크다운 모드
+  - [x] 마크다운 입력 영역
+  - [x] 모드 전환 토글 버튼
+- [ ] 리치텍스트 추가 기능 (선택)
+  - [ ] 붙여넣기 시 plain text만 허용 (외부 HTML 스타일 차단)
+  - [ ] 제목 (H1, H2, H3)
+  - [ ] 리스트 (순서/비순서)
+  - [ ] 링크
+  - [ ] 인용구
+- [ ] PostDetailScreen 연동
+  - [ ] isMarkdown에 따라 렌더링 분기
+  - [ ] richtext: DOMPurify 적용 후 dangerouslySetInnerHTML
+  - [ ] markdown: 기존 마크다운 렌더러 사용
 
 ---
 
@@ -137,7 +141,7 @@
 
 ## 🎯 마일스톤
 
-### ✅ Milestone 1: 기본 기능 완성 (현재)
+### ✅ Milestone 1: 기본 기능 완성 
 - [x] 글 작성/수정/삭제
 - [x] 검색/정렬
 - [x] 다중 삭제
@@ -145,14 +149,14 @@
 - [x] Supabase 마이그레이션
 - [x] Vite + Tailwind CSS 전환
 
-### ✅ Milestone 2: 사용자 시스템 (완료!)
+### ✅ Milestone 2: 사용자 시스템 
 - [x] 로그인/회원가입
 - [x] 작성자 정보
-- [ ] 관리자 페이지
+- [x] 관리자 페이지
 
-### 📅 Milestone 3: 에디터 고도화
+### 📅 Milestone 3: 에디터 고도화 (현재)
 - [ ] 리치텍스트 개선
-- [ ] 마크다운 지원
+- [x] 마크다운 지원
 
 ### 📅 Milestone 4: 협업 기능
 - [ ] 댓글
@@ -161,6 +165,15 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-02-10
+- 리치텍스트 에디터 커스텀 구현 완료
+  - contentEditable + Selection API 기반
+  - HTML 직접 저장 방식 채택 (JSON 파서 불필요로 판단)
+  - Bold/Italic/Underline: toggleSemanticStyle + removeStyle 로직
+  - Color: savedRangeRef + removeStyleFromFragment 중첩 방지
+  - FontSize: savedRangeRef로 select 클릭 시 selection 복원
+- 다음 작업: PostDetailScreen 연동, 붙여넣기 처리
 
 ### 2026-02-03
 - ✅ Phase 1 완료!
