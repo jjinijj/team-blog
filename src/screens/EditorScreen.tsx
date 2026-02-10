@@ -1,29 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { useAuth } from '../contexts/AuthContext';
+import { getCurrentStyles, wrapSelection, unwrapTag, applyStyle, cleanHTML } from '../utils/SelectionUtils';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
   onAddPost: (
     title: string,
     content: string,
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
     isMarkdown: boolean,
   ) => void;
   onUpdatePost?: (
     postId: string,
     title: string,
     content: string,
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
     isMarkdown: boolean,
   ) => void;
   posts?: Post[];
@@ -42,13 +33,19 @@ function EditorScreen({
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [fontSize, setFontSize] = useState(16);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
-  const [textColor, setTextColor] = useState('#000000');
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('richtext');
 
+  // 리치텍스트 에디터 ref
+  const editorRef = useRef<HTMLDivElement>(null);
+  
+  // 현재 스타일 상태
+  const [currentStyles, setCurrentStyles] = useState({
+    isBold: false,
+    isItalic: false,
+    isUnderline: false,
+    fontSize: '16px',
+    color: '#000000',
+  });
   const {user, loading} = useAuth();
   const navigate = useNavigate();
 
@@ -75,14 +72,84 @@ function EditorScreen({
     if (postToEdit) {
       setTitle(postToEdit.title);
       setContent(postToEdit.content);
-      setFontSize(postToEdit.fontSize);
-      setIsBold(postToEdit.isBold);
-      setIsItalic(postToEdit.isItalic);
-      setIsUnderline(postToEdit.isUnderline);
-      setTextColor(postToEdit.textColor);
       setEditorMode(postToEdit.isMarkdown ? 'markdown' : 'richtext')
+
+      //리치 텍스트 모드일때 에디터에 html 설정
+      if(!postToEdit.isMarkdown && editorRef.current){
+        editorRef.current.innerHTML = postToEdit.content;
+      }
     }
   }, [postToEdit]);
+
+  // 선택 변경 감지 및 스타일 업데이트
+  useEffect(() => {
+    const updateStyles = () => {
+      if (editorMode === 'richtext' && editorRef.current) {
+        const styles = getCurrentStyles(editorRef.current);
+        setCurrentStyles({
+          isBold: styles.isBold,
+          isItalic: styles.isItalic,
+          isUnderline: styles.isUnderline,
+          fontSize: styles.fontSize || '16px',
+          color: styles.color || '#000000',
+        });
+      }
+    };
+
+    document.addEventListener('selectionchange', updateStyles);
+    return () => document.removeEventListener('selectionchange', updateStyles);
+  }, [editorMode]);
+
+// 리치텍스트 에디터 입력 변경
+  const handleEditorInput = () => {
+    if (editorRef.current) {
+      setContent(editorRef.current.innerHTML);
+    }
+  };
+
+  // Bold 토글
+  const handleBold = () => {
+    if (currentStyles.isBold) {
+      unwrapTag('strong');
+      unwrapTag('b');
+    } else {
+      wrapSelection('strong');
+    }
+    editorRef.current?.focus();
+  };
+
+  // Italic 토글
+  const handleItalic = () => {
+    if (currentStyles.isItalic) {
+      unwrapTag('em');
+      unwrapTag('i');
+    } else {
+      wrapSelection('em');
+    }
+    editorRef.current?.focus();
+  };
+
+  // Underline 토글
+  const handleUnderline = () => {
+    if (currentStyles.isUnderline) {
+      unwrapTag('u');
+    } else {
+      wrapSelection('u');
+    }
+    editorRef.current?.focus();
+  };
+
+  // Font Size 변경
+  const handleFontSize = (size: string) => {
+    applyStyle('fontSize', size);
+    editorRef.current?.focus();
+  };
+
+  // Color 변경
+  const handleColor = (color: string) => {
+    applyStyle('color', color);
+    editorRef.current?.focus();
+  };
 
   const handlePublish = () => {
     if (!title.trim()) {
@@ -93,9 +160,9 @@ function EditorScreen({
 
       const isMarkdown = editorMode === 'markdown' ? true : false;
       if (postToEdit && onUpdatePost) {
-        onUpdatePost(postToEdit.id, title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown);
+        onUpdatePost(postToEdit.id, title, content, isMarkdown);
       } else if (onAddPost) {
-        onAddPost(title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown);
+        onAddPost(title, content, isMarkdown);
       }
     }
   };
@@ -162,12 +229,12 @@ function EditorScreen({
             {/* Toolbar */}
             <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm mb-8 py-2 border-b border-gray-100 flex items-center gap-1">
               <button
-                onClick={() => setIsBold(!isBold)}
+                onClick={handleBold}
                 disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
                   editorMode === 'markdown' 
                     ? 'opacity-30 cursor-not-allowed' 
-                    : isBold 
+                    : currentStyles.isBold 
                       ? 'bg-blue-100 text-blue-600' 
                       : 'hover:bg-gray-100'
                 }`}
@@ -176,12 +243,12 @@ function EditorScreen({
                 <span className="font-bold">B</span>
               </button>
               <button
-                onClick={() => setIsItalic(!isItalic)}
+                onClick={handleItalic}
                 disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
                   editorMode === 'markdown' 
                     ? 'opacity-30 cursor-not-allowed' 
-                    : isBold 
+                    : currentStyles.isItalic 
                       ? 'bg-blue-100 text-blue-600' 
                       : 'hover:bg-gray-100'
                 }`}
@@ -190,12 +257,12 @@ function EditorScreen({
                 <span className="italic">I</span>
               </button>
               <button
-                onClick={() => setIsUnderline(!isUnderline)}
+                onClick={handleUnderline}
                 disabled={editorMode === 'markdown'}
                 className={`p-2 rounded transition-colors ${
                   editorMode === 'markdown' 
                     ? 'opacity-30 cursor-not-allowed' 
-                    : isBold 
+                    : currentStyles.isUnderline 
                       ? 'bg-blue-100 text-blue-600' 
                       : 'hover:bg-gray-100'
                 }`}
@@ -209,15 +276,13 @@ function EditorScreen({
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">크기:</span>
                 <select
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
+                  value={currentStyles.fontSize}
+                  onChange={(e) => handleFontSize(e.target.value)}
                   disabled={editorMode === 'markdown'}
                   className={`p-2 rounded transition-colors ${
                     editorMode === 'markdown' 
                       ? 'opacity-30 cursor-not-allowed' 
-                      : isBold 
-                        ? 'bg-blue-100 text-blue-600' 
-                        : 'hover:bg-gray-100'
+                      :''
                   }`}
                 >
                   <option value={12}>12px</option>
@@ -235,8 +300,8 @@ function EditorScreen({
                 <span className="text-xs text-gray-500">색상:</span>
                 <input
                   type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
+                  value={currentStyles.color}
+                  onChange={(e) => handleColor(e.target.value)}
                   className="w-8 h-8 rounded cursor-pointer border border-gray-200"
                   disabled={editorMode === 'markdown'}
                 />
@@ -302,20 +367,29 @@ function EditorScreen({
                 </span>
               </div>
               
+              {/* Editor */}
               <div className="editor-content prose prose-slate max-w-none">
-                <textarea
-                  className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed placeholder:text-gray-300 p-0 resize-none"
-                  placeholder="이야기를 들려주세요..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  style={editorMode === 'richtext' ? {
-                    fontSize: `${fontSize}px`,
-                    fontWeight: isBold ? 'bold' : 'normal',
-                    fontStyle: isItalic ? 'italic' : 'normal',
-                    textDecoration: isUnderline ? 'underline' : 'none',
-                    color: textColor,
-                  } : undefined}  // 마크다운 모드일 때는 스타일 적용 안 함
+                {editorMode === 'markdown' ? (
+                  <textarea
+                    className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed placeholder:text-gray-300 p-0 resize-none"
+                    placeholder="이야기를 들려주세요..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    style= {undefined}  // 마크다운 모드일 때는 스타일 적용 안 함
                 />
+                ) 
+                : (
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={handleEditorInput}
+                    className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed p-0"
+                    style={{ whiteSpace: 'pre-wrap' }}
+                    suppressContentEditableWarning
+                  />
+                )}
+                
+                
               </div>
             </div>
           </div>
