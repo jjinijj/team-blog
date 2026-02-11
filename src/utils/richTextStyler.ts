@@ -64,11 +64,75 @@ const unwrapTagsInFragment = (
   });
 };
 
+// ─────────────────────────────────────────────
+//  range 경계 확장
+//
+//  문제:
+//  extractContents()는 range의 경계(startContainer / endContainer)를
+//  기준으로 내용을 잘라낸다.
+//  경계가 텍스트 노드 안에 있으면 부모 태그는 잘려나가지 않고
+//  빈 껍데기로 DOM에 남는다.
+//
+//  예시:
+//  <span style="color:red">Hello</span> 전체 선택 후 Bold 적용
+//  range.startContainer = 텍스트 노드 "Hello" (span 안)
+//  range.endContainer   = 텍스트 노드 "Hello" (span 안)
+//  → extractContents: fragment="Hello"(텍스트만), DOM=<span style="color:red"></span>(빈 껍데기)
+//  → 결과: <span style="color:red"></span><strong>Hello</strong> (색상 사라짐)
+//
+//  해결:
+//  extractContents 전에 range 경계를 부모 요소 바깥으로 확장
+//  - 시작점이 텍스트 노드의 맨 앞(offset=0)이면 → setStartBefore(부모)
+//  - 끝점이 텍스트 노드의 맨 끝(offset=length)이면 → setEndAfter(부모)
+//
+//  결과:
+//  range가 span 자체를 포함하게 되어 span 통째로 fragment에 추출
+//  → <strong><span style="color:red">Hello</span></strong> (색상 유지)
+// ─────────────────────────────────────────────
+const expandRangeBoundaries = (
+  range: Range,
+  container: HTMLElement
+): void => {
+  // 시작점: 텍스트 노드의 맨 앞이면 부모 요소 앞으로 확장
+  if (
+    range.startContainer.nodeType === Node.TEXT_NODE &&
+    range.startOffset === 0
+  ) {
+    const parent = range.startContainer.parentNode as HTMLElement;
+    if (
+      parent &&
+      parent !== container &&
+      parent.nodeType === Node.ELEMENT_NODE
+    ) {
+      range.setStartBefore(parent);
+    }
+  }
+
+  // 끝점: 텍스트 노드의 맨 끝이면 부모 요소 뒤로 확장
+  if (
+    range.endContainer.nodeType === Node.TEXT_NODE &&
+    range.endOffset === (range.endContainer as Text).length
+  ) {
+    const parent = range.endContainer.parentNode as HTMLElement;
+    if (
+      parent &&
+      parent !== container &&
+      parent.nodeType === Node.ELEMENT_NODE
+    ) {
+      range.setEndAfter(parent);
+    }
+  }
+};
+
 /** 선택 영역을 엘리먼트로 감싸고 선택 복원 */
 const wrapSelection = (
   range: Range,
+  container: HTMLElement,
   createElement: () => HTMLElement
 ): void => {
+  // extractContents 전에 range 확장 (빈 껍데기 방지)
+  expandRangeBoundaries(range, container);
+
   const fragment = range.extractContents();
   const wrapper = createElement();
   wrapper.appendChild(fragment);
@@ -82,23 +146,6 @@ const wrapSelection = (
 
 // ─────────────────────────────────────────────
 //  스타일 제거 핵심 로직
-//
-//  올바른 순서:
-//  1. 선택된 content 추출 (extractContents)
-//  2. fragment에서 태그 언래핑
-//  3. extractContents 이후 range가 ancestor 태그 안에 있는지 확인
-//     - 있으면: ancestor 안의 남은 내용("after")을 따로 추출
-//              unstyled fragment 삽입 → restyled "after" 삽입
-//     - 없으면: 그냥 range.insertNode
-//
-//  예시:
-//  <strong>Hel[lo]ld</strong>
-//  → extractContents → fragment="lo", DOM=<strong>Helld</strong>
-//                       range is inside <strong> at split point
-//  → afterRange: split point ~ end of strong → extracts "ld"
-//  → insert: "lo" after <strong>Hel</strong>
-//  → insert: <strong>ld</strong> after "lo"
-//  → 결과: <strong>Hel</strong>lo<strong>ld</strong>
 // ─────────────────────────────────────────────
 const removeStyle = (
   container: HTMLElement,
@@ -115,7 +162,6 @@ const removeStyle = (
   const ancestor = findTagAncestor(range.startContainer, tagNames, container);
 
   if (!ancestor || !ancestor.parentNode) {
-    // ancestor 밖 → 그냥 삽입
     range.insertNode(fragment);
     sel.collapseToEnd();
     return;
@@ -124,15 +170,12 @@ const removeStyle = (
   const parent = ancestor.parentNode;
 
   // ③ ancestor 안의 남은 내용("after") 추출
-  //    range.startContainer ~ ancestor의 끝
-  //    주의: setEnd는 ancestor 밖이 아닌 inside로 (경계 교차 방지)
   const afterRange = document.createRange();
   afterRange.setStart(range.startContainer, range.startOffset);
   afterRange.setEnd(ancestor, ancestor.childNodes.length);
   const afterFragment = afterRange.extractContents();
 
   // ④ ancestor 바로 다음 위치에 삽입
-  //    [ancestor (before만 남음)] [fragment (unstyled)] [new ancestor (after)]
   const insertBefore = ancestor.nextSibling;
   parent.insertBefore(fragment, insertBefore);
 
@@ -174,22 +217,12 @@ const toggleSemanticStyle = (
   if (isFullyStyled) {
     removeStyle(container, range, tagNames);
   } else {
-    wrapSelection(range, createElement);
+    wrapSelection(range, container, createElement);
   }
 };
 
 // ─────────────────────────────────────────────
 //  span 기반 스타일 (Color / FontSize)
-// ─────────────────────────────────────────────
-//  span 기반 스타일 적용 (Color / FontSize)
-//
-//  중첩 방지 알고리즘:
-//  적용 전에 fragment 안의 기존 같은 속성을 먼저 제거
-//
-//  예: <span style="color:red">Hello</span> 선택 후 파란색 적용
-//  ① extractContents → fragment: <span style="color:red">Hello</span>
-//  ② removeStyleFromFragment("color") → fragment: Hello
-//  ③ 새 span으로 감싸기 → <span style="color:blue">Hello</span>
 // ─────────────────────────────────────────────
 
 /** fragment 안의 span에서 특정 CSS 속성 제거 (빈 span이면 언래핑) */
@@ -200,7 +233,6 @@ const removeStyleFromFragment = (
   Array.from(fragment.querySelectorAll("span")).forEach((span) => {
     span.style.removeProperty(property);
 
-    // 스타일이 완전히 비어있으면 span 자체를 언래핑
     if (!span.getAttribute("style") || span.style.cssText.trim() === "") {
       const parent = span.parentNode!;
       while (span.firstChild) parent.insertBefore(span.firstChild, span);
@@ -211,9 +243,13 @@ const removeStyleFromFragment = (
 
 const applySpanStyle = (
   range: Range,
+  container: HTMLElement,
   property: "color" | "fontSize",
   value: string
 ): void => {
+  // extractContents 전에 range 확장 (빈 껍데기 방지)
+  expandRangeBoundaries(range, container);
+
   const fragment = range.extractContents();
 
   // 기존 같은 속성 제거 (중첩 방지)
@@ -285,11 +321,11 @@ export const toggleUnderline = (container: HTMLElement): void =>
 export const applyColor = (container: HTMLElement, color: string): void => {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-  applySpanStyle(sel.getRangeAt(0), "color", color);
+  applySpanStyle(sel.getRangeAt(0), container, "color", color);
 };
 
 export const applyFontSize = (container: HTMLElement, size: number): void => {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-  applySpanStyle(sel.getRangeAt(0), "fontSize", `${size}px`);
+  applySpanStyle(sel.getRangeAt(0), container, "fontSize", `${size}px`);
 };
