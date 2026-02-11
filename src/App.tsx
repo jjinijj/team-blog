@@ -12,6 +12,7 @@ import AdminLayout from './component/admin/AdminLayout';
 import Dashboard from './screens/admin/Dashboard';
 import WhitelistPage from './screens/admin/WhitelistPage';
 import PostManagePage from './screens/admin/PostManagePage';
+import { DocumentNode } from './utils/richTextTypes'; // 경로는 프로젝트에 맞게 조정
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -60,80 +61,66 @@ function AppContent() {
     }
   };
 
-  const handleAddPost = async (
-    title: string, 
-    content: string, 
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
-    isMarkdown: boolean,
-  ) => {
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title,
-      content,
-      fontSize,
-      isBold,
-      isItalic,
-      isUnderline,
-      textColor,
-      createdAt: new Date().toLocaleDateString('ko-KR'),
-      isMarkdown: isMarkdown,
-      author_id: user?.id || null,
-      author_email: user?.email || null,
-    };
-
-    try {
-      await createPost(newPost);
-      setPosts([newPost, ...posts]);
-      navigate(`/post/${newPost.id}`);
-    } catch (error) {
-      console.error('글 생성 실패:', error);
-      alert('글 생성에 실패했습니다.');
-    }
+const handleAddPost = async (
+  title: string,
+  content: string,
+  contentType: 'richtext' | 'markdown',
+  contentJson: DocumentNode | null,
+) => {
+  const newPost: Post = {
+    id: Date.now().toString(),
+    title,
+    content,
+    content_type: contentType,
+    content_json: contentJson,
+    createdAt: new Date().toLocaleDateString('ko-KR'),
+    author_id: user?.id || null,
+    author_email: user?.email || null,
+    isMarkdown: contentType === 'markdown', // 레거시 유지
   };
 
-  const handleUpdatePost = async (
-    postId: string,
-    title: string, 
-    content: string, 
-    fontSize: number,
-    isBold: boolean,
-    isItalic: boolean,
-    isUnderline: boolean,
-    textColor: string,
-    isMarkdown: boolean,
-  ) => {
-    const updatedPost: Post = {
-      id: postId,
-      title,
-      content,
-      fontSize,
-      isBold,
-      isItalic,
-      isUnderline,
-      textColor,
-      createdAt: new Date().toLocaleDateString('ko-KR'),
-      isMarkdown: isMarkdown,
-      author_id: user?.id || null,
-      author_email:user?.email || null,
-    };
+  try {
+    await createPost(newPost);
+    setPosts([newPost, ...posts]);
+    navigate(`/post/${newPost.id}`);
+  } catch (error) {
+    console.error('글 생성 실패:', error);
+    alert('글 생성에 실패했습니다.');
+  }
+};
 
-    try {
-      await updatePost(updatedPost);
-      setPosts(posts.map((post) => 
-        post.id === postId 
-          ? { ...post, title, content, fontSize, isBold, isItalic, isUnderline, textColor, isMarkdown }
-          : post
-      ));
-      navigate(`/post/${postId}`);
-    } catch (error) {
-      console.error('업데이트 실패:', error);
-      alert('글 수정에 실패했습니다.');
-    }
+const handleUpdatePost = async (
+  postId: string,
+  title: string,
+  content: string,
+  contentType: 'richtext' | 'markdown',
+  contentJson: DocumentNode | null,
+) => {
+  const updatedPost: Post = {
+    id: postId,
+    title,
+    content,
+    content_type: contentType,
+    content_json: contentJson,
+    createdAt: new Date().toLocaleDateString('ko-KR'),
+    isMarkdown: contentType === 'markdown', // 레거시 유지
+    author_id: user?.id || null,
+    author_email: user?.email || null,
   };
+
+  try {
+    await updatePost(updatedPost);
+    setPosts(posts.map((post) =>
+      post.id === postId
+        ? { ...post, title, content, content_type: contentType, content_json: contentJson, isMarkdown: contentType === 'markdown' }
+        : post
+    ));
+    navigate(`/post/${postId}`);
+  } catch (error) {
+    console.error('업데이트 실패:', error);
+    alert('글 수정에 실패했습니다.');
+  }
+};
 
   return (
     <Routes>

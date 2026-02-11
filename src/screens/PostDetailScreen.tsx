@@ -1,8 +1,11 @@
 import { useParams } from 'react-router-dom';
-import { Post } from '../types/Post';
+import { getRenderMode, Post } from '../types/Post';
+import DOMPurify from 'dompurify';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { RichTextRenderer } from '../utils/richTextRenderer';
+import { safeParseDoc } from '../utils/safeParseDoc';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -11,7 +14,16 @@ interface PostDetailScreenProps {
   onDelete: (postId: string) => void;
 }
 
-function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScreenProps) {
+function resolveContentType(post: Post): 'markdown' | 'richtext' {
+  // 신버전 우선
+  if (post.content_type) return post.content_type;
+
+  // 구버전 fallback
+  return post.isMarkdown ? 'markdown' : 'richtext';
+}
+
+
+const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScreenProps) => {
   const { id } = useParams<{ id: string }>();
   const post = posts.find(p => p.id === id);
 
@@ -39,8 +51,8 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
     );
   }
 
-  console.log(post.author_id);
-  console.log(user?.id);
+  const contentType = resolveContentType(post);
+  const doc = safeParseDoc(post);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -83,11 +95,11 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
             <span className="text-gray-500 text-sm">{post.createdAt}</span>
             {/* 모드 표시 뱃지 */}
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              post.isMarkdown 
+              contentType === 'markdown' 
                 ? 'bg-purple-100 text-purple-600' 
                 : 'bg-blue-100 text-blue-600'
             }`}>
-              {post.isMarkdown ? 'Markdown' : 'Rich Text'}
+              {contentType === 'markdown' ? 'Markdown' : 'Rich Text'}
             </span>
           </div>
           
@@ -121,26 +133,20 @@ function PostDetailScreen({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
 
         {/* Article Content - 마크다운/리치텍스트 분기 */}
         <article className="prose prose-slate prose-lg max-w-none mb-16 prose-h1:text-4xl prose-h2:text-2xl prose-p:text-base">
-          {post.isMarkdown ? (
-            // 마크다운 모드: MarkdownRenderer 사용
-            <MarkdownRenderer markdown={post.content} />
-          ) : (
-            // 리치텍스트 모드: 스타일 적용
-            <div
-              className="leading-relaxed whitespace-pre-wrap"
-              style={{
-                fontSize: `${post.fontSize}px`,
-                fontWeight: post.isBold ? 'bold' : 'normal',
-                fontStyle: post.isItalic ? 'italic' : 'normal',
-                textDecoration: post.isUnderline ? 'underline' : 'none',
-                color: post.textColor,
-              }}
-            >
-              {post.content}
-            </div>
-          )}
+                
+        {contentType === 'markdown' && (
+          <MarkdownRenderer markdown={post.content} />
+        )}
+      
+        {contentType === 'richtext' && doc && (
+          <RichTextRenderer doc={doc} />
+        )}
+      
+        {contentType === 'richtext' && !doc && (
+          <p className="text-gray-400 italic">지원되지 않는 이전 형식의 글입니다. (마이그레이션 필요)</p>
+        )}
+      
         </article>
-
         {/* Comments Section */}
         <section className="border-t border-gray-100 pt-12 pb-24">
           <div className="flex items-center justify-between mb-8">

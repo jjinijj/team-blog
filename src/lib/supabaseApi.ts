@@ -1,6 +1,24 @@
 import { supabase } from "../supabaseClient";
 import type { Post } from '../types/Post';
 
+const mapPost = (post: any): Post => ({
+    id: post.id,
+    title: post.title,
+
+    content: post.content ?? "",
+    content_json: post.content_json ?? null,
+    content_type: post.content_type ?? null,
+
+    createdAt: post.createdAt,
+
+    author_id: post.author_id,
+    author_email: post.users?.email ?? null,
+
+    // 레거시 fallback
+    isMarkdown: post.isMarkdown ?? false,
+});
+
+
 // CREATE
 export const createPost = async (post: Post): Promise<Post> => {
     const { data, error } = await supabase
@@ -8,25 +26,28 @@ export const createPost = async (post: Post): Promise<Post> => {
         .insert([{
             id: post.id,
             title: post.title,
-            content: post.content,
-            fontSize: post.fontSize,
-            isBold: post.isBold,
-            isItalic: post.isItalic,
-            isUnderline: post.isUnderline,
-            textColor: post.textColor,
+
+            content: post.content ?? "",
+            content_json: post.content_json ?? null,
+            content_type: post.content_type ?? null,
+
             createdAt: post.createdAt,
-            isMarkdown: post.isMarkdown,
             author_id: post.author_id,
+
+            // 레거시 유지용
+            isMarkdown: post.content_type === 'markdown',
         }])
-        .select();
+        .select(`
+            *,
+            users!author_id (email)
+        `)
+        .single();
 
-    if (error) {
-        console.error('글 생성 실패:', error);
-        throw error;
-    }
+    if (error) throw error;
 
-    return data[0];
+    return mapPost(data);
 };
+
 
 // READ
 export const readPost = async (): Promise<Post[]> => {
@@ -34,31 +55,15 @@ export const readPost = async (): Promise<Post[]> => {
         .from('posts')
         .select(`
             *,
-            users!author_id (
-                email
-            )
-        `);
+            users!author_id (email)
+        `)
+        .order('createdAt', { ascending: false });
 
-    if (error) {
-        console.error('글 가져오기 실패:', error);
-        throw error;
-    }
+    if (error) throw error;
 
-    return data.map((post: any) => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        fontSize: post.fontSize,
-        isBold: post.isBold,
-        isItalic: post.isItalic,
-        isUnderline: post.isUnderline,
-        textColor: post.textColor,
-        createdAt: post.createdAt,
-        isMarkdown: post.isMarkdown,
-        author_id: post.author_id,
-        author_email: post.users?.email || null,
-    }));
+    return data.map(mapPost);
 };
+
 
 // UPDATE
 export const updatePost = async (post: Post): Promise<Post> => {
@@ -66,25 +71,25 @@ export const updatePost = async (post: Post): Promise<Post> => {
         .from('posts')
         .update({
             title: post.title,
-            content: post.content,
-            fontSize: post.fontSize,
-            isBold: post.isBold,
-            isItalic: post.isItalic,
-            isUnderline: post.isUnderline,
-            textColor: post.textColor,
-            isMarkdown: post.isMarkdown,
-            author_id: post.author_id,
+
+            content: post.content ?? "",
+            content_json: post.content_json ?? null,
+            content_type: post.content_type ?? null,
+
+            isMarkdown: post.content_type === 'markdown',
         })
         .eq('id', post.id)
-        .select();
+        .select(`
+            *,
+            users!author_id (email)
+        `)
+        .single();
 
-    if (error) {
-        console.error('글 업데이트 실패:', error);
-        throw error;
-    }
+    if (error) throw error;
 
-    return data[0];
+    return mapPost(data);
 };
+
 
 // DELETE
 export const deletePost = async (postId: string): Promise<void> => {
