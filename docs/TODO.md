@@ -77,38 +77,42 @@
 ### Phase 3: 에디터 개선
 
 #### 4. 리치텍스트 에디터 개선
-**예상 소요**: 2-4시간
 
 - [x] 에디터 모드 추가
-  - [x] Post에 `isMarkdown: boolean` 추가
+  - [x] Post에 `isMarkdown: boolean`, `content_type` 추가
   - [x] 기본값은 richtext
 - [x] 리치텍스트 툴바
-  - [x] 텍스트 선택 후 포맷 적용
-  - [x] Bold 적용/해제 (Selection API 기반 커스텀 구현)
+  - [x] 텍스트 선택 후 포맷 적용 (Selection API 기반 커스텀 구현)
+  - [x] Bold 적용/해제
   - [x] Italic 적용/해제
   - [x] Underline 적용/해제
-  - [x] Font Size 적용 (savedRange로 selection 복원)
-  - [x] Color 적용 (savedRange + removeStyleFromFragment 중첩 방지)
+  - [x] Font Size 적용 (savedRange로 select 클릭 시 selection 복원)
+  - [x] Color 적용 (savedRange + removeStyleFromFragment 중첩 방지, 실시간 반영)
 - [x] 마크다운 모드
   - [x] 마크다운 입력 영역
   - [x] 모드 전환 토글 버튼
-- [ ] 모드 전환 시 호환
-- [ ] 리치텍스트 추가 기능 (선택)
+- [x] PostDetailScreen 연동
+  - [x] content_type에 따라 렌더링 분기 (getRenderMode 함수)
+  - [x] richtext: RichTextRenderer + content_json (DocumentNode[])
+  - [x] markdown: 기존 마크다운 렌더러 사용
+  - [x] 레거시 글 fallback 처리 (safeParseDoc)
+- [x] DB 구조 변경
+  - [x] `content_type` 컬럼 추가 (TEXT, NULL = 레거시)
+  - [x] `content_json` 컬럼 추가 (JSONB, richtext 렌더링용)
+  - [x] 불필요한 전역 스타일 컬럼 제거 (font_size, is_bold 등)
+  - [x] `isMarkdown` 레거시 컬럼 유지 (하위 호환)
+
+- [ ] 미해결 버그
+  - [ ] 색상 적용 후 Bold 토글 시 색상이 검정으로 초기화되고 Bold 해제 안 됨
+  - [ ] 다양한 크기의 텍스트를 동시 선택 후 크기 변경 시 부분적으로만 적용됨
+
+- [ ] 추가 기능 (선택)
+  - [ ] 모드 전환 시 내용 호환 처리 (richtext ↔ markdown 전환)
   - [ ] 붙여넣기 시 plain text만 허용 (외부 HTML 스타일 차단)
   - [ ] 제목 (H1, H2, H3)
   - [ ] 리스트 (순서/비순서)
   - [ ] 링크
   - [ ] 인용구
-- [ ] PostDetailScreen 연동
-  - [ ] isMarkdown에 따라 렌더링 분기
-  - [ ] richtext: DOMPurify 적용 후 dangerouslySetInnerHTML
-  - [ ] markdown: 기존 마크다운 렌더러 사용
-- [ ] DB구조 변경
-
-**발견된 오류**
-- [ ] 색상 변경 후 볼드를 적용하면 검정색 적용 후 볼드 적용
-  - [ ] 볼드 해제 시 색상이 변경되고 볼드 해제가 안됨
-- [ ] 글씨 크기가 다양한 텍스트들을 선택하고 글씨 크기 변경 시 부분적으로 적용 됨
 
 ---
 
@@ -148,7 +152,7 @@
 
 ## 🎯 마일스톤
 
-### ✅ Milestone 1: 기본 기능 완성 
+### ✅ Milestone 1: 기본 기능 완성
 - [x] 글 작성/수정/삭제
 - [x] 검색/정렬
 - [x] 다중 삭제
@@ -156,14 +160,20 @@
 - [x] Supabase 마이그레이션
 - [x] Vite + Tailwind CSS 전환
 
-### ✅ Milestone 2: 사용자 시스템 
+### ✅ Milestone 2: 사용자 시스템
 - [x] 로그인/회원가입
 - [x] 작성자 정보
 - [x] 관리자 페이지
 
-### 📅 Milestone 3: 에디터 고도화 (현재)
-- [ ] 리치텍스트 개선
-- [x] 마크다운 지원
+### 🚧 Milestone 3: 에디터 고도화 (진행 중)
+- [x] richtext / markdown 모드 전환
+- [x] Bold / Italic / Underline 토글
+- [x] Font Size / Color 적용
+- [x] PostDetailScreen 연동 (RichTextRenderer)
+- [x] DB 구조 변경 (content_type, content_json)
+- [ ] 미해결 버그 수정 (색상+볼드, 다중 크기 선택)
+- [ ] 붙여넣기 처리
+- [ ] 모드 전환 호환
 
 ### 📅 Milestone 4: 협업 기능
 - [ ] 댓글
@@ -173,36 +183,35 @@
 
 ## 📝 작업 진행 노트
 
+### 2026-02-11
+- 리치텍스트 에디터 마무리
+  - Color picker 중첩 span 버그 수정 (removeStyleFromFragment)
+  - Color picker 실시간 반영 (savedRangeRef + onChange)
+  - Font Size select selection 복원 (onMouseDown + savedRangeRef)
+  - EditorScreen / App.tsx 함수 시그니처 불일치 수정
+  - safeParseDoc 단순화 (content_json 직접 반환)
+  - DB 마이그레이션 SQL 준비 및 적용
+- 미해결 버그 2건 확인 (다음 세션에서 처리 예정)
+- 다음 작업: 버그 수정 → 붙여넣기 처리 → 댓글 기능
+
 ### 2026-02-10
-- 리치텍스트 에디터 커스텀 구현 완료
+- 리치텍스트 에디터 커스텀 구현
   - contentEditable + Selection API 기반
-  - HTML 직접 저장 방식 채택 (JSON 파서 불필요로 판단)
+  - content + content_json 병행 저장 방식 채택
   - Bold/Italic/Underline: toggleSemanticStyle + removeStyle 로직
   - Color: savedRangeRef + removeStyleFromFragment 중첩 방지
   - FontSize: savedRangeRef로 select 클릭 시 selection 복원
-- 다음 작업: PostDetailScreen 연동, 붙여넣기 처리
 
 ### 2026-02-03
-- ✅ Phase 1 완료!
-- 로그인/회원가입 기능 구현
-  - Supabase Auth 설정
-  - 이메일 화이트리스트 기반 회원가입
+- ✅ Phase 1 완료
+  - Supabase Auth 설정, 이메일 화이트리스트 기반 회원가입
   - AuthContext 구현 (세션 관리, signUp, signIn, signOut)
-  - AuthScreen UI (로그인/회원가입 토글)
-- 작성자 정보 및 권한 관리
   - public.users 테이블 생성 및 트리거 설정
-  - posts와 users JOIN으로 작성자 이메일 표시
-  - 본인 글만 수정/삭제 가능하도록 권한 체크
-  - EditorScreen 접근 제어 (로그인 필수, 권한 체크)
-- 문서 업데이트
-  - DATABASE_SCHEMA.md 업데이트 (v2.0.0)
-  - TODO.md 업데이트
-- 다음 작업: Phase 2 관리자 페이지 또는 Phase 4 댓글 기능
+  - 본인 글만 수정/삭제 권한 체크
 
 ### 2026-02-01
 - 작업 순서 확정
 - TODO 문서 생성
-- 다음 작업: 로그인 기능 구현
 
 ---
 
