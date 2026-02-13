@@ -76,18 +76,20 @@
 
 ### Phase 3: 에디터 개선
 
-#### 4. 리치텍스트 에디터 개선
+#### 4-1. 리치텍스트 에디터 v1 (DOM 기반) - 완료 및 한계 확인
+
+**완료된 작업:**
 
 - [x] 에디터 모드 추가
   - [x] Post에 `isMarkdown: boolean`, `content_type` 추가
   - [x] 기본값은 richtext
-- [x] 리치텍스트 툴바
+- [x] 리치텍스트 툴바 (기본 기능)
   - [x] 텍스트 선택 후 포맷 적용 (Selection API 기반 커스텀 구현)
-  - [x] Bold 적용/해제
-  - [x] Italic 적용/해제
-  - [x] Underline 적용/해제
-  - [x] Font Size 적용 (savedRange로 select 클릭 시 selection 복원)
-  - [x] Color 적용 (savedRange + removeStyleFromFragment 중첩 방지, 실시간 반영)
+  - [x] Bold 적용/해제 ✅ 안정적
+  - [x] Italic 적용/해제 ✅ 안정적
+  - [x] Underline 적용/해제 ✅ 안정적
+  - [x] Font Size 적용 ⚠️ 중첩 문제
+  - [x] Color 적용 ⚠️ 중첩 문제
 - [x] 마크다운 모드
   - [x] 마크다운 입력 영역
   - [x] 모드 전환 토글 버튼
@@ -101,24 +103,122 @@
   - [x] `content_json` 컬럼 추가 (JSONB, richtext 렌더링용)
   - [x] 불필요한 전역 스타일 컬럼 제거 (font_size, is_bold 등)
   - [x] `isMarkdown` 레거시 컬럼 유지 (하위 호환)
+- [x] 검색/미리보기 수정
+  - [x] 글 목록 미리보기 HTML 태그 노출 문제 (DOMParser로 해결)
+  - [x] 검색 로직 수정 (stripHtml 함수로 HTML 태그 제거)
 
-- [ ] 미해결 버그
-  - [x] 색상 적용 후 Bold 토글 시 색상이 검정으로 초기화되고 Bold 해제 안 됨
-  - [ ] 다양한 크기의 텍스트를 동시 선택 후 크기 변경 시 부분적으로만 적용됨
+**발견된 근본적 한계:**
 
-- [ ] 리치텍스트 저장 방식 관련 후속 수정
-  - [x] 글 목록 미리보기 HTML 태그 노출 문제
-    - content에 HTML이 저장되면서 미리보기에 `<strong>`, `<span>` 등 태그가 그대로 출력됨
-    - 해결 방향: 미리보기 표시 시 HTML 태그를 제거한 plain text 사용
-    - `content.replace(/<[^>]*>/g, '')` 또는 DOMParser로 텍스트만 추출
-  - [x] 검색 로직 수정
-    - 현재 content(HTML 문자열)에서 키워드 검색 → 태그가 포함되어 오작동 가능
-    - "strong" 검색 시 `<strong>` 태그 때문에 엉뚱한 글이 매칭될 수 있음
-    - 해결 방향: 검색 시 HTML 태그 제거 후 plain text 기준으로 비교
+- ❌ **span 중첩 문제 미해결**
+  - fontSize/Color 적용 시 중첩된 span이 계속 쌓임
+  - 예: `<span 32px><span 14px><span 12px><span 16px>test</span></span></span></span>`
+- ❌ **DOM 구조 예측 불가**
+  - contentEditable은 브라우저마다 다른 HTML 생성
+  - extractContents, range 조작이 매우 tricky
+- ❌ **디버깅 극도로 어려움**
+  - 여러 세션에 걸쳐 수십 번 시도했으나 근본 해결 실패
+  - whack-a-mole 패턴 (하나 고치면 다른 버그 발생)
+- ❌ **유지보수 불가능**
+  - 코드 복잡도 높고 예측 불가능한 동작
 
-- [ ] 추가 기능 (선택)
+**결론:** contentEditable + DOM 직접 조작 방식은 **구조적 한계**가 있음. 핵심 기능(fontSize/Color)을 안정적으로 구현하려면 **근본적인 접근 방식 변경 필요**.
+
+---
+
+#### 4-2. 리치텍스트 에디터 v2 (JSON 기반) - 재작성 ⭐
+
+**예상 소요**: 7-10일 (1.5-2주)
+
+**접근 방식:** contentEditable 버리고 JSON 상태 기반 커스텀 에디터 구현
+
+**Phase 1: 데이터 구조 설계** (0.5일)
+- [ ] TextNode 타입 정의
+  ```typescript
+  type TextNode = {
+    text: string;
+    styles: {
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      fontSize?: number;
+      color?: string;
+    };
+  };
+  type EditorState = TextNode[];
+  ```
+- [ ] Selection 타입 정의
+  ```typescript
+  type Selection = {
+    anchorNodeIndex: number;
+    anchorOffset: number;
+    focusNodeIndex: number;
+    focusOffset: number;
+  };
+  ```
+
+**Phase 2: 렌더링 엔진** (1일)
+- [ ] EditorState → React 컴포넌트 렌더링
+- [ ] 각 TextNode를 styled span으로 변환
+- [ ] 커서/선택 영역 시각화
+
+**Phase 3: 선택 관리** (1-2일) ← 가장 복잡
+- [ ] 마우스 드래그 → Selection 계산
+- [ ] 키보드 화살표 → Selection 이동
+- [ ] 더블클릭 → 단어 선택
+- [ ] 드래그 앤 드롭 선택 처리
+
+**Phase 4: 입력 처리** (1-2일)
+- [ ] 텍스트 입력 → EditorState 업데이트
+- [ ] Backspace/Delete → 텍스트 삭제
+- [ ] Enter → 개행 처리
+- [ ] Selection 기반 텍스트 교체
+
+**Phase 5: 스타일 적용** (0.5일) ← 핵심, 쉬워짐!
+- [ ] applyFontSize 구현
+  ```typescript
+  // 선택 영역을 split → 스타일 적용 → merge
+  const { start, middle, end } = splitBySelection(state, selection);
+  const styledMiddle = middle.map(node => ({
+    ...node,
+    styles: { ...node.styles, fontSize: size }
+  }));
+  return [...start, ...styledMiddle, ...end];
+  ```
+- [ ] applyColor 구현
+- [ ] toggleBold/Italic/Underline 구현
+- [ ] **중첩 문제 근본 해결** (JSON은 중첩 불가능)
+
+**Phase 6: IME/복붙** (1일)
+- [ ] 한글 입력 (compositionstart/end)
+- [ ] 복사/붙여넣기 (plain text만 허용)
+- [ ] Cut 처리
+
+**Phase 7: 기존 시스템 통합** (0.5일)
+- [ ] 저장 시: EditorState → HTML + DocumentNode (기존 파서 재사용)
+- [ ] 불러오기 시: HTML/DocumentNode → EditorState
+- [ ] 기존 DB 스키마 유지 (호환성)
+
+**Phase 8: 테스트 & 버그 수정** (1-2일)
+- [ ] 엣지 케이스 테스트
+- [ ] 성능 최적화
+- [ ] 크로스 브라우저 테스트
+
+**장점:**
+- ✅ 중첩 문제 근본 해결 (JSON은 구조적으로 중첩 불가)
+- ✅ 로직 명확, 디버깅 쉬움
+- ✅ 테스트 가능 (순수 함수)
+- ✅ Undo/Redo 쉬움 (state 히스토리)
+- ✅ 확장 가능 (링크, 이미지 등 추가 용이)
+- ✅ 유지보수 가능
+
+**다음 작업:**
+1. Phase 1부터 순차적 구현
+2. 각 Phase 완료 후 테스트
+3. Bold/Italic/Underline은 이미 작동하므로 참고
+
+- [ ] 추가 기능 (선택, v2 완성 후)
   - [ ] 모드 전환 시 내용 호환 처리 (richtext ↔ markdown 전환)
-  - [ ] 붙여넣기 시 plain text만 허용 (외부 HTML 스타일 차단)
+  - [ ] 붙여넣기 시 서식 옵션 (plain text / keep formatting)
   - [ ] 제목 (H1, H2, H3)
   - [ ] 리스트 (순서/비순서)
   - [ ] 링크
@@ -175,17 +275,24 @@
 - [x] 작성자 정보
 - [x] 관리자 페이지
 
-### 🚧 Milestone 3: 에디터 고도화 (진행 중)
+### ✅ Milestone 3-v1: 에디터 기본 구현 (DOM 기반) - 완료
 - [x] richtext / markdown 모드 전환
-- [x] Bold / Italic / Underline 토글
-- [x] Font Size / Color 적용
+- [x] Bold / Italic / Underline 토글 (안정적)
+- [x] Font Size / Color 적용 (중첩 문제로 한계)
 - [x] PostDetailScreen 연동 (RichTextRenderer)
 - [x] DB 구조 변경 (content_type, content_json)
-- [ ] 미해결 버그 수정 (색상+볼드, 다중 크기 선택)
-- [ ] 글 목록 미리보기 HTML 태그 노출 수정
-- [ ] 검색 로직 수정 (HTML 태그 제거 후 plain text 검색)
-- [ ] 붙여넣기 처리
-- [ ] 모드 전환 호환
+- [x] 글 목록 미리보기 HTML 태그 노출 수정
+- [x] 검색 로직 수정 (HTML 태그 제거 후 plain text 검색)
+
+### 🚧 Milestone 3-v2: 에디터 재작성 (JSON 기반) - 예정 (1.5-2주)
+- [ ] Phase 1: 데이터 구조 설계 (0.5일)
+- [ ] Phase 2: 렌더링 엔진 (1일)
+- [ ] Phase 3: 선택 관리 (1-2일)
+- [ ] Phase 4: 입력 처리 (1-2일)
+- [ ] Phase 5: 스타일 적용 (0.5일) - 중첩 문제 근본 해결
+- [ ] Phase 6: IME/복붙 (1일)
+- [ ] Phase 7: 기존 시스템 통합 (0.5일)
+- [ ] Phase 8: 테스트 & 버그 수정 (1-2일)
 
 ### 📅 Milestone 4: 협업 기능
 - [ ] 댓글
@@ -194,6 +301,27 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-02-13
+- 리치텍스트 에디터 v1 (DOM 기반) 완료 및 한계 발견
+  - expandRangeBoundaries: range 경계를 부모 요소로 확장 (빈 껍데기 방지)
+  - removeStyleFromFragment 개선: querySelectorAll 방식, fontSize만 있는 span 완전 언래핑
+  - **한계 발견: span 중첩 문제 근본 해결 불가**
+    - contentEditable + DOM 직접 조작 방식의 구조적 한계
+    - 여러 세션에 걸쳐 수십 번 시도했으나 중첩 문제 해결 실패
+    - Bold/Italic/Underline은 안정적이나 fontSize/Color는 중첩 발생
+- MainScreen 검색/미리보기 수정
+  - stripHtml 함수로 HTML 태그 제거
+  - DOMParser 사용하여 plain text 추출
+- RICHTEXT_ARCHITECTURE.md 문서 작성
+  - 전체 데이터 흐름 정리
+  - 각 파일별 역할 및 사용 예시
+- **중요 결정: JSON 기반 에디터 v2 재작성**
+  - 핵심 기능 요구사항 + DOM 방식의 근본적 한계 → 재작성 결정
+  - 라이브러리 없이 커스텀 구현 목표
+  - 예상 소요: 1.5-2주 (7-10일)
+  - 장점: 중첩 문제 근본 해결, 테스트 가능, 유지보수 용이
+- 다음 작업: JSON 기반 에디터 v2 Phase 1부터 순차 구현
 
 ### 2026-02-11
 - 리치텍스트 에디터 마무리
