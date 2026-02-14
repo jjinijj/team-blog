@@ -36,9 +36,23 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
     }
   };
 
+  // HTML 태그 제거 → plain text 추출
+  // richtext 글의 content는 HTML 문자열이므로 태그를 제거해야
+  // 미리보기와 검색이 올바르게 동작함
+  const stripHtml = (html: string): string => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  };
+
   const getSearchedPosts = () => {
-    return posts.filter((post)=>post.title.includes(searchKeyword) || post.content.includes(searchKeyword));
-  }
+    return posts.filter((post) => {
+      const plainContent = stripHtml(post.content);
+      return (
+        post.title.includes(searchKeyword) ||
+        plainContent.includes(searchKeyword)
+      );
+    });
+  };
 
   const getSortedPosts = () => {
     const sorted = (searchKeyword === '' ? [...posts] : getSearchedPosts());
@@ -259,7 +273,7 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
                       </h3>
                       
                       <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                        {post.content}
+                        {stripHtml(post.content)}
                       </p>
                     </div>
                   </div>
