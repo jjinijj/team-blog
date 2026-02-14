@@ -1,5 +1,5 @@
 import { supabase } from "../supabaseClient";
-import type { Post } from '../types/Post';
+import type { Post, NewPost } from '../types/Post';
 
 const mapPost = (post: any): Post => ({
     id: post.id,
@@ -20,11 +20,10 @@ const mapPost = (post: any): Post => ({
 
 
 // CREATE
-export const createPost = async (post: Post): Promise<Post> => {
+export const createPost = async (post: NewPost): Promise<Post> => {
     const { data, error } = await supabase
         .from('posts')
         .insert([{
-            id: post.id,
             title: post.title,
 
             content: post.content ?? "",
