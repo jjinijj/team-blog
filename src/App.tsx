@@ -3,7 +3,7 @@ import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
-import { Post } from './types/Post';
+import { Post, NewPost } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -67,8 +67,7 @@ const handleAddPost = async (
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
 ) => {
-  const newPost: Post = {
-    id: Date.now().toString(),
+  const newPost: NewPost = {
     title,
     content,
     content_type: contentType,
@@ -80,9 +79,9 @@ const handleAddPost = async (
   };
 
   try {
-    await createPost(newPost);
-    setPosts([newPost, ...posts]);
-    navigate(`/post/${newPost.id}`);
+    const date = await createPost(newPost);
+    setPosts([date, ...posts]);
+    navigate(`/post/${date.id}`);
   } catch (error) {
     console.error('글 생성 실패:', error);
     alert('글 생성에 실패했습니다.');

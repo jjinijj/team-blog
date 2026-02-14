@@ -13,6 +13,8 @@ export interface Post{
     isMarkdown: boolean;
 }
 
+export type NewPost = Omit<Post, 'id'>;
+
 export const getRenderMode = (post: Post): 'markdown' | 'richtext' => {
     if(post.content_type){
         return post.content_type;
