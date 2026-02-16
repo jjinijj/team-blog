@@ -5,7 +5,7 @@ import {
   readPost,
   deletePost,
   deleteMultiplePosts,
-} from '../../lib/supabaseApi';
+} from '../../api/supabaseApi';
 
 /**
  * 게시글 관리 페이지

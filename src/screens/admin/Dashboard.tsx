@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { readPost } from '../../lib/supabaseApi';
-import { readAllowedEmails } from '../../lib/AdminApi';
+import { readPost } from '../../api/supabaseApi';
+import { readAllowedEmails } from '../../api/AdminApi';
 
 /**
  * 관리자 대시보드
