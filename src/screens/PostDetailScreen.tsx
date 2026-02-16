@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
+import CommentsSection from '../component/comments/CommentsSection'
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -147,49 +148,9 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
         )}
       
         </article>
-        {/* Comments Section */}
-        <section className="border-t border-gray-100 pt-12 pb-24">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold">댓글 (0)</h3>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>정렬:</span>
-              <button className="font-medium text-gray-900 flex items-center">
-                최신순 <span className="ml-1">▼</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Comment Input - 로그인시에만 표시*/}
-          {user ? (
-            <div className="flex gap-4 mb-10">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0">
-                {user.email?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1">
-                <textarea
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder="댓글을 입력하세요..."
-                  rows={3}
-                />
-                <div className="flex justify-end mt-2">
-                  <button className="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
-                    댓글 작성
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-600 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
-              <button 
-                onClick={() => navigate('/login')}
-                className="text-sm text-blue-500 font-semibold hover:underline"
-              >
-                로그인하기
-              </button>
-            </div>
-          )}
-        </section>
+        {/* Comments Section - 새로운 CommentsSection 컴포넌트 사용 */}
+        <CommentsSection postId={post.id} />
       </main>
     </div>
   );
