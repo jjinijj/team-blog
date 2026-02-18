@@ -1,12 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { getRenderMode, Post } from '../types/Post';
-import DOMPurify from 'dompurify';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection'
+import { getAbsoluteDay } from '../utils/DataFormat';
 
 interface PostDetailScreenProps {
   posts: Post[];
@@ -93,7 +93,7 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
         {/* Post Header */}
         <header className="mb-12">
           <div className="flex items-center gap-2 mb-6">
-            <span className="text-gray-500 text-sm">{post.createdAt}</span>
+            <span className="text-gray-500 text-sm">{getAbsoluteDay(post.created_at)}</span>
             {/* 모드 표시 뱃지 */}
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               contentType === 'markdown' 
@@ -118,7 +118,7 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
                   {post.author_email || 'Unknown'}
                 </span>
                 <span className="text-xs text-gray-500">
-                  {post.createdAt}
+                  {getAbsoluteDay(post.created_at)}
                 </span>
               </div>
             </div>

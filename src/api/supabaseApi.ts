@@ -1,5 +1,5 @@
 import { supabase } from "../supabaseClient";
-import type { Post, NewPost } from '../types/Post';
+import type { Post, NewPost, UpdatePost } from '../types/Post';
 
 const mapPost = (post: any): Post => ({
     id: post.id,
@@ -9,7 +9,8 @@ const mapPost = (post: any): Post => ({
     content_json: post.content_json ?? null,
     content_type: post.content_type ?? null,
 
-    createdAt: post.createdAt,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
 
     author_id: post.author_id,
     author_email: post.users?.email ?? null,
@@ -30,7 +31,6 @@ export const createPost = async (post: NewPost): Promise<Post> => {
             content_json: post.content_json ?? null,
             content_type: post.content_type ?? null,
 
-            createdAt: post.createdAt,
             author_id: post.author_id,
 
             // 레거시 유지용
@@ -65,7 +65,7 @@ export const readPost = async (): Promise<Post[]> => {
 
 
 // UPDATE
-export const updatePost = async (post: Post): Promise<Post> => {
+export const updatePost = async (post: UpdatePost): Promise<Post> => {
     const { data, error } = await supabase
         .from('posts')
         .update({

@@ -6,6 +6,7 @@ import {
   deletePost,
   deleteMultiplePosts,
 } from '../../api/supabaseApi';
+import { getAbsoluteTime } from '../../utils/DataFormat';
 
 /**
  * 게시글 관리 페이지
@@ -245,7 +246,7 @@ const PostManagePage: React.FC = () => {
                         {post.author_email || '알 수 없음'}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {(post.createdAt)}
+                        {getAbsoluteTime(post.created_at)}
                       </td>
                       {/* 선택 모드가 아닐 때만 액션 버튼 표시 */}
                     {isSelectMode ? (

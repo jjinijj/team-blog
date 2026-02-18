@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
+import { getRelativeTime } from '../utils/DataFormat';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
@@ -57,9 +58,9 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
   const getSortedPosts = () => {
     const sorted = (searchKeyword === '' ? [...posts] : getSearchedPosts());
     if (sortOrder === 'newest') {
-      return sorted.sort((a, b) => Number(b.id) - Number(a.id));
+      return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } else {
-      return sorted.sort((a, b) => Number(a.id) - Number(b.id));
+      return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }
   };
 
@@ -265,7 +266,7 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
                           {post.author_email || 'Unknown'}
                         </span>
                         <span className="text-gray-300">•</span>
-                        <span className="text-xs text-gray-500">{post.createdAt}</span>
+                        <span className="text-xs text-gray-500">{getRelativeTime(post.created_at)}</span>
                       </div>
                       
                       <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight group-hover:text-blue-500 transition-colors">

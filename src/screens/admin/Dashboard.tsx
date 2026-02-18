@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const recentPosts = posts.filter(
-        post => new Date(post.createdAt) > sevenDaysAgo
+        post => new Date(post.created_at) > sevenDaysAgo
       ).length;
 
       setStats({
