@@ -66,15 +66,16 @@ const handleAddPost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private',
 ) => {
   const newPost: NewPost = {
     title,
     content,
     content_type: contentType,
     content_json: contentJson,
-    //createdAt: new Date().toLocaleDateString('ko-KR'),
     author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status,
     isMarkdown: contentType === 'markdown', // 레거시 유지
   };
 
@@ -94,6 +95,7 @@ const handleUpdatePost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private'
 ) => {
   const updatedPost: UpdatePost = {
     id: postId,
@@ -101,10 +103,9 @@ const handleUpdatePost = async (
     content,
     content_type: contentType,
     content_json: contentJson,
-    //createdAt: new Date().toLocaleDateString('ko-KR'),
     isMarkdown: contentType === 'markdown', // 레거시 유지
-    author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status
   };
 
   try {
