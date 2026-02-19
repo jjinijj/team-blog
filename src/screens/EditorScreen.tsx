@@ -17,6 +17,9 @@ import {
   applyFontSize,
 } from "../utils/richTextStyler";
 import { TextStyle } from "../utils/richTextTypes";
+import { useDraft } from '../hooks/useDraft';
+import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
+import ProfileDropdown from '../component/Profiledropdown';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -25,6 +28,7 @@ interface EditorScreenProps {
     content: string,
     contentType: 'richtext' | 'markdown',
     contentJson: DocumentNode | null,
+    status: 'draft' | 'published' | 'private',
   ) => void;
   onUpdatePost?: (
     postId: string,
@@ -32,6 +36,7 @@ interface EditorScreenProps {
     content: string,
     contentType: 'richtext' | 'markdown',
     contentJson: DocumentNode | null,
+    status: 'draft' | 'published' | 'private',
   ) => void;
   posts?: Post[];
   editingPost?: Post;
@@ -54,12 +59,20 @@ export const EditorScreen = ({
   const [markdownContent, setMarkdownContent] = useState('');
   const [activeStyles, setActiveStyles] = useState<TextStyle>({});
   const [activeFontSize, setActiveFontSize] = useState(16);
+  const [status, setStatus] = useState<'draft' | 'published' | 'private'>(
+    postToEdit?.status ?? 'published'
+  );
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // ── 임시저장 ───────────────────────────────────
+  const { saveDraft, clearDraft, hasDraft, draftData, dismissDraft } = useDraft(postToEdit?.id);
 
   // ── 권한 체크 ──────────────────────────────────
   useEffect(() => {
@@ -86,7 +99,6 @@ export const EditorScreen = ({
     } else {
       setEditorMode('richtext');
       if (editorRef.current) {
-        // content_json이 있으면 JSON → HTML, 없으면 content(HTML) 직접 사용
         if (postToEdit.content_json) {
           const doc = deserializeDocument(JSON.stringify(postToEdit.content_json));
           editorRef.current.innerHTML = documentToHTML(doc);
@@ -97,6 +109,30 @@ export const EditorScreen = ({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postToEdit?.id]);
+
+  // ── draft 복원 핸들러 ──────────────────────────
+  const handleRestoreDraft = useCallback(() => {
+    if (!draftData) return;
+
+    setTitle(draftData.title);
+    setEditorMode(draftData.content_type);
+
+    if (draftData.content_type === 'markdown') {
+      setMarkdownContent(draftData.content);
+    } else {
+      if (editorRef.current) {
+        // content_json이 있으면 JSON → HTML, 없으면 content(HTML) 직접 사용
+        if (draftData.content_json) {
+          const doc = deserializeDocument(JSON.stringify(draftData.content_json));
+          editorRef.current.innerHTML = documentToHTML(doc);
+        } else {
+          editorRef.current.innerHTML = draftData.content;
+        }
+      }
+    }
+
+    clearDraft(); // 복원 후 draft 삭제
+  }, [draftData, clearDraft]);
 
   // ── 선택 변경 감지 → 툴바 상태 업데이트 ────────
   useEffect(() => {
@@ -109,6 +145,33 @@ export const EditorScreen = ({
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, [editorMode]);
+
+  // ── auto-save: title 변경 감지 ────────────────
+  useEffect(() => {
+    saveDraft({
+      title,
+      content: editorMode === 'markdown'
+        ? markdownContent
+        : editorRef.current?.innerHTML ?? '',
+      content_json: editorMode === 'richtext' && editorRef.current
+        ? parseHTMLToDocument(editorRef.current)
+        : null,
+      content_type: editorMode,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
+
+  // ── auto-save: markdown 변경 감지 ────────────
+  useEffect(() => {
+    if (editorMode !== 'markdown') return;
+    saveDraft({
+      title,
+      content: markdownContent,
+      content_json: null,
+      content_type: 'markdown',
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markdownContent]);
 
   // ── 툴바 핸들러 ───────────────────────────────
   const handleBold = useCallback(() => {
@@ -159,6 +222,28 @@ export const EditorScreen = ({
     savedRangeRef.current = null;
   }, []);
 
+  // ── richtext 변경 감지 → auto-save ────────────
+  const handleRichTextInput = useCallback(() => {
+    if (!editorRef.current) return;
+    saveDraft({
+      title,
+      content: editorRef.current.innerHTML,
+      content_json: parseHTMLToDocument(editorRef.current),
+      content_type: 'richtext',
+    });
+  }, [saveDraft, title]);
+
+  // ── 드롭다운 외부 클릭 시 닫기 ────────────────
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ── 저장 ──────────────────────────────────────
   const handlePublish = () => {
     if (!title.trim()) {
@@ -171,7 +256,6 @@ export const EditorScreen = ({
     let contentType: 'richtext' | 'markdown';
 
     if (editorMode === 'markdown') {
-      // 마크다운: content에 텍스트, contentJson 없음
       if (!markdownContent.trim()) {
         alert('내용을 입력해주세요.');
         return;
@@ -180,9 +264,6 @@ export const EditorScreen = ({
       contentType = 'markdown';
       contentJson = null;
     } else {
-      // 리치텍스트:
-      // content = innerHTML (검색/미리보기용 fallback)
-      // contentJson = DocumentNode[] (렌더링용 정식 데이터)
       if (!editorRef.current || !editorRef.current.textContent?.trim()) {
         alert('내용을 입력해주세요.');
         return;
@@ -193,10 +274,12 @@ export const EditorScreen = ({
     }
 
     if (postToEdit && onUpdatePost) {
-      onUpdatePost(postToEdit.id, title, content, contentType, contentJson);
+      onUpdatePost(postToEdit.id, title, content, contentType, contentJson, status);
     } else {
-      onAddPost(title, content, contentType, contentJson);
+      onAddPost(title, content, contentType, contentJson, status);
     }
+
+    clearDraft();
   };
 
   if (loading) {
@@ -212,30 +295,117 @@ export const EditorScreen = ({
 
   const isMarkdownMode = editorMode === 'markdown';
 
+  const STATUS_OPTIONS = [
+    {
+      value: 'draft' as const,
+      label: '초안',
+      description: '나만 볼 수 있어요',
+      icon: 'edit_note',
+    },
+    {
+      value: 'published' as const,
+      label: '공개',
+      description: '모든 팀원에게 공개',
+      icon: 'public',
+    },
+    {
+      value: 'private' as const,
+      label: '비공개',
+      description: '나만 볼 수 있어요',
+      icon: 'lock',
+    },
+  ];
+
+  const selectedOption = STATUS_OPTIONS.find((o) => o.value === status)!;
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white">
+    <div className="flex flex-col h-screen overflow-hidden bg-white dark:bg-background-dark">
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-gray-200 bg-white shrink-0">
+      <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={onGoToMain} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500">
-            <span>←</span>
+          <button onClick={onGoToMain} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+            <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <span className="text-sm font-semibold">
             {postToEdit ? '글 수정' : '새 글 작성'}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={onGoToMain} className="px-4 h-9 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
-            취소
-          </button>
-          <button onClick={handlePublish} className="px-5 h-9 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
-            {postToEdit ? '수정' : '등록'}
-          </button>
+          {/* Status 드롭다운 */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setStatusDropdownOpen((prev) => !prev)}
+              className="w-32 justify-between px-5 h-9 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2"
+            >
+              <span>{selectedOption.label}</span>
+              <span className="material-symbols-outlined text-[18px]">expand_more</span>
+            </button>
+
+            {statusDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
+                {STATUS_OPTIONS.map((option) => {
+                  const isSelected = status === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setStatus(option.value);
+                        setStatusDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 flex items-center gap-3 text-sm transition-colors ${
+                        isSelected
+                          ? 'text-primary bg-primary/5 hover:bg-primary/10'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <span className={`material-symbols-outlined text-[20px] ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
+                        {option.icon}
+                      </span>
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold text-xs">{option.label}</span>
+                        <span className={`text-[10px] ${isSelected ? 'text-primary/70' : 'text-slate-500'}`}>
+                          {option.description}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <span className="material-symbols-outlined text-[16px] ml-auto text-primary">check</span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* 구분선 + 등록 버튼 */}
+                <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2 px-2">
+                  <button
+                    onClick={() => {
+                      setStatusDropdownOpen(false);
+                      handlePublish();
+                    }}
+                    className="w-full h-8 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors"
+                  >
+                    {postToEdit ? '수정 완료' : '등록'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+          <div className='h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1'/>
+          <ProfileDropdown/>
         </div>
       </header>
 
+      {/* 임시저장 복원 배너 - 공간 항상 확보 */}
+      <DraftRecoveryBanner
+        draftData={draftData}
+        visible={hasDraft && !!draftData}
+        onRestore={handleRestoreDraft}
+        onDismiss={dismissDraft}
+      />
+
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[740px] mx-auto px-8 py-12">
+
           {/* Toolbar */}
           <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm mb-8 py-2 border-b border-gray-100 flex items-center gap-1">
             <button
@@ -332,6 +502,7 @@ export const EditorScreen = ({
               contentEditable
               suppressContentEditableWarning
               data-placeholder="이야기를 들려주세요..."
+              onInput={handleRichTextInput}
               className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent text-gray-800 leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-gray-300 empty:before:pointer-events-none"
               style={{ whiteSpace: 'pre-wrap' }}
             />

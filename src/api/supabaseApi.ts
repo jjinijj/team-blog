@@ -1,5 +1,5 @@
 import { supabase } from "../supabaseClient";
-import type { Post } from '../types/Post';
+import type { Post, NewPost, UpdatePost } from '../types/Post';
 
 const mapPost = (post: any): Post => ({
     id: post.id,
@@ -9,10 +9,13 @@ const mapPost = (post: any): Post => ({
     content_json: post.content_json ?? null,
     content_type: post.content_type ?? null,
 
-    createdAt: post.createdAt,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
 
     author_id: post.author_id,
     author_email: post.users?.email ?? null,
+
+    status: post.status,
 
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
@@ -20,19 +23,19 @@ const mapPost = (post: any): Post => ({
 
 
 // CREATE
-export const createPost = async (post: Post): Promise<Post> => {
+export const createPost = async (post: NewPost): Promise<Post> => {
     const { data, error } = await supabase
         .from('posts')
         .insert([{
-            id: post.id,
             title: post.title,
 
             content: post.content ?? "",
             content_json: post.content_json ?? null,
             content_type: post.content_type ?? null,
 
-            createdAt: post.createdAt,
             author_id: post.author_id,
+
+            status : post.status,
 
             // 레거시 유지용
             isMarkdown: post.content_type === 'markdown',
@@ -50,23 +53,51 @@ export const createPost = async (post: Post): Promise<Post> => {
 
 
 // READ
-export const readPost = async (): Promise<Post[]> => {
+export const readPosts = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
         .select(`
             *,
             users!author_id (email)
         `)
-        .order('createdAt', { ascending: false });
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     return data.map(mapPost);
 };
 
+// READ
+export const readMyPosts = async(userId: string): Promise<Post[]> => {
+    const {data, error} = await supabase.from('posts')
+                                        .select('*, users!author_id(email)')
+                                        .eq('author_id', userId)
+                                        .order('created_at',{ascending: false});
+    if(error)
+        throw error;
+
+    return data.map(mapPost);
+}
+
+// 단건 조회 - published 글 또는 본인 글
+export const readPostById = async (postId: string): Promise<Post | null> => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select(`
+            *,
+            users!author_id (email)
+        `)
+        .eq('id', postId)
+        .single();
+
+    if (error) return null;
+    return mapPost(data);
+};
+
 
 // UPDATE
-export const updatePost = async (post: Post): Promise<Post> => {
+export const updatePost = async (post: UpdatePost): Promise<Post> => {
     const { data, error } = await supabase
         .from('posts')
         .update({
@@ -75,6 +106,8 @@ export const updatePost = async (post: Post): Promise<Post> => {
             content: post.content ?? "",
             content_json: post.content_json ?? null,
             content_type: post.content_type ?? null,
+
+            status: post.status,
 
             isMarkdown: post.content_type === 'markdown',
         })

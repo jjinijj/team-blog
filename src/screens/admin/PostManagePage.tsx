@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../../types/Post';
 import {
-  readPost,
+  readPosts,
   deletePost,
   deleteMultiplePosts,
-} from '../../lib/supabaseApi';
+} from '../../api/supabaseApi';
+import { getAbsoluteTime } from '../../utils/DataFormat';
 
 /**
  * 게시글 관리 페이지
@@ -29,7 +30,7 @@ const PostManagePage: React.FC = () => {
   const loadPosts = async () => {
     try {
       setIsLoading(true);
-      const data = await readPost();
+      const data = await readPosts();
       setPosts(data);
     } catch (err) {
       console.error('게시글 목록 로드 실패:', err);
@@ -245,7 +246,7 @@ const PostManagePage: React.FC = () => {
                         {post.author_email || '알 수 없음'}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {(post.createdAt)}
+                        {getAbsoluteTime(post.created_at)}
                       </td>
                       {/* 선택 모드가 아닐 때만 액션 버튼 표시 */}
                     {isSelectMode ? (

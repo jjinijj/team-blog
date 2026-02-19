@@ -3,8 +3,8 @@ import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
-import { Post } from './types/Post';
-import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './lib/supabaseApi';
+import { Post, NewPost, UpdatePost } from './types/Post';
+import { createPost, deleteMultiplePosts, deletePost, updatePost } from './api/supabaseApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminGuard from './component/admin/AdminGuard';
@@ -13,26 +13,12 @@ import Dashboard from './screens/admin/Dashboard';
 import WhitelistPage from './screens/admin/WhitelistPage';
 import PostManagePage from './screens/admin/PostManagePage';
 import { DocumentNode } from './utils/richTextTypes'; // 경로는 프로젝트에 맞게 조정
+import MyPostsScreen from './screens/profile/Mypostsscreen';
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        const data = await readPost();
-        console.log('데이터 로드 성공:', data);
-        setPosts(data);
-      } catch (error) {
-        console.error('데이터 로드 실패:', error);
-      }
-    };
-    
-    loadPosts();
-  }, []);
 
   const handleDeletePost = async (postId: string) => {
     if (window.confirm('글을 삭제하시겠습니까?')) {
@@ -66,23 +52,23 @@ const handleAddPost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private',
 ) => {
-  const newPost: Post = {
-    id: Date.now().toString(),
+  const newPost: NewPost = {
     title,
     content,
     content_type: contentType,
     content_json: contentJson,
-    createdAt: new Date().toLocaleDateString('ko-KR'),
     author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status,
     isMarkdown: contentType === 'markdown', // 레거시 유지
   };
 
   try {
-    await createPost(newPost);
-    setPosts([newPost, ...posts]);
-    navigate(`/post/${newPost.id}`);
+    const date = await createPost(newPost);
+    setPosts([date, ...posts]);
+    navigate(`/post/${date.id}`);
   } catch (error) {
     console.error('글 생성 실패:', error);
     alert('글 생성에 실패했습니다.');
@@ -95,17 +81,17 @@ const handleUpdatePost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private'
 ) => {
-  const updatedPost: Post = {
+  const updatedPost: UpdatePost = {
     id: postId,
     title,
     content,
     content_type: contentType,
     content_json: contentJson,
-    createdAt: new Date().toLocaleDateString('ko-KR'),
     isMarkdown: contentType === 'markdown', // 레거시 유지
-    author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status
   };
 
   try {
@@ -138,7 +124,6 @@ const handleUpdatePost = async (
         path="/"
         element={
           <MainScreen 
-            posts={posts}
             onViewPost={(postId) => navigate(`/post/${postId}`)}
             onGoToEditor={() => navigate('/write')} 
           />
@@ -175,10 +160,19 @@ const handleUpdatePost = async (
         path="/post/:id"
         element={
           <PostDetailScreen 
-            posts={posts} 
-            onGoToMain={() => navigate('/')}  
             onEdit={(postId) => navigate(`edit/${postId}`)}
             onDelete={handleDeletePost}
+          />
+        }
+      />
+
+      {/* 내 글 보기 */}
+      <Route
+        path="/my-posts"
+        element={
+          <MyPostsScreen 
+            onGoToMain={() => navigate('/')}
+            onEditPost={(postId) => navigate(`edit/${postId}`)}
           />
         }
       />

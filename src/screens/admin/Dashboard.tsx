@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { readPost } from '../../lib/supabaseApi';
-import { readAllowedEmails } from '../../lib/AdminApi';
+import { readPosts } from '../../api/supabaseApi';
+import { readAllowedEmails } from '../../api/AdminApi';
 
 /**
  * 관리자 대시보드
@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     try {
       const [posts, emails] = await Promise.all([
-        readPost(),
+        readPosts(),
         readAllowedEmails(),
       ]);
 
@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const recentPosts = posts.filter(
-        post => new Date(post.createdAt) > sevenDaysAgo
+        post => new Date(post.created_at) > sevenDaysAgo
       ).length;
 
       setStats({
