@@ -19,6 +19,7 @@ import {
 import { TextStyle } from "../utils/richTextTypes";
 import { useDraft } from '../hooks/useDraft';
 import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
+import ProfileDropdown from '../component/Profiledropdown';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -380,14 +381,17 @@ export const EditorScreen = ({
                       setStatusDropdownOpen(false);
                       handlePublish();
                     }}
-                    className="w-full h-8 bg-primary hover:bg-primary/90 text-white rounded-lg text-xs font-bold transition-colors"
+                    className="w-full h-8 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors"
                   >
                     {postToEdit ? '수정 완료' : '등록'}
                   </button>
                 </div>
               </div>
             )}
+
           </div>
+          <div className='h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1'/>
+          <ProfileDropdown/>
         </div>
       </header>
 

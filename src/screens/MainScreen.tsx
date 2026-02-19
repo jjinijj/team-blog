@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 import { getRelativeTime } from '../utils/DataFormat';
+import ProfileDropdown from '../component/Profiledropdown';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
@@ -79,94 +80,8 @@ function MainScreen({ onGoToEditor, posts, onViewPost }: MainScreenProps) {
           </div>
           
           {/* Profile Button or Login Button */}
-          <div className="relative">
-            {user ? (
-              // 로그인됨 - 프로필 버튼
-              <>
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold hover:shadow-lg transition-all"
-                >
-                  {user.email?.[0].toUpperCase() || 'U'}
-                </button>
-
-                {/* Profile Dropdown */}
-                {isProfileOpen && (
-                  <>
-                    {/* Backdrop to close dropdown */}
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setIsProfileOpen(false)}
-                    />
-                    
-                    {/* Dropdown Menu */}
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50">
-                      {/* User Info Section */}
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900">로그인됨</p>
-                        <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
-                      </div>
-                      
-                      {/* Menu Items */}
-                      <button
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          // TODO: 사용자 정보 페이지로 이동
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                      >
-                        <span>사용자 정보</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          // TODO: 내 글 필터링 기능
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                      >
-                        <span>내 글 보기</span>
-                      </button>
-
-                      {/* 관리자 메뉴 */}
-                      {isAdmin && (
-                        <>
-                          <div className="my-1 h-px bg-gray-100" />
-                          <button
-                            onClick={() => {
-                              setIsProfileOpen(false);
-                              navigate('/admin');
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-3"
-                          >
-                            <span>⚙️</span>
-                            <span>관리자 페이지</span>
-                          </button>
-                        </>
-                      )}
-                      
-                      <div className="my-1 h-px bg-gray-100" />
-                      
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-                      >
-                        <span>로그아웃</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              // 로그인 안됨 - 로그인 버튼
-              <button
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                로그인
-              </button>
-            )}
-          </div>
+          <div className='h-6 w-px bg-slte-200 dark:bg-slate-800 mx-1'/>
+          <ProfileDropdown/>
         </div>
       </header>
 
