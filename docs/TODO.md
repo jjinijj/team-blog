@@ -376,19 +376,25 @@
 
 ---
 
-#### 7. 임시저장 (Auto-save)
-**예상 소요**: 1-2시간
+#### 7. 임시저장 (Auto-save) ✅
+**예상 소요**: 1-2시간 | **실제 소요**: 약 2시간
 
-- [ ] 자동 저장 로직
-  - [ ] 30초마다 localStorage에 자동 저장
-  - [ ] 제목, 내용, 스타일 정보 저장
-- [ ] 복원 기능
-  - [ ] 에디터 진입 시 임시저장 데이터 확인
-  - [ ] "이어서 작성하기" 프롬프트
-  - [ ] 복원 또는 새로 작성 선택
-- [ ] 임시저장 관리
-  - [ ] 발행 시 임시저장 데이터 삭제
-  - [ ] 오래된 임시저장 자동 삭제 (7일 이상)
+- [x] 자동 저장 로직
+  - [x] debounce(1500ms)로 타이핑 멈춤 후 자동 저장
+  - [x] 제목, 내용, content_json, content_type 저장
+- [x] 복원 기능
+  - [x] 에디터 진입 시 임시저장 데이터 확인
+  - [x] 헤더 바로 아래 복원 배너 표시 (전체 너비, 공간 항상 확보)
+  - [x] "Restore Draft" → 내용 복원 + draft 삭제
+  - [x] "Dismiss" → 배너만 숨김, draft는 유지
+- [x] 임시저장 관리
+  - [x] 발행 시 임시저장 데이터 삭제
+  - [x] 오래된 임시저장 자동 삭제 (7일 이상)
+- [x] 파일 구조
+  - [x] `draftUtils.ts` — 저장/불러오기/삭제 순수 함수
+  - [x] `useDraft.ts` — 커스텀 훅 (debounce 포함)
+  - [x] `DraftRecoveryBanner.tsx` — 복원 배너 UI
+  - [x] `EditorScreen.tsx` — 통합
 
 ---
 
@@ -572,7 +578,7 @@
 
 ### 📅 Milestone 5: 확장 기능
 - [ ] 포스트 페이징
-- [ ] 임시저장
+- [x] 임시저장
 - [ ] 핀 고정 글
 - [ ] 북마크
 - [ ] 검색 고도화
@@ -586,6 +592,15 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-02-19
+- ✅ **임시저장 (Auto-save) 완료**
+  - debounce(1500ms) 방식 채택 — 30초 인터벌보다 반응 빠르고 불필요한 I/O 없음
+  - localStorage key 구조: `draft:new` / `draft:post:{uuid}`
+  - `draftUtils.ts` → `useDraft.ts` → `DraftRecoveryBanner.tsx` → `EditorScreen` 순으로 구현
+  - 배너는 항상 렌더링, draft 없을 때 `opacity-0`으로 처리 — 레이아웃 흔들림 없음
+  - 7일 이상 된 draft 자동 정리 (EditorScreen 진입 시)
+  - **배운 점**: Auto-save(로컬 crash recovery)와 Draft status(DB 저장 초안)는 완전히 다른 개념
 
 ### 2026-02-17
 - ✅ **Post 날짜 필드 리팩토링 완료**
