@@ -3,7 +3,7 @@ import MainScreen from './screens/MainScreen';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
-import { Post, NewPost } from './types/Post';
+import { Post, NewPost, UpdatePost } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, readPost, updatePost } from './api/supabaseApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -66,15 +66,16 @@ const handleAddPost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private',
 ) => {
   const newPost: NewPost = {
     title,
     content,
     content_type: contentType,
     content_json: contentJson,
-    createdAt: new Date().toLocaleDateString('ko-KR'),
     author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status,
     isMarkdown: contentType === 'markdown', // 레거시 유지
   };
 
@@ -94,17 +95,17 @@ const handleUpdatePost = async (
   content: string,
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
+  status: 'draft' | 'published' | 'private'
 ) => {
-  const updatedPost: Post = {
+  const updatedPost: UpdatePost = {
     id: postId,
     title,
     content,
     content_type: contentType,
     content_json: contentJson,
-    createdAt: new Date().toLocaleDateString('ko-KR'),
     isMarkdown: contentType === 'markdown', // 레거시 유지
-    author_id: user?.id || null,
     author_email: user?.email || null,
+    status: status
   };
 
   try {

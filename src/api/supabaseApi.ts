@@ -15,6 +15,8 @@ const mapPost = (post: any): Post => ({
     author_id: post.author_id,
     author_email: post.users?.email ?? null,
 
+    status: post.status,
+
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
 });
@@ -32,6 +34,8 @@ export const createPost = async (post: NewPost): Promise<Post> => {
             content_type: post.content_type ?? null,
 
             author_id: post.author_id,
+
+            status : post.status,
 
             // 레거시 유지용
             isMarkdown: post.content_type === 'markdown',
@@ -56,12 +60,25 @@ export const readPost = async (): Promise<Post[]> => {
             *,
             users!author_id (email)
         `)
-        .order('createdAt', { ascending: false });
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     return data.map(mapPost);
 };
+
+// READ
+export const reatMyPosts = async(userId: string): Promise<Post[]> => {
+    const {data, error} = await supabase.from('posts')
+                                        .select('*, users!author_id(email)')
+                                        .eq('author_id', userId)
+                                        .order('created_at',{ascending: false});
+    if(error)
+        throw error;
+
+    return data.map(mapPost);
+}
 
 
 // UPDATE
@@ -74,6 +91,8 @@ export const updatePost = async (post: UpdatePost): Promise<Post> => {
             content: post.content ?? "",
             content_json: post.content_json ?? null,
             content_type: post.content_type ?? null,
+
+            status: post.status,
 
             isMarkdown: post.content_type === 'markdown',
         })
