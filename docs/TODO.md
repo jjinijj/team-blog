@@ -135,27 +135,30 @@
 
 ---
 
-#### 3-3. 글 상태 관리 (3-tier)
-**예상 소요**: 1시간
+#### 3-3. 글 상태 관리 (3-tier) ✅
+**예상 소요**: 1시간 | **실제 소요**: 약 1시간
 
-- [ ] DB 스키마
-  - [ ] `posts` 테이블에 `status` 컬럼 추가
+- [x] DB 스키마
+  - [x] `posts` 테이블에 `status` 컬럼 추가
     ```sql
     status TEXT DEFAULT 'published' 
     CHECK (status IN ('draft', 'published', 'private'))
     ```
-- [ ] RLS 정책 수정
-  - [ ] Draft: 본인 + 관리자만 조회 가능
-  - [ ] Published: 모두 조회 가능
-  - [ ] Private: 본인만 조회 가능
-- [ ] UI 업데이트
-  - [ ] 글 작성/수정 시 상태 선택 드롭다운
-  - [ ] 글 목록에서 상태 표시 (Draft/Private 배지)
-  - [ ] 상태별 필터링 (내 글 보기에서)
-- [ ] 쿼리 로직 수정
-  - [ ] 메인 화면: Published만 조회
-  - [ ] 내 글: 모든 상태 조회
-  - [ ] 관리자: Draft 포함 조회 가능
+  - [x] 기존 글 일괄 업데이트 (`status = 'published'`)
+- [x] RLS 정책 수정
+  - [x] Published: 모두 조회 가능
+  - [x] Draft: 본인 + 관리자만 조회 가능
+  - [x] Private: 본인만 조회 가능
+- [x] Post 타입 수정
+  - [x] `status: 'draft' | 'published' | 'private'` 필드 추가
+  - [x] `UpdatePost`에서 `author_id` 제거
+- [x] postApi.ts 쿼리 분기
+  - [x] `readPosts()` — published만 조회 (메인 화면)
+  - [x] `readMyPosts(userId)` — 모든 status 조회 (내 글)
+- [x] EditorScreen UI
+  - [x] status 드롭다운 (Draft / Publish / Private)
+  - [x] 선택한 status와 함께 등록/수정 호출
+- [ ] 글 목록 status 배지 표시 → **3-2. 사용자 페이지에서 구현**
 
 ---
 
@@ -579,6 +582,7 @@
 ### 📅 Milestone 5: 확장 기능
 - [ ] 포스트 페이징
 - [x] 임시저장
+- [x] 글 상태 관리 (Draft/Published/Private)
 - [ ] 핀 고정 글
 - [ ] 북마크
 - [ ] 검색 고도화
@@ -601,6 +605,17 @@
   - 배너는 항상 렌더링, draft 없을 때 `opacity-0`으로 처리 — 레이아웃 흔들림 없음
   - 7일 이상 된 draft 자동 정리 (EditorScreen 진입 시)
   - **배운 점**: Auto-save(로컬 crash recovery)와 Draft status(DB 저장 초안)는 완전히 다른 개념
+- ✅ **글 상태 관리 (Draft/Published/Private) 완료**
+  - DB: `status` 컬럼 추가 + RLS 정책 수정 (status별 조회 범위 제한)
+  - `Post` 타입에 `status` 필드 추가, `UpdatePost`에서 `author_id` 제거
+  - `postApi.ts`: `readPosts()` published 필터, `readMyPosts()` 신규 추가
+  - EditorScreen: 드롭다운 UI로 상태 선택 후 등록/수정 (초안/공개/비공개 한글화)
+  - 글 목록 배지 표시는 사용자 페이지(3-2) 구현 시 함께 처리
+  - **배운 점**: `EXISTS (SELECT 1 ...)` — 존재 여부만 확인할 때 관례적으로 사용
+- ✅ **ProfileDropdown 공통 컴포넌트 분리**
+  - MainScreen과 EditorScreen에서 동일한 프로필 드롭다운 사용 → 컴포넌트로 분리
+  - `isAdmin`, `signOut`을 props 대신 `useAuth()`에서 직접 가져와 props 최소화
+  - EditorScreen 헤더에 프로필 버튼 추가
 
 ### 2026-02-17
 - ✅ **Post 날짜 필드 리팩토링 완료**
