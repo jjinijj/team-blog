@@ -1,45 +1,73 @@
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getRenderMode, Post } from '../types/Post';
+import { Post } from '../types/Post';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
-import CommentsSection from '../component/comments/CommentsSection'
+import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
+import { readPostById } from '../api/supabaseApi';
 
 interface PostDetailScreenProps {
-  posts: Post[];
-  onGoToMain: () => void;
   onEdit: (postId: string) => void;
   onDelete: (postId: string) => void;
 }
 
 function resolveContentType(post: Post): 'markdown' | 'richtext' {
-  // 신버전 우선
   if (post.content_type) return post.content_type;
-
-  // 구버전 fallback
   return post.isMarkdown ? 'markdown' : 'richtext';
 }
 
-
-const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScreenProps) => {
+const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
   const { id } = useParams<{ id: string }>();
-  const post = posts.find(p => p.id === id);
-
-  const {user} = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await readPostById(id);
+        setPost(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+              <span>←</span>
+              <span className="text-sm font-medium">목록으로</span>
+            </button>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-lg text-gray-400">불러오는 중...</p>
+        </main>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-            <button
-              onClick={onGoToMain}
-              className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
-            >
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
               <span>←</span>
               <span className="text-sm font-medium">목록으로</span>
             </button>
@@ -61,14 +89,13 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button
-            onClick={onGoToMain}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
           >
             <span>←</span>
             <span className="text-sm font-medium">목록으로</span>
           </button>
-          {/* 권한에 따라 표시 또는 숨기기*/}
-          {post.author_id === user?.id &&(
+          {post.author_id === user?.id && (
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onEdit(post.id)}
@@ -84,7 +111,6 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
               </button>
             </div>
           )}
-          
         </div>
       </header>
 
@@ -94,20 +120,19 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
         <header className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <span className="text-gray-500 text-sm">{getAbsoluteDay(post.created_at)}</span>
-            {/* 모드 표시 뱃지 */}
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              contentType === 'markdown' 
-                ? 'bg-purple-100 text-purple-600' 
+              contentType === 'markdown'
+                ? 'bg-purple-100 text-purple-600'
                 : 'bg-blue-100 text-blue-600'
             }`}>
               {contentType === 'markdown' ? 'Markdown' : 'Rich Text'}
             </span>
           </div>
-          
+
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-8 tracking-tight">
             {post.title}
           </h1>
-          
+
           <div className="flex items-center justify-between py-6 border-y border-gray-100">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
@@ -122,38 +147,32 @@ const PostDetailScreen = ({ posts, onGoToMain, onEdit, onDelete }: PostDetailScr
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 text-gray-500 text-sm">
               <span>📖</span>
-              <span>
-                {Math.ceil(post.content.length / 1000)} min read
-              </span>
+              <span>{Math.ceil(post.content.length / 1000)} min read</span>
             </div>
           </div>
         </header>
 
-        {/* Article Content - 마크다운/리치텍스트 분기 */}
+        {/* Article Content */}
         <article className="prose prose-slate prose-lg max-w-none mb-16 prose-h1:text-4xl prose-h2:text-2xl prose-p:text-base">
-                
-        {contentType === 'markdown' && (
-          <MarkdownRenderer markdown={post.content} />
-        )}
-      
-        {contentType === 'richtext' && doc && (
-          <RichTextRenderer doc={doc} />
-        )}
-      
-        {contentType === 'richtext' && !doc && (
-          <p className="text-gray-400 italic">지원되지 않는 이전 형식의 글입니다. (마이그레이션 필요)</p>
-        )}
-      
+          {contentType === 'markdown' && (
+            <MarkdownRenderer markdown={post.content} />
+          )}
+          {contentType === 'richtext' && doc && (
+            <RichTextRenderer doc={doc} />
+          )}
+          {contentType === 'richtext' && !doc && (
+            <p className="text-gray-400 italic">지원되지 않는 이전 형식의 글입니다. (마이그레이션 필요)</p>
+          )}
         </article>
 
-        {/* Comments Section - 새로운 CommentsSection 컴포넌트 사용 */}
+        {/* Comments */}
         <CommentsSection postId={post.id} />
       </main>
     </div>
   );
-}
+};
 
 export default PostDetailScreen;
