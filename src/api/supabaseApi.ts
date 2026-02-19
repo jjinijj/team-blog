@@ -53,7 +53,7 @@ export const createPost = async (post: NewPost): Promise<Post> => {
 
 
 // READ
-export const readPost = async (): Promise<Post[]> => {
+export const readPosts = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -69,7 +69,7 @@ export const readPost = async (): Promise<Post[]> => {
 };
 
 // READ
-export const reatMyPosts = async(userId: string): Promise<Post[]> => {
+export const readMyPosts = async(userId: string): Promise<Post[]> => {
     const {data, error} = await supabase.from('posts')
                                         .select('*, users!author_id(email)')
                                         .eq('author_id', userId)
@@ -79,6 +79,21 @@ export const reatMyPosts = async(userId: string): Promise<Post[]> => {
 
     return data.map(mapPost);
 }
+
+// 단건 조회 - published 글 또는 본인 글
+export const readPostById = async (postId: string): Promise<Post | null> => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select(`
+            *,
+            users!author_id (email)
+        `)
+        .eq('id', postId)
+        .single();
+
+    if (error) return null;
+    return mapPost(data);
+};
 
 
 // UPDATE

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { readPost } from '../../api/supabaseApi';
+import { readPosts } from '../../api/supabaseApi';
 import { readAllowedEmails } from '../../api/AdminApi';
 
 /**
@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     try {
       const [posts, emails] = await Promise.all([
-        readPost(),
+        readPosts(),
         readAllowedEmails(),
       ]);
 

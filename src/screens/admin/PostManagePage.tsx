@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../../types/Post';
 import {
-  readPost,
+  readPosts,
   deletePost,
   deleteMultiplePosts,
 } from '../../api/supabaseApi';
@@ -30,7 +30,7 @@ const PostManagePage: React.FC = () => {
   const loadPosts = async () => {
     try {
       setIsLoading(true);
-      const data = await readPost();
+      const data = await readPosts();
       setPosts(data);
     } catch (err) {
       console.error('게시글 목록 로드 실패:', err);
