@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Post } from '../../types/Post';
-import { readMyPosts, deletePost } from '../../api/supabaseApi';
+import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/supabaseApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
 
 type FilterStatus = 'all' | 'published' | 'draft' | 'private';
+type SortOrder = 'newest' | 'oldest';
 
 const STATUS_TABS: { value: FilterStatus; label: string; icon: string }[] = [
   { value: 'all',       label: '전체',   icon: 'format_list_bulleted' },
@@ -35,50 +36,53 @@ const StatusBadge = ({ status }: { status: Post['status'] }) => {
   );
 };
 
-const PostActionMenu = ({
-  post,
-  onEdit,
-  onDelete,
+// 정렬 드롭다운
+const SortDropdown = ({
+  sortOrder,
+  onChange,
 }: {
-  post: Post;
-  onEdit: (post: Post) => void;
-  onDelete: (postId: string) => void;
+  sortOrder: SortOrder;
+  onChange: (v: SortOrder) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const LABELS: Record<SortOrder, string> = { newest: '최신순', oldest: '오래된순' };
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((p) => !p)}
-        className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 transition-colors"
+        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 h-9 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
       >
-        <span className="material-symbols-outlined">more_vert</span>
+        <span className="material-symbols-outlined text-slate-400 text-lg">filter_alt</span>
+        {LABELS[sortOrder]}
+        <span className="material-symbols-outlined text-xs">expand_more</span>
       </button>
       {open && (
         <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 z-50">
-          <button
-            onClick={() => { setOpen(false); onEdit(post); }}
-            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">edit</span>
-            수정
-          </button>
-          <button
-            onClick={() => { setOpen(false); onDelete(post.id); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">delete</span>
-            삭제
-          </button>
+          {(['newest', 'oldest'] as SortOrder[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => { onChange(v); setOpen(false); }}
+              className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between transition-colors ${
+                sortOrder === v
+                  ? 'text-blue-600 bg-blue-50 font-semibold dark:bg-blue-900/20'
+                  : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'
+              }`}
+            >
+              {LABELS[v]}
+              {sortOrder === v && <span className="material-symbols-outlined text-sm text-blue-600">check</span>}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -97,6 +101,11 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+
+  // 선택 모드
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
@@ -114,6 +123,52 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
     fetch();
   }, [user]);
 
+  // 필터 + 정렬 적용
+  const getFilteredSorted = () => {
+    let result = filter === 'all' ? [...posts] : posts.filter((p) => p.status === filter);
+    result.sort((a, b) => {
+      const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return sortOrder === 'newest' ? diff : -diff;
+    });
+    return result;
+  };
+
+  const filtered = getFilteredSorted();
+
+  const counts: Record<FilterStatus, number> = {
+    all:       posts.length,
+    published: posts.filter((p) => p.status === 'published').length,
+    draft:     posts.filter((p) => p.status === 'draft').length,
+    private:   posts.filter((p) => p.status === 'private').length,
+  };
+
+  // 체크박스 핸들러
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const isAllSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((p) => p.id)));
+    }
+  };
+
+  // 선택 모드 진입/해제
+  const enterSelectMode = () => setIsSelectMode(true);
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  // 단건 삭제
   const handleDelete = async (postId: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
     try {
@@ -125,13 +180,18 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
     }
   };
 
-  const filtered = filter === 'all' ? posts : posts.filter((p) => p.status === filter);
-
-  const counts: Record<FilterStatus, number> = {
-    all:       posts.length,
-    published: posts.filter((p) => p.status === 'published').length,
-    draft:     posts.filter((p) => p.status === 'draft').length,
-    private:   posts.filter((p) => p.status === 'private').length,
+  // 다중 삭제
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`선택한 ${selectedIds.size}개의 글을 삭제하시겠습니까?`)) return;
+    try {
+      await deleteMultiplePosts([...selectedIds]);
+      setPosts((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+      exitSelectMode();
+    } catch (e) {
+      console.error(e);
+      alert('삭제에 실패했습니다.');
+    }
   };
 
   return (
@@ -174,18 +234,18 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
               return (
                 <button
                   key={tab.value}
-                  onClick={() => setFilter(tab.value)}
+                  onClick={() => { setFilter(tab.value); exitSelectMode(); }}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'text-blue-600 font-semibold border-l-2 border-primary bg-primary/5'
+                      ? 'text-blue-600 font-semibold border-l-2 border-blue-600 bg-blue-50'
                       : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 border-l-2 border-transparent'
                   }`}
                 >
-                  <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-primary' : ''}`}>
+                  <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-blue-600' : ''}`}>
                     {tab.icon}
                   </span>
                   <span>{tab.label}</span>
-                  <span className={`ml-auto hidden text-xs font-medium lg:inline ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+                  <span className={`ml-auto hidden text-xs font-medium lg:inline ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
                     {counts[tab.value]}
                   </span>
                 </button>
@@ -197,18 +257,68 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
         {/* Content */}
         <section className="flex-1 p-4 lg:p-8">
           <div className="mx-auto max-w-5xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">내 글</h2>
-              <p className="text-sm text-slate-500">{counts[filter]}개의 글</p>
+            {/* 상단 타이틀 + 컨트롤 */}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">내 글</h2>
+                <p className="text-sm text-slate-500">{counts[filter]}개의 글</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <SortDropdown sortOrder={sortOrder} onChange={setSortOrder} />
+                {isSelectMode ? (
+                  <button
+                    onClick={exitSelectMode}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 h-9 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                    취소
+                  </button>
+                ) : (
+                  <button
+                    onClick={enterSelectMode}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 h-9 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                  >
+                    <span className="material-symbols-outlined text-sm">check_box</span>
+                    선택
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Post List */}
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+
+              {/* Bulk Action Bar - 선택 모드일 때 표시 */}
+              {isSelectMode && (
+                <div className="flex items-center justify-between border-b border-slate-200 bg-blue-50 px-6 py-3 dark:border-slate-800 dark:bg-blue-900/20">
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {selectedIds.size}개 선택됨
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleDeleteSelected}
+                    disabled={selectedIds.size === 0}
+                    className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-bold text-red-600 hover:bg-red-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    선택 삭제
+                  </button>
+                </div>
+              )}
+
               {/* Table Header */}
-              <div className="hidden grid-cols-12 border-b border-slate-200 bg-slate-50/50 px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 md:grid">
-                <div className="col-span-7">제목</div>
+              <div className={`hidden border-b border-slate-200 bg-slate-50/50 px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 md:grid ${isSelectMode ? 'grid-cols-12' : 'grid-cols-12'}`}>
+                {isSelectMode && <div className="col-span-1" />}
+                <div className={isSelectMode ? 'col-span-6' : 'col-span-7'}>제목</div>
                 <div className="col-span-2">상태</div>
-                <div className="col-span-3 text-right">작성일</div>
+                <div className={`${isSelectMode ? 'col-span-3' : 'col-span-3'} text-right`}>작성일</div>
               </div>
 
               {/* Rows */}
@@ -224,17 +334,35 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
                   filtered.map((post) => (
                     <div
                       key={post.id}
-                      className="group grid grid-cols-1 gap-4 px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 md:grid-cols-12 md:items-center md:gap-0"
+                      className={`group grid grid-cols-1 gap-4 px-6 py-4 transition-colors md:grid-cols-12 md:items-center md:gap-0 ${
+                        selectedIds.has(post.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/10'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
                     >
+                      {/* 체크박스 - 선택 모드일 때만 */}
+                      {isSelectMode && (
+                        <div className="col-span-1 flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(post.id)}
+                            onChange={() => toggleSelect(post.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"
+                          />
+                        </div>
+                      )}
+
                       {/* 제목 */}
-                      <div className="col-span-7 flex items-start gap-4">
+                      <div className={`${isSelectMode ? 'col-span-6' : 'col-span-7'} flex items-start gap-4`}>
                         <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
                           <span className="material-symbols-outlined text-slate-400">article</span>
                         </div>
                         <div>
                           <button
-                            onClick={() => navigate(`/post/${post.id}`)}
-                            className="text-base font-semibold text-slate-900 group-hover:text-primary dark:text-slate-100 transition-colors text-left"
+                            onClick={() => !isSelectMode && navigate(`/post/${post.id}`)}
+                            className={`text-base font-semibold text-slate-900 dark:text-slate-100 transition-colors text-left ${
+                              isSelectMode ? 'cursor-default' : 'group-hover:text-blue-600 cursor-pointer'
+                            }`}
                           >
                             {post.title}
                           </button>
@@ -249,8 +377,8 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
                         <StatusBadge status={post.status} />
                       </div>
 
-                      {/* 날짜 + 액션 */}
-                      <div className="col-span-3 flex items-center justify-between md:justify-end">
+                      {/* 날짜 */}
+                      <div className="col-span-3 flex items-center justify-between md:justify-end gap-3">
                         <span className="text-sm text-slate-500">{getAbsoluteTime(post.created_at)}</span>
                       </div>
                     </div>
