@@ -14,6 +14,9 @@ import WhitelistPage from './screens/admin/WhitelistPage';
 import PostManagePage from './screens/admin/PostManagePage';
 import { DocumentNode } from './utils/richTextTypes'; // 경로는 프로젝트에 맞게 조정
 import MyPostsScreen from './screens/profile/Mypostsscreen';
+import ProfileLayout from './component/Profilelayout';
+import EditProfilePage from './screens/profile/EditProfilePage';
+import ChangePasswordPage from './screens/profile/ChangePasswordPage';
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -193,6 +196,15 @@ const handleUpdatePost = async (
           {/* 404 - 존재하지 않는 경로는 홈으로 */}
           <Route path="*" element={<Navigate to="/" replace />} />
 
+      {/* 사용자 페이지 라우트 - 중첩 구조 */}
+          <Route path="/profile" element={<ProfileLayout />}>
+            <Route index element={<Navigate to="edit" replace />} />
+            <Route path="edit" element={<EditProfilePage />} />
+            <Route path="password" element={<ChangePasswordPage />} />
+          </Route>
+
+          {/* 404 - 존재하지 않는 경로는 홈으로 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
       
     </Routes>
   );
