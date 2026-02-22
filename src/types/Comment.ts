@@ -8,6 +8,9 @@ export interface Comment {
   content: string;               // 댓글 내용
   created_at: string;            // 작성 시간
   updated_at: string;            // 수정 시간
+
+  author_name: string | null;
+  author_color: string | null;
   
   // JOIN으로 가져올 필드 (선택적)
   author_email?: string;         // 작성자 이메일

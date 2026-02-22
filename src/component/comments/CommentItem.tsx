@@ -20,7 +20,6 @@ export default function CommentItem({
   onUpdate,
   onDelete
 }: CommentItemProps) {
-  // 상대 시간 계산 (예: "2시간 전")
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -34,28 +33,27 @@ export default function CommentItem({
     return `${Math.floor(diffInSeconds / 31536000)}년 전`;
   };
 
-  // 이메일에서 첫 글자 추출 (아바타용)
-  const getInitial = (email?: string) => {
-    return email ? email.charAt(0).toUpperCase() : '?';
-  };
+  const displayName = comment.author_name ?? comment.author_email ?? '?';
+  const avatarColor = comment.author_color ?? '#3b82f6';
+  const initial = displayName[0].toUpperCase();
 
-  // 수정 모드일 때
+  // 수정 모드
   if (isEditing) {
     return (
       <div className="flex gap-4">
-        {/* 아바타 */}
-        <div className="size-10 bg-blue-600 rounded-full shrink-0 flex items-center justify-center text-white font-bold">
-          {getInitial(comment.author_email)}
+        <div
+          className="size-10 rounded-full shrink-0 flex items-center justify-center text-white font-bold"
+          style={{ backgroundColor: avatarColor }}
+        >
+          {initial}
         </div>
 
         <div className="flex-1">
-          {/* 작성자 정보 */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm font-bold">{comment.author_email}</span>
+            <span className="text-sm font-bold">{displayName}</span>
             <span className="text-xs text-slate-500">{getRelativeTime(comment.created_at)}</span>
           </div>
 
-          {/* 수정 입력창 */}
           <textarea
             defaultValue={comment.content}
             id={`edit-${comment.id}`}
@@ -63,7 +61,6 @@ export default function CommentItem({
             className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none mb-2"
           />
 
-          {/* 저장/취소 버튼 */}
           <div className="flex justify-end gap-2">
             <button
               onClick={onCancelEdit}
@@ -91,27 +88,26 @@ export default function CommentItem({
     );
   }
 
-  // 일반 모드 (읽기 전용)
+  // 일반 모드
   return (
     <div className="flex gap-4">
-      {/* 아바타 */}
-      <div className="size-10 bg-blue-600 rounded-full shrink-0 flex items-center justify-center text-white font-bold">
-        {getInitial(comment.author_email)}
+      <div
+        className="size-10 rounded-full shrink-0 flex items-center justify-center text-white font-bold"
+        style={{ backgroundColor: avatarColor }}
+      >
+        {initial}
       </div>
 
       <div className="flex-1">
-        {/* 작성자 정보 */}
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-bold">{comment.author_email}</span>
+          <span className="text-sm font-bold">{displayName}</span>
           <span className="text-xs text-slate-500">{getRelativeTime(comment.created_at)}</span>
         </div>
 
-        {/* 댓글 내용 */}
         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
           {comment.content}
         </p>
 
-        {/* 액션 버튼들 (본인 댓글만) */}
         {isOwner && (
           <div className="flex items-center gap-4">
             <button

@@ -10,14 +10,17 @@ export interface Post{
     author_id: string | null; // 작성자, 기존 포스트들은 null
     author_email: string | null;
 
+    author_name: string | null;
+    author_color: string | null;
+
     status: 'draft' | 'published' | 'private';
 
     // legacy
     isMarkdown: boolean;
 }
 
-export type NewPost = Omit<Post, 'id' | 'created_at' | 'updated_at'>;
-export type UpdatePost = Omit<Post, 'created_at'| 'updated_at' | 'author_id'>
+export type NewPost = Omit<Post, 'id' | 'created_at' | 'updated_at' | 'author_name' | 'author_color'>;
+export type UpdatePost = Omit<Post, 'created_at' | 'updated_at' | 'author_id' | 'author_name' | 'author_color'>;
 
 export const getRenderMode = (post: Post): 'markdown' | 'richtext' => {
     if(post.content_type){
