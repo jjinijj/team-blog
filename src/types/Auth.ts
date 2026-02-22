@@ -1,9 +1,11 @@
 import { User } from "@supabase/supabase-js";
 
-export interface AuthState{
-    user: User | null;
-    loading: boolean;
-    isAdmin: boolean;
+export interface AuthState {
+  user: User | null;
+  loading: boolean;
+  isAdmin: boolean;
+  displayName: string | null;
+  avatarColor: string;
 }
 
 export interface LoginForData{

@@ -20,7 +20,7 @@ function resolveContentType(post: Post): 'markdown' | 'richtext' {
   return post.isMarkdown ? 'markdown' : 'richtext';
 }
 
-const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
+const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+            <button onClick={() => navigate('/')} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
               <span>←</span>
               <span className="text-sm font-medium">목록으로</span>
             </button>
@@ -67,7 +67,7 @@ const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+            <button onClick={() => navigate('/')} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
               <span>←</span>
               <span className="text-sm font-medium">목록으로</span>
             </button>
@@ -89,7 +89,7 @@ const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
           >
             <span>←</span>
@@ -135,12 +135,15 @@ const PostDetailScreen = ({onEdit, onDelete }: PostDetailScreenProps) => {
 
           <div className="flex items-center justify-between py-6 border-y border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                {post.author_email?.[0]?.toUpperCase() || 'U'}
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold"
+                style={{ backgroundColor: post.author_color ?? '#3b82f6' }}
+              >
+                {(post.author_name ?? post.author_email ?? 'U')[0].toUpperCase()}
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-900">
-                  {post.author_email || 'Unknown'}
+                  {post.author_name ?? post.author_email ?? 'Unknown'}
                 </span>
                 <span className="text-xs text-gray-500">
                   {getAbsoluteDay(post.created_at)}

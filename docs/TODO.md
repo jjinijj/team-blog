@@ -106,7 +106,12 @@
 
 ---
 
-#### 3-1. 관리자 페이지 개선
+#### API 파일명 리팩토링
+- [ ] `supabaseApi.ts` → `postApi.ts`
+- [ ] `adminApi.ts` → `authApi.ts`
+- [ ] import 경로 일괄 수정
+
+---
 **예상 소요**: 1시간
 
 - [ ] 글 목록 관리
