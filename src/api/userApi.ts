@@ -4,6 +4,7 @@ export interface UserProfile {
   id: string;
   email: string;
   display_name: string | null;
+  avatar_color: string | null;
   is_admin: boolean;
   created_at: string;
 }
@@ -33,5 +34,14 @@ export const updateDisplayName = async (userId: string, displayName: string): Pr
 // 비밀번호 변경
 export const updatePassword = async (newPassword: string): Promise<void> => {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+};
+
+// 배경 색 변경
+export const updateAvatarColor = async (userId: string, color: string): Promise<void> => {
+  const { error } = await supabase
+    .from('users')
+    .update({ avatar_color: color })
+    .eq('id', userId);
   if (error) throw error;
 };

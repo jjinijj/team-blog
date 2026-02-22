@@ -45,7 +45,7 @@ export const createPost = async (post: NewPost): Promise<Post> => {
         }])
         .select(`
             *,
-            users!author_id (email)
+            users!author_id(email)
         `)
         .single();
 
@@ -61,7 +61,7 @@ export const readPosts = async (): Promise<Post[]> => {
         .from('posts')
         .select(`
             *,
-            users!author_id (email, display_name, avatar_color)
+            users!author_id(email,display_name,avatar_color)
         `)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
@@ -74,7 +74,7 @@ export const readPosts = async (): Promise<Post[]> => {
 // READ
 export const readMyPosts = async(userId: string): Promise<Post[]> => {
     const {data, error} = await supabase.from('posts')
-                                        .select('*, users!author_id (email, display_name, avatar_color')
+                                        .select('*, users!author_id(email,display_name,avatar_color)')
                                         .eq('author_id', userId)
                                         .order('created_at',{ascending: false});
     if(error)
@@ -89,7 +89,7 @@ export const readPostById = async (postId: string): Promise<Post | null> => {
         .from('posts')
         .select(`
             *,
-            users!author_id (email, display_name, avatar_color)
+            users!author_id(email,display_name,avatar_color)
         `)
         .eq('id', postId)
         .single();
@@ -117,7 +117,7 @@ export const updatePost = async (post: UpdatePost): Promise<Post> => {
         .eq('id', post.id)
         .select(`
             *,
-            users!author_id (email)
+            users!author_id(email)
         `)
         .single();
 

@@ -12,18 +12,20 @@ export const fetchComments = async (postId: string): Promise<Comment[]> => {
       .from(tableName)
       .select(`
         *,
-        users!author_id (email, display_name, avatar_color)
+        users!author_id(email,display_name,avatar_color)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
+    console.log(data);
+
     return ((data as any[]) || []).map((comment: any) => ({
       ...comment,
-      author_email: comment.author?.email,
-      author_name: comment.author?.display_name ?? null,
-      author_color: comment.author?.avatar_color ?? '#3b82f6',
+      author_email: comment.users?.email,
+      author_name: comment.users?.display_name ?? null,
+      author_color: comment.users?.avatar_color ?? '#3b82f6',
     }));
   } catch (e) {
     console.error('Error fetching comments:', e);
