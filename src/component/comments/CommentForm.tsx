@@ -1,12 +1,12 @@
 // src/components/comments/CommentForm.tsx
 import { useState, FormEvent } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface CommentFormProps {
   onSubmit: (content: string) => Promise<void>;
   initialValue?: string;
   placeholder?: string;
   submitButtonText?: string;
-  userEmail?: string;  // 사용자 이메일 (아바타 표시용)
   showAvatar?: boolean;  // 아바타 표시 여부
 }
 
@@ -15,11 +15,12 @@ export default function CommentForm({
   initialValue = '',
   placeholder = '댓글을 작성하세요...',
   submitButtonText = '등록',
-  userEmail,
   showAvatar = true
 }: CommentFormProps) {
   const [content, setContent] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { displayName, avatarColor } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -41,17 +42,18 @@ export default function CommentForm({
     }
   };
 
-  // 이메일에서 첫 글자 추출 (아바타용)
-  const getInitial = (email?: string) => {
-    return email ? email.charAt(0).toUpperCase() : '?';
+  // 이름에서 첫 글자 추출 (아바타용)
+  const getInitial = (displayName: string) => {
+    return displayName ? displayName.charAt(0).toUpperCase() : '?';
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-4 mb-10">
       {/* 사용자 아바타 (선택적) */}
       {showAvatar && (
-        <div className="size-10 bg-blue-600 rounded-full shrink-0 flex items-center justify-center text-white font-bold">
-          {getInitial(userEmail)}
+        <div className="size-10 bg-blue-600 rounded-full shrink-0 flex items-center justify-center text-white font-bold"
+        style={{ backgroundColor: avatarColor }}>
+          {getInitial(displayName? displayName : 'unknown')}
         </div>
       )}
 

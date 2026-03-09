@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { updateDisplayName, updateAvatarColor, UserProfile } from '../../api/userApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface OutletContext {
   profile: UserProfile | null;
@@ -24,12 +25,18 @@ const PALETTE = [
 
 const EditProfilePage = () => {
   const { profile, setProfile } = useOutletContext<OutletContext>();
+  const { refreshUserInfo } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [selectedColor, setSelectedColor] = useState(profile?.avatar_color ?? '#3b82f6');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (profile?.display_name) setDisplayName(profile.display_name);
+    if (profile?.avatar_color) setSelectedColor(profile.avatar_color);
+  }, [profile?.display_name, profile?.avatar_color]);
 
   if (!profile) return null;
 
@@ -44,6 +51,7 @@ const EditProfilePage = () => {
         await updateAvatarColor(profile.id, selectedColor);
       }
       setProfile({ ...profile, display_name: displayName.trim(), avatar_color: selectedColor });
+      await refreshUserInfo();
       setSuccess(true);
     } catch (e) {
       setError('저장에 실패했습니다. 다시 시도해주세요.');

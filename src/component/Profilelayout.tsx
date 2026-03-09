@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchUserProfile, UserProfile } from '../api/userApi'
 
 const ProfileLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user, avatarColor, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -37,7 +37,8 @@ const ProfileLayout = () => {
 
           {/* 사용자 정보 */}
           <div className="flex items-center gap-3 p-3 mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0">
+            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0"
+            style={{background : avatarColor }}>
               {profile ? (profile.display_name ?? profile.email)[0].toUpperCase() : '?'}
             </div>
             <div className="flex flex-col overflow-hidden">

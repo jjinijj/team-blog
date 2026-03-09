@@ -4,9 +4,10 @@ import { User } from '@supabase/supabase-js';
 import { AuthState } from "../types/Auth"
 
 interface AuthContextType extends AuthState {
-    signUp: (email: string, password: string) => Promise<{error: Error | null}>;
+    signUp: (email: string, password: string, displayName: string) => Promise<{error: Error | null}>;
     signIn: (email: string, password: string) => Promise<{error: Error | null}>;
     signOut: () => Promise<void>;
+    refreshUserInfo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -87,7 +88,7 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
         return () => { subscription.unsubscribe(); }
     }, []);
 
-    const signUp = async(email: string, password: string) => {
+    const signUp = async(email: string, password: string, displayName: string) => {
         try {
             const {data: allowedEmail, error: checkError} = await supabase
                 .from('allowed_emails')
@@ -99,7 +100,11 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
                 return { error: new Error('허용되지 않은 이메일입니다. 관리자에게 문의하세요.') };
             }
 
-            const {error: signUpError} = await supabase.auth.signUp({ email, password });
+            const {error: signUpError} = await supabase.auth.signUp({
+                email,
+                password,
+                options: { data: { display_name: displayName.trim() } },
+            });
             if (signUpError) return {error: signUpError};
 
             return {error: null};
@@ -129,6 +134,10 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
         }
     };
 
+    const refreshUserInfo = async () => {
+        if (user) await fetchUserInfo(user.id);
+    };
+
     const value = {
         user,
         loading,
@@ -138,6 +147,7 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
         signUp,
         signIn,
         signOut,
+        refreshUserInfo,
     };
 
     return (
