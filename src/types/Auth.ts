@@ -17,6 +17,7 @@ export interface SignupFormData{
     email: string;
     password: string;
     confirmPassword: string;
+    displayName: string;
 }
 
 export interface AllowedEmail{
