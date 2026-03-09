@@ -11,6 +11,7 @@ interface AuthScreenProp {
 const AuthScreen = ({goToMain} : AuthScreenProp) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +32,12 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
       return;
     }
 
+    if (mode === 'signup' && !displayName.trim()) {
+      setError('이름을 입력해주세요.');
+      setLoading(false);
+      return;
+    }
+
     if (mode === 'signup' && password !== confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
       setLoading(false);
@@ -46,7 +53,7 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
     try {
       const { error } = mode === 'login'
         ? await signIn(email, password)
-        : await signUp(email, password);
+        : await signUp(email, password, displayName);
 
       if (error) {
         setError(error.message);
@@ -54,7 +61,7 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
 
         if(mode === 'signup'){
             alert('회원가입이 완료되었습니다.');
-            //goToMain();
+            goToMain();
         }else if(mode === 'login'){
             goToMain();
         }
@@ -72,6 +79,7 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
   const toggleMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');
     setError('');
+    setDisplayName('');
     setPassword('');
     setConfirmPassword('');
   };
@@ -113,6 +121,25 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
             />
           </label>
         </div>
+
+        {/* Display Name Field (회원가입 시에만) */}
+        {mode === 'signup' && (
+          <div className="flex flex-col w-full">
+            <label className="flex flex-col w-full">
+              <p className="text-gray-900 text-sm font-semibold leading-normal pb-2 uppercase tracking-wider">
+                이름
+              </p>
+              <input
+                className="form-input flex w-full rounded-lg text-gray-900 focus:outline-0 focus:ring-2 focus:ring-blue-600/20 border border-gray-300 bg-white focus:border-blue-600 h-14 placeholder:text-gray-400 p-[15px] text-base font-normal transition-all"
+                placeholder="팀에서 사용할 이름을 입력하세요"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={loading}
+              />
+            </label>
+          </div>
+        )}
 
         {/* Password Field */}
         <div className="flex flex-col w-full">
