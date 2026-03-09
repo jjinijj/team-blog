@@ -83,7 +83,6 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
           onSubmit={handleCreate}
           placeholder="댓글을 작성하세요..."
           submitButtonText="등록"
-          userEmail={user.email}
           showAvatar={true}
         />
       )}
