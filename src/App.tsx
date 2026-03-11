@@ -13,6 +13,7 @@ import AdminLayout from './component/admin/AdminLayout';
 import Dashboard from './screens/admin/Dashboard';
 import WhitelistPage from './screens/admin/WhitelistPage';
 import PostManagePage from './screens/admin/PostManagePage';
+import HomeScreenPage from './screens/admin/HomeScreenPage';
 import { DocumentNode } from './utils/richTextTypes'; // 경로는 프로젝트에 맞게 조정
 import MyPostsScreen from './screens/profile/Mypostsscreen';
 import ProfileLayout from './component/Profilelayout';
@@ -203,6 +204,7 @@ const handleUpdatePost = async (
               
               {/* 실제 관리자 페이지들 */}
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="home-screen" element={<HomeScreenPage />} />
               <Route path="whitelist" element={<WhitelistPage />} />
               <Route path="posts" element={<PostManagePage />} />
             </Route>
