@@ -159,7 +159,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         </header>
 
         {/* Article Content */}
-        <article className="prose prose-slate prose-lg max-w-none mb-16 prose-h1:text-4xl prose-h2:text-2xl prose-p:text-base">
+        <article className="prose prose-slate prose-lg max-w-none mb-16 prose-h1:text-4xl prose-h2:text-2xl prose-p:text-base [&_code]:before:content-none [&_code]:after:content-none">
           {contentType === 'markdown' && (
             <MarkdownRenderer markdown={post.content} />
           )}

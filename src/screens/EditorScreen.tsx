@@ -46,8 +46,9 @@ export const EditorScreen = ({
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { user, loading, displayName } = useAuth();
+  const { user, loading, displayName, avatarColor } = useAuth();
   const navigate = useNavigate();
 
   // ── 임시저장 ───────────────────────────────────
@@ -115,6 +116,118 @@ export const EditorScreen = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // ── wrap selection ────────────────────────────
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const { selectionStart, selectionEnd } = textarea;
+    if (selectionStart === selectionEnd) return;
+
+    const WRAP_MAP: Record<string, [string, string]> = {
+      '*': ['*', '*'],
+      '`': ['`', '`'],
+      '~': ['~~', '~~'],
+      '_': ['__', '__'],
+    };
+
+    const wrap = WRAP_MAP[e.key];
+    if (!wrap) return;
+
+    e.preventDefault();
+    const [open, close] = wrap;
+    const before = markdownContent.slice(0, selectionStart);
+    const selected = markdownContent.slice(selectionStart, selectionEnd);
+    const after = markdownContent.slice(selectionEnd);
+    const newContent = before + open + selected + close + after;
+    setMarkdownContent(newContent);
+
+    requestAnimationFrame(() => {
+      textarea.selectionStart = selectionStart + open.length;
+      textarea.selectionEnd = selectionEnd + open.length;
+    });
+  }, [markdownContent]);
+
+  // ── 툴바 액션 ─────────────────────────────────
+  const applyInlineWrap = useCallback((open: string, close: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const { selectionStart, selectionEnd } = textarea;
+    const selected = markdownContent.slice(selectionStart, selectionEnd);
+    const before = markdownContent.slice(0, selectionStart);
+    const after = markdownContent.slice(selectionEnd);
+    const newContent = before + open + selected + close + after;
+    setMarkdownContent(newContent);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      if (selected) {
+        textarea.selectionStart = selectionStart + open.length;
+        textarea.selectionEnd = selectionEnd + open.length;
+      } else {
+        textarea.selectionStart = selectionStart + open.length;
+        textarea.selectionEnd = selectionStart + open.length;
+      }
+    });
+  }, [markdownContent]);
+
+  const applyLinePrefix = useCallback((prefix: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const { selectionStart } = textarea;
+    const lineStart = markdownContent.lastIndexOf('\n', selectionStart - 1) + 1;
+    const lineHasPrefix = markdownContent.slice(lineStart).startsWith(prefix);
+    let newContent: string;
+    let offset: number;
+    if (lineHasPrefix) {
+      newContent = markdownContent.slice(0, lineStart) + markdownContent.slice(lineStart + prefix.length);
+      offset = -prefix.length;
+    } else {
+      newContent = markdownContent.slice(0, lineStart) + prefix + markdownContent.slice(lineStart);
+      offset = prefix.length;
+    }
+    setMarkdownContent(newContent);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.selectionStart = selectionStart + offset;
+      textarea.selectionEnd = selectionStart + offset;
+    });
+  }, [markdownContent]);
+
+  const applyLink = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const url = window.prompt('링크 URL을 입력하세요', 'https://');
+    if (!url) return;
+    const { selectionStart, selectionEnd } = textarea;
+    const selected = markdownContent.slice(selectionStart, selectionEnd) || '링크 텍스트';
+    const insert = `[${selected}](${url})`;
+    const newContent = markdownContent.slice(0, selectionStart) + insert + markdownContent.slice(selectionEnd);
+    setMarkdownContent(newContent);
+    requestAnimationFrame(() => textarea.focus());
+  }, [markdownContent]);
+
+  const applyCodeBlock = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const { selectionStart, selectionEnd } = textarea;
+    const selected = markdownContent.slice(selectionStart, selectionEnd);
+    if (selected) {
+      applyInlineWrap('`', '`');
+    } else {
+      const atLineStart = selectionStart === 0 || markdownContent[selectionStart - 1] === '\n';
+      const prefix = atLineStart ? '' : '\n';
+      const insert = prefix + '```\n\n```\n';
+      const newContent = markdownContent.slice(0, selectionStart) + insert + markdownContent.slice(selectionEnd);
+      setMarkdownContent(newContent);
+      const cursorPos = selectionStart + prefix.length + 4;
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.selectionStart = cursorPos;
+        textarea.selectionEnd = cursorPos;
+      });
+    }
+  }, [markdownContent, applyInlineWrap]);
 
   // ── 저장 ──────────────────────────────────────
   const handlePublish = () => {
@@ -256,6 +369,53 @@ export const EditorScreen = ({
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[740px] mx-auto px-8 py-12">
+          {/* 툴바 */}
+          <div className="sticky top-0 z-10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm mb-8 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
+            {(() => {
+              const btnClass = "p-2 rounded transition-colors text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200";
+              return (
+                <>
+                  <button onClick={() => applyInlineWrap('**', '**')} title="Bold" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">format_bold</span>
+                  </button>
+                  <button onClick={() => applyInlineWrap('*', '*')} title="Italic" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">format_italic</span>
+                  </button>
+                  <button onClick={applyLink} title="Link" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">link</span>
+                  </button>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
+                  <button onClick={() => applyLinePrefix('# ')} title="Heading 1" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">format_h1</span>
+                  </button>
+                  <button onClick={() => applyLinePrefix('## ')} title="Heading 2" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">format_h2</span>
+                  </button>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
+                  <button onClick={() => applyLinePrefix('> ')} title="Quote" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">format_quote</span>
+                  </button>
+                  <button onClick={applyCodeBlock} title="Code Block" className={btnClass}>
+                    <span className="material-symbols-outlined text-[20px]">code</span>
+                  </button>
+                  <button disabled title="Image" className="p-2 rounded transition-colors opacity-40 cursor-not-allowed text-slate-500 dark:text-slate-400">
+                    <span className="material-symbols-outlined text-[20px]">image</span>
+                  </button>
+                </>
+              );
+            })()}
+            <div className="ml-auto flex items-center gap-4 px-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Markdown Supported</span>
+              <button
+                onClick={() => window.open('https://github.com/jjinijj/team-blog/blob/main/docs/MARKDOWN_GUIDE.md', '_blank')}
+                className="flex items-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline uppercase tracking-widest"
+              >
+                <span className="material-symbols-outlined text-[14px]">help</span>
+                Guide
+              </button>
+            </div>
+          </div>
+
           {/* 제목 */}
           <input
             type="text"
@@ -266,7 +426,7 @@ export const EditorScreen = ({
           />
 
           <div className="flex items-center gap-3 py-2 border-y border-gray-50 mb-6">
-            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: avatarColor }}>
               {(displayName || user.email)?.[0]?.toUpperCase() || 'A'}
             </div>
             <span className="text-sm font-medium text-gray-500">
@@ -276,10 +436,12 @@ export const EditorScreen = ({
 
           {/* 본문 */}
           <textarea
+            ref={textareaRef}
             className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed placeholder:text-gray-300 p-0 resize-none font-mono text-sm"
             placeholder="이야기를 들려주세요... (마크다운 지원)"
             value={markdownContent}
             onChange={(e) => setMarkdownContent(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
       </main>

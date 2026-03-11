@@ -19,6 +19,7 @@ export type InlineNode =
 | {type: 'strong'; value: string}
 | {type: 'em'; value: string}
 | {type: 'u'; value: string}
+| {type: 'del'; value: string}
 | {type: 'code'; value: string}
 | {type: 'link'; value: string; url: string}
 | {type: 'image'; value: string; url: string}
@@ -332,6 +333,23 @@ export const parseInline = (text: string): InlineNode[] => {
             }
             result.push({type:'em', value: italic});
             i+=1;
+            continue;
+        }
+
+        // strikethrough
+        if(text.startsWith('~~', i)){
+            if(buffer){
+                result.push({type:'text', value: buffer});
+                buffer = '';
+            }
+
+            i+=2;
+            let del = '';
+            while(i < text.length && !text.startsWith('~~', i)){
+                del += text[i++];
+            }
+            result.push({type:'del', value: del});
+            i+=2;
             continue;
         }
 
