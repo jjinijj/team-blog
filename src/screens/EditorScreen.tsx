@@ -286,7 +286,8 @@ export const EditorScreen = ({
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white dark:bg-background-dark">
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark shrink-0">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark shrink-0 px-4 lg:px-20">
+        <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={onGoToMain} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
             <span className="material-symbols-outlined">arrow_back</span>
@@ -356,6 +357,7 @@ export const EditorScreen = ({
           </div>
           <div className='h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1'/>
           <ProfileDropdown/>
+        </div>
         </div>
       </header>
 

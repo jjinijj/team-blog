@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 import { getRelativeTime } from '../utils/DataFormat';
-import ProfileDropdown from '../component/Profiledropdown';
+import SiteHeader from '../component/SiteHeader';
 import { readPosts } from '../api/supabaseApi';
 
 interface MainScreenProps {
@@ -68,23 +68,8 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-                <span className="text-lg">📝</span>
-              </div>
-              <h1 className="text-lg font-bold tracking-tight">TeamBlog</h1>
-            </div>
-          </div>
-
-          <div className='h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1' />
-          <ProfileDropdown />
-        </div>
-      </header>
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
+      <SiteHeader />
 
       <main className="flex-1 max-w-[960px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Search & Sort Area */}

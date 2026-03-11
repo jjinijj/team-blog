@@ -47,11 +47,13 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-white">
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
-              <span>←</span>
-              <span className="text-sm font-medium">목록으로</span>
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
+          <div className="max-w-7xl mx-auto h-16 flex items-center">
+            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+              <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </span>
+              <span className="text-sm font-semibold">목록으로</span>
             </button>
           </div>
         </header>
@@ -65,11 +67,13 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   if (!post) {
     return (
       <div className="flex flex-col min-h-screen bg-white">
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
-              <span>←</span>
-              <span className="text-sm font-medium">목록으로</span>
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
+          <div className="max-w-7xl mx-auto h-16 flex items-center">
+            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+              <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </span>
+              <span className="text-sm font-semibold">목록으로</span>
             </button>
           </div>
         </header>
@@ -86,14 +90,13 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
-          >
-            <span>←</span>
-            <span className="text-sm font-medium">목록으로</span>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
+        <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
+          <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+            <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+              <span className="material-symbols-outlined">arrow_back</span>
+            </span>
+            <span className="text-sm font-semibold">목록으로</span>
           </button>
           {post.author_id === user?.id && (
             <div className="flex items-center gap-3">
