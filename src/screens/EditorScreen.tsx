@@ -47,7 +47,7 @@ export const EditorScreen = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { user, loading } = useAuth();
+  const { user, loading, displayName } = useAuth();
   const navigate = useNavigate();
 
   // ── 임시저장 ───────────────────────────────────
@@ -267,10 +267,10 @@ export const EditorScreen = ({
 
           <div className="flex items-center gap-3 py-2 border-y border-gray-50 mb-6">
             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-              {user.email?.[0]?.toUpperCase() || 'A'}
+              {(displayName || user.email)?.[0]?.toUpperCase() || 'A'}
             </div>
             <span className="text-sm font-medium text-gray-500">
-              작성자 <span className="text-gray-900">{user.email || 'Unknown'}</span>
+              작성자 <span className="text-gray-900">{displayName || user.email || 'Unknown'}</span>
             </span>
           </div>
 
