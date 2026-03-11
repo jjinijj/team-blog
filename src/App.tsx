@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import MainScreen from './screens/MainScreen';
+import LandingPage from './screens/LandingPage';
 import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
@@ -12,11 +13,15 @@ import AdminLayout from './component/admin/AdminLayout';
 import Dashboard from './screens/admin/Dashboard';
 import WhitelistPage from './screens/admin/WhitelistPage';
 import PostManagePage from './screens/admin/PostManagePage';
+import HomeScreenPage from './screens/admin/HomeScreenPage';
 import { DocumentNode } from './utils/richTextTypes'; // 경로는 프로젝트에 맞게 조정
 import MyPostsScreen from './screens/profile/Mypostsscreen';
 import ProfileLayout from './component/Profilelayout';
 import EditProfilePage from './screens/profile/EditProfilePage';
 import ChangePasswordPage from './screens/profile/ChangePasswordPage';
+import TeamPage from './screens/TeamPage';
+import ContactPage from './screens/ContactPage';
+import ScrollToTop from './component/ScrollToTop';
 
 function AppContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -28,7 +33,7 @@ function AppContent() {
       try {
         await deletePost(postId);
         setPosts(posts.filter((post) => postId !== post.id));
-        navigate('/');
+        navigate('/blog');
       } catch (error) {
         console.error('글 삭제 실패:', error);
         alert('글 삭제에 실패했습니다.');
@@ -112,23 +117,34 @@ const handleUpdatePost = async (
 };
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* 로그인 화면 */}
       <Route path="/login"
              element={
              <AuthScreen
-              goToMain={() => navigate('/')}
+              goToMain={() => navigate('/blog')}
             />
           }
         />
       
-      {/* 메인 화면 */}
+      {/* 랜딩 페이지 */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* 팀 소개 */}
+      <Route path="/team" element={<TeamPage />} />
+
+      {/* 연락처 */}
+      <Route path="/contact" element={<ContactPage />} />
+
+      {/* 메인 화면 (블로그 글 목록) */}
       <Route
-        path="/"
+        path="/blog"
         element={
-          <MainScreen 
+          <MainScreen
             onViewPost={(postId) => navigate(`/post/${postId}`)}
-            onGoToEditor={() => navigate('/write')} 
+            onGoToEditor={() => navigate('/write')}
           />
         }
       />
@@ -138,7 +154,7 @@ const handleUpdatePost = async (
         path="/write"
         element={
           <EditorScreen 
-            onGoToMain={() => navigate('/')} 
+            onGoToMain={() => navigate('/blog')} 
             onAddPost={handleAddPost}
             editingPost={undefined}
           />
@@ -151,7 +167,7 @@ const handleUpdatePost = async (
         element={
           <EditorScreen 
             posts={posts}
-            onGoToMain={() => navigate('/')} 
+            onGoToMain={() => navigate('/blog')} 
             onAddPost={handleAddPost}
             onUpdatePost={handleUpdatePost}
           />
@@ -174,7 +190,7 @@ const handleUpdatePost = async (
         path="/my-posts"
         element={
           <MyPostsScreen 
-            onGoToMain={() => navigate('/')}
+            onGoToMain={() => navigate('/blog')}
             onEditPost={(postId) => navigate(`edit/${postId}`)}
           />
         }
@@ -188,6 +204,7 @@ const handleUpdatePost = async (
               
               {/* 실제 관리자 페이지들 */}
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="home-screen" element={<HomeScreenPage />} />
               <Route path="whitelist" element={<WhitelistPage />} />
               <Route path="posts" element={<PostManagePage />} />
             </Route>
@@ -207,6 +224,7 @@ const handleUpdatePost = async (
           <Route path="*" element={<Navigate to="/" replace />} />
       
     </Routes>
+    </>
   );
 }
 

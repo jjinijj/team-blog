@@ -128,6 +128,8 @@ const renderInline = (text:string) : React.ReactNode[] => {
                 return <em key = {i}>{node.value}</em>
             case "u":
                 return <u key = {i}>{node.value}</u>
+            case "del":
+                return <del key={i}>{node.value}</del>
             case "code":
                 return <code key ={i} className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono">{node.value}</code>
             case "link":
