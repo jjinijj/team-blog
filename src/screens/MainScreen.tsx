@@ -15,7 +15,7 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -62,8 +62,10 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
     const sorted = searchKeyword === '' ? [...posts] : getSearchedPosts();
     if (sortOrder === 'newest') {
       return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else {
+    } else if (sortOrder === 'oldest') {
       return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else {
+      return sorted.sort((a, b) => b.view_count - a.view_count || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
   };
 
@@ -98,7 +100,9 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
             <div className="flex items-center gap-2 pb-2">
               <div className="relative group">
                 <button className="flex items-center gap-2 px-3 h-8 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:border-blue-500 transition-all">
-                  <span className="text-gray-900">{sortOrder === 'newest' ? '최신순' : '등록순'}</span>
+                  <span className="text-gray-900">
+                    {sortOrder === 'newest' ? '최신순' : sortOrder === 'oldest' ? '등록순' : '인기순'}
+                  </span>
                   <span className="text-xs">▼</span>
                 </button>
                 <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-200">
@@ -119,6 +123,15 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
                   >
                     등록순
                     {sortOrder === 'oldest' && <span>✓</span>}
+                  </button>
+                  <button
+                    onClick={() => setSortOrder('popular')}
+                    className={`w-full text-left px-4 py-2 text-sm font-medium flex items-center justify-between transition-colors ${
+                      sortOrder === 'popular' ? 'text-blue-500 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    인기순
+                    {sortOrder === 'popular' && <span>✓</span>}
                   </button>
                 </div>
               </div>

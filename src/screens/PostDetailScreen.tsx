@@ -8,7 +8,7 @@ import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
-import { readPostById } from '../api/supabaseApi';
+import { readPostById, recordView } from '../api/supabaseApi';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -35,6 +35,9 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       try {
         const data = await readPostById(id);
         setPost(data);
+        if (user && data) {
+          recordView(id, user.id, data.author_id);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -42,7 +45,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       }
     };
     fetch();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) {
     return (
@@ -154,9 +157,15 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <span>📖</span>
-              <span>{Math.ceil(post.content.length / 1000)} min read</span>
+            <div className="flex items-center gap-4 text-gray-500 text-sm">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                <span>{post.view_count.toLocaleString()}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span>📖</span>
+                <span>{Math.ceil(post.content.length / 1000)} min read</span>
+              </span>
             </div>
           </div>
         </header>
