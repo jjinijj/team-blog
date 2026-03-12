@@ -1,4 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import {
+  fetchHomeScreenConfig,
+  saveHomeScreenConfig,
+  fetchTeamMembers,
+  updateTeamMemberVisibility,
+  type TeamMember,
+} from '../../api/homeScreenApi';
 
 type ConfigTab = 'layout' | 'global' | 'seo';
 
@@ -29,30 +36,104 @@ const Toggle = ({
 
 const HomeScreenPage = () => {
   const [activeTab, setActiveTab] = useState<ConfigTab>('layout');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<'success' | 'error' | null>(null);
 
   const [heroVisible, setHeroVisible] = useState(true);
+  const [heroHeadline, setHeroHeadline] = useState('');
+  const [heroSubheadline, setHeroSubheadline] = useState('');
+  const [heroCtaText, setHeroCtaText] = useState('');
+
   const [latestPostsVisible, setLatestPostsVisible] = useState(true);
-  const [teamVisible, setTeamVisible] = useState(false);
-
-  const [heroHeadline, setHeroHeadline] = useState('현대 개발자를 위한 인사이트');
-  const [heroSubheadline, setHeroSubheadline] = useState(
-    '소프트웨어 엔지니어링, UI 디자인, 커리어 성장에 관한 최신 트렌드를 만나보세요.'
-  );
-  const [heroCtaText, setHeroCtaText] = useState('최신 글 읽기');
-
   const [displayCount, setDisplayCount] = useState(6);
   const [sortOrder, setSortOrder] = useState('newest');
   const [cardLayout, setCardLayout] = useState<'grid' | 'list'>('grid');
 
-  const [teamDescription, setTeamDescription] = useState(
-    '저희는 아름답고 기능적인 소프트웨어를 만드는 것에 열정적인 소규모 팀입니다.'
-  );
+  const [teamVisible, setTeamVisible] = useState(false);
+  const [teamDescription, setTeamDescription] = useState('');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const tabs: { id: ConfigTab; label: string }[] = [
     { id: 'layout', label: '레이아웃 빌더' },
     { id: 'global', label: '전체 설정' },
     { id: 'seo', label: 'SEO 및 메타데이터' },
   ];
+
+  useEffect(() => {
+    const load = async () => {
+      const [config, members] = await Promise.all([
+        fetchHomeScreenConfig(),
+        fetchTeamMembers(),
+      ]);
+
+      if (config) {
+        setHeroVisible(config.hero_visible);
+        setHeroHeadline(config.hero_headline);
+        setHeroSubheadline(config.hero_subheadline);
+        setHeroCtaText(config.hero_cta_text);
+        setLatestPostsVisible(config.latest_posts_visible);
+        setDisplayCount(config.latest_posts_count);
+        setSortOrder(config.latest_posts_sort);
+        setCardLayout(config.card_layout ?? 'grid');
+        setTeamVisible(config.team_visible);
+        setTeamDescription(config.team_description);
+      }
+
+      setTeamMembers(members);
+      setLoading(false);
+    };
+
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      await saveHomeScreenConfig({
+        hero_visible: heroVisible,
+        hero_headline: heroHeadline,
+        hero_subheadline: heroSubheadline,
+        hero_cta_text: heroCtaText,
+        latest_posts_visible: latestPostsVisible,
+        latest_posts_count: displayCount,
+        latest_posts_sort: sortOrder,
+        card_layout: cardLayout,
+        team_visible: teamVisible,
+        team_description: teamDescription,
+      });
+      setSaveMessage('success');
+    } catch {
+      setSaveMessage('error');
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
+
+  const handleTeamMemberToggle = async (userId: string, current: boolean) => {
+    const next = !current;
+    setTeamMembers((prev) =>
+      prev.map((m) => (m.id === userId ? { ...m, show_in_team: next } : m))
+    );
+    try {
+      await updateTeamMemberVisibility(userId, next);
+    } catch {
+      // 실패 시 롤백
+      setTeamMembers((prev) =>
+        prev.map((m) => (m.id === userId ? { ...m, show_in_team: current } : m))
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 p-6 flex items-center justify-center">
+        <p className="text-slate-400 text-sm">불러오는 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6">
@@ -67,10 +148,22 @@ const HomeScreenPage = () => {
               블로그 랜딩 페이지의 레이아웃과 섹션 표시 여부를 설정하세요.
             </p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition-all">
-            <span className="material-symbols-outlined text-lg">save</span>
-            저장
-          </button>
+          <div className="flex items-center gap-3">
+            {saveMessage === 'success' && (
+              <span className="text-sm text-green-600 font-medium">저장되었습니다.</span>
+            )}
+            {saveMessage === 'error' && (
+              <span className="text-sm text-red-500 font-medium">저장에 실패했습니다.</span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 disabled:opacity-60 transition-all"
+            >
+              <span className="material-symbols-outlined text-lg">save</span>
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
         </div>
 
         {/* 탭 */}
@@ -104,19 +197,17 @@ const HomeScreenPage = () => {
                     <p className="text-xs text-slate-500">페이지 상단의 메인 배너</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Toggle checked={heroVisible} onChange={setHeroVisible} />
-                </div>
+                <Toggle checked={heroVisible} onChange={setHeroVisible} />
               </div>
               <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                      헤드라인
+                      헤드라인 <span className="text-xs text-slate-400 font-normal">(Enter로 줄바꿈)</span>
                     </label>
-                    <input
-                      type="text"
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    <textarea
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                      rows={2}
                       value={heroHeadline}
                       onChange={(e) => setHeroHeadline(e.target.value)}
                     />
@@ -161,9 +252,7 @@ const HomeScreenPage = () => {
                     <p className="text-xs text-slate-500">최근 작성된 글 목록</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Toggle checked={latestPostsVisible} onChange={setLatestPostsVisible} />
-                </div>
+                <Toggle checked={latestPostsVisible} onChange={setLatestPostsVisible} />
               </div>
               <div className="p-5 flex flex-wrap gap-12">
                 <div>
@@ -242,11 +331,9 @@ const HomeScreenPage = () => {
                     <p className="text-xs text-slate-500">팀원을 소개하는 섹션</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Toggle checked={teamVisible} onChange={setTeamVisible} />
-                </div>
+                <Toggle checked={teamVisible} onChange={setTeamVisible} />
               </div>
-              <div className="p-5 space-y-4">
+              <div className="p-5 space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
                     팀 소개 문구
@@ -259,14 +346,36 @@ const HomeScreenPage = () => {
                     onChange={(e) => setTeamDescription(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-500">
-                    현재 표시:{' '}
-                    <span className="text-slate-900 dark:text-slate-100 font-bold">전체 멤버</span>
-                  </span>
-                  <button className="text-xs font-bold text-blue-500 hover:underline">
-                    멤버 선택
-                  </button>
+
+                {/* 팀원 목록 */}
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">
+                    팀원 노출 설정
+                  </p>
+                  <div className="space-y-2">
+                    {teamMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                            style={{ backgroundColor: member.avatar_color ?? '#3b82f6' }}
+                          >
+                            {(member.display_name ?? '?')[0].toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {member.display_name ?? '이름 없음'}
+                          </span>
+                        </div>
+                        <Toggle
+                          checked={member.show_in_team}
+                          onChange={() => handleTeamMemberToggle(member.id, member.show_in_team)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>
