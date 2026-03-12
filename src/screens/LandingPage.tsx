@@ -12,6 +12,7 @@ const LandingPage = () => {
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);
   const [config, setConfig] = useState<HomeScreenConfig | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -22,25 +23,45 @@ const LandingPage = () => {
       setRecentPosts(posts.slice(0, cfg?.latest_posts_count ?? 3));
       setConfig(cfg);
       setTeamMembers(members.filter((m) => m.show_in_team));
+      setLoading(false);
     });
   }, []);
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
       <SiteHeader />
 
       <main className="flex-grow">
 
+        {/* Hero Skeleton */}
+        {loading && (
+          <section className="px-4 lg:px-20 py-12">
+            <div className="max-w-7xl mx-auto">
+              <div className="rounded-3xl bg-slate-800 min-h-[480px] flex items-center animate-pulse">
+                <div className="px-8 lg:px-16 max-w-2xl py-16 space-y-5 w-full">
+                  <div className="h-5 w-32 bg-slate-700 rounded-full" />
+                  <div className="space-y-3">
+                    <div className="h-10 w-3/4 bg-slate-700 rounded-xl" />
+                    <div className="h-10 w-1/2 bg-slate-700 rounded-xl" />
+                  </div>
+                  <div className="h-5 w-2/3 bg-slate-700 rounded-full" />
+                  <div className="h-12 w-36 bg-slate-700 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Hero Section */}
-        {config?.hero_visible !== false && (
+        {!loading && config?.hero_visible !== false && (
           <section className="px-4 lg:px-20 py-12">
             <div className="max-w-7xl mx-auto">
               <div className="relative overflow-hidden rounded-3xl bg-slate-900 min-h-[480px] flex items-center">
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-800" />
                 <div className="relative z-10 px-8 lg:px-16 max-w-2xl py-16">
                   <span className="inline-block bg-primary/20 text-white border border-primary/30 text-xs font-bold px-3 py-1 rounded-full mb-6 uppercase tracking-wider">
-                    Engineering Blog
+                    {config?.hero_badge_text || 'Engineering Blog'}
                   </span>
                   <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-6 whitespace-pre-line">
                     {config?.hero_headline ?? '팀의 경험과\n인사이트를 공유합니다.'}
@@ -50,7 +71,7 @@ const LandingPage = () => {
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <button
-                      onClick={() => navigate('/blog')}
+                      onClick={() => navigate(config?.hero_cta_url || '/blog')}
                       className="bg-primary text-white font-bold px-8 py-3 rounded-lg flex items-center gap-2 group hover:bg-primary/90 transition-colors"
                     >
                       {config?.hero_cta_text ?? '블로그 보기'}
@@ -64,8 +85,8 @@ const LandingPage = () => {
         )}
 
         {/* Latest Posts */}
-        {config?.latest_posts_visible !== false && (
-          <section className="px-4 lg:px-20 py-12 bg-white dark:bg-slate-900/30">
+        {!loading && config?.latest_posts_visible !== false && (
+          <section className="px-4 lg:px-20 py-12 bg-white dark:bg-slate-900/50">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-end justify-between mb-10">
                 <div>
@@ -116,7 +137,7 @@ const LandingPage = () => {
                     <div
                       key={post.id}
                       onClick={() => navigate(`/post/${post.id}`)}
-                      className="flex flex-col group cursor-pointer bg-background-light dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:shadow-md transition-all"
+                      className="flex flex-col group cursor-pointer bg-white dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:shadow-md transition-all"
                     >
                       <h3 className="text-lg font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">
                         {post.title}
@@ -145,8 +166,8 @@ const LandingPage = () => {
         )}
 
         {/* Team Section */}
-        {config?.team_visible && (
-          <section className="px-4 lg:px-20 py-20 bg-white dark:bg-slate-900/30">
+        {!loading && config?.team_visible && (
+          <section className="px-4 lg:px-20 py-20 bg-slate-50 dark:bg-slate-900/50">
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col lg:flex-row items-center gap-16">
                 <div className="flex-1">
@@ -193,7 +214,7 @@ const LandingPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-100 dark:bg-slate-950 px-4 lg:px-20 py-10 border-t border-slate-200 dark:border-slate-800">
+      <footer className="bg-slate-100 dark:bg-slate-900 px-4 lg:px-20 py-10 border-t border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm">
             <LogoMark size="sm" />

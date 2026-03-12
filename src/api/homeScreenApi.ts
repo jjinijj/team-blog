@@ -3,9 +3,11 @@ import { supabase } from '../supabaseClient';
 export interface HomeScreenConfig {
   id: number;
   hero_visible: boolean;
+  hero_badge_text: string;
   hero_headline: string;
   hero_subheadline: string;
   hero_cta_text: string;
+  hero_cta_url: string;
   latest_posts_visible: boolean;
   latest_posts_count: number;
   latest_posts_sort: string;

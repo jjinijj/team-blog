@@ -98,6 +98,28 @@
 
 ### Phase 2: 관리 기능
 
+#### 2-2. 홈 화면(랜딩 페이지) 설정 ✅
+**예상 소요**: 3-4시간 | **실제 소요**: 약 4시간
+
+- [x] DB 스키마
+  - [x] `home_screen_config` 테이블 생성 (싱글 로우, id=1 고정)
+  - [x] `users` 테이블에 `show_in_team`, `avatar_color` 컬럼 추가
+  - [x] RLS 정책 (읽기: 전체, 쓰기: 관리자만)
+- [x] API 레이어 (`homeScreenApi.ts`)
+  - [x] `fetchHomeScreenConfig`, `saveHomeScreenConfig` (upsert)
+  - [x] `fetchTeamMembers`, `updateTeamMemberVisibility`
+- [x] 관리자 페이지 (`/admin/home-screen`)
+  - [x] 히어로 섹션: 표시 여부, 배지 텍스트, 헤드라인(multiline), 서브헤드라인, CTA 버튼 텍스트/URL
+  - [x] 최신 글 섹션: 표시 여부, 표시 개수, 정렬, 레이아웃(그리드/리스트)
+  - [x] 팀 소개 섹션: 표시 여부, 소개 문구, 팀원별 show_in_team 토글 (optimistic update)
+- [x] LandingPage DB 연동
+  - [x] 하드코딩 제거, DB 설정값 반영
+  - [x] 히어로/최신글/팀 섹션 조건부 렌더링
+  - [x] 리스트/그리드 레이아웃 분기
+  - [x] 로딩 중 스켈레톤 UI (텍스트 깜빡임 방지)
+
+---
+
 #### 3. 관리자 페이지
 **예상 소요**: 1-2시간
 
@@ -495,6 +517,18 @@
 
 ---
 
+#### 9-1. 태그 기능
+**예상 소요**: 2-3시간
+
+- [ ] DB 스키마
+  - [ ] `tags` 테이블 생성 (id, name, slug)
+  - [ ] `post_tags` 테이블 생성 (post_id, tag_id)
+- [ ] 에디터에 태그 입력 UI 추가 (쉼표 구분 입력)
+- [ ] 글 목록/상세에 태그 표시 및 태그 클릭 시 필터
+- [ ] 히어로 배지 텍스트를 인기 태그로 연동 (관리자 설정)
+
+---
+
 #### 10. 검색 고도화
 **예상 소요**: 1-2시간
 
@@ -538,10 +572,12 @@
 
 #### 12. 기타 편의 기능
 
-- [ ] 조회수 (30분-1시간)
-  - [ ] `posts` 테이블에 `view_count` 컬럼 추가
-  - [ ] 글 조회 시 +1
-  - [ ] 인기 글 정렬 옵션
+- [ ] 조회수 (1-2시간)
+  - [ ] `post_views` 테이블 생성 (post_id, user_id, viewed_at)
+  - [ ] 같은 유저 24시간 내 재조회 카운트 제외
+  - [ ] 본인 글 조회 제외
+  - [ ] `posts` 테이블에 `view_count` 캐시 컬럼 추가 (집계 성능용)
+  - [ ] 인기 글 정렬 옵션 (MainScreen, LandingPage)
   
 - [ ] 다크모드 (1-2시간)
   - [ ] Tailwind 다크모드 활용
@@ -573,7 +609,19 @@
 
 ---
 
-### Phase 7: 파일 첨부
+### Phase 7: 파일 & 이미지
+
+#### 13-0. 이미지 업로드 (홈 화면용)
+**예상 소요**: 1-2시간
+
+- [ ] Supabase Storage 버킷 생성 (`home-images`, 공개 읽기 / 관리자 쓰기)
+- [ ] `home_screen_config` 테이블에 `team_image_url TEXT` 컬럼 추가
+- [ ] 관리자 페이지 팀 소개 섹션에 이미지 업로드 UI
+  - [ ] 파일 선택 → Storage 업로드 → URL 저장
+  - [ ] 현재 이미지 미리보기 + 교체 버튼
+- [ ] LandingPage 팀 섹션에 이미지 표시 (url 있으면 이미지, 없으면 현재 장식용 도형 유지)
+
+---
 
 #### 13. 파일 첨부 기능
 **예상 소요**: 2-3시간
