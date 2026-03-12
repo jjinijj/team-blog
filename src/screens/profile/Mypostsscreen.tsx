@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import LogoMark from '../../component/LogoMark';
 import { Post } from '../../types/Post';
 import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/supabaseApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
@@ -203,14 +204,12 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
             onClick={onGoToMain}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
-              <span className="material-symbols-outlined text-xl">terminal</span>
-            </div>
-            <h2 className="text-lg font-bold tracking-tight">TeamBlog</h2>
-          </div>
+          <button onClick={onGoToMain} className="flex items-center gap-3">
+            <LogoMark size="md" />
+            <h2 className="text-xl font-bold tracking-tight">Team Blog</h2>
+          </button>
         </div>
         <button
           onClick={() => navigate('/editor')}

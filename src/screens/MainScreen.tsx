@@ -155,7 +155,25 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
           </div>
 
           {loading ? (
-            <p className="text-center text-gray-400 text-base py-20">불러오는 중...</p>
+            <div className="flex flex-col animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <div key={i}>
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-5 h-5 rounded-full bg-gray-200 shrink-0" />
+                      <div className="h-3 w-20 bg-gray-200 rounded-full" />
+                      <div className="h-3 w-16 bg-gray-200 rounded-full" />
+                    </div>
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 bg-gray-200 rounded w-full" />
+                      <div className="h-3.5 bg-gray-200 rounded w-5/6" />
+                    </div>
+                  </div>
+                  {i < 4 && <div className="h-px bg-gray-200 my-2 mx-4" />}
+                </div>
+              ))}
+            </div>
           ) : getSortedPosts().length === 0 ? (
             <p className="text-center text-gray-400 text-base py-20">아직 글이 없습니다.</p>
           ) : (
