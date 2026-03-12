@@ -41,9 +41,11 @@ const HomeScreenPage = () => {
   const [saveMessage, setSaveMessage] = useState<'success' | 'error' | null>(null);
 
   const [heroVisible, setHeroVisible] = useState(true);
+  const [heroBadgeText, setHeroBadgeText] = useState('');
   const [heroHeadline, setHeroHeadline] = useState('');
   const [heroSubheadline, setHeroSubheadline] = useState('');
   const [heroCtaText, setHeroCtaText] = useState('');
+  const [heroCtaUrl, setHeroCtaUrl] = useState('');
 
   const [latestPostsVisible, setLatestPostsVisible] = useState(true);
   const [displayCount, setDisplayCount] = useState(6);
@@ -69,9 +71,11 @@ const HomeScreenPage = () => {
 
       if (config) {
         setHeroVisible(config.hero_visible);
+        setHeroBadgeText(config.hero_badge_text);
         setHeroHeadline(config.hero_headline);
         setHeroSubheadline(config.hero_subheadline);
         setHeroCtaText(config.hero_cta_text);
+        setHeroCtaUrl(config.hero_cta_url);
         setLatestPostsVisible(config.latest_posts_visible);
         setDisplayCount(config.latest_posts_count);
         setSortOrder(config.latest_posts_sort);
@@ -93,9 +97,11 @@ const HomeScreenPage = () => {
     try {
       await saveHomeScreenConfig({
         hero_visible: heroVisible,
+        hero_badge_text: heroBadgeText,
         hero_headline: heroHeadline,
         hero_subheadline: heroSubheadline,
         hero_cta_text: heroCtaText,
+        hero_cta_url: heroCtaUrl,
         latest_posts_visible: latestPostsVisible,
         latest_posts_count: displayCount,
         latest_posts_sort: sortOrder,
@@ -203,6 +209,17 @@ const HomeScreenPage = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                      배지 텍스트
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                      value={heroBadgeText}
+                      onChange={(e) => setHeroBadgeText(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
                       헤드라인 <span className="text-xs text-slate-400 font-normal">(Enter로 줄바꿈)</span>
                     </label>
                     <textarea
@@ -234,6 +251,18 @@ const HomeScreenPage = () => {
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       value={heroCtaText}
                       onChange={(e) => setHeroCtaText(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                      버튼 링크 URL
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                      placeholder="/blog"
+                      value={heroCtaUrl}
+                      onChange={(e) => setHeroCtaUrl(e.target.value)}
                     />
                   </div>
                 </div>

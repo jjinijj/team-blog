@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const ProfileDropdown = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { user, isAdmin, signOut, displayName, avatarColor } = useAuth();
+  const { user, loading, profileReady, isAdmin, signOut, displayName, avatarColor } = useAuth();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +28,9 @@ export const ProfileDropdown = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {user ? (
+      {loading || !profileReady ? (
+        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      ) : user ? (
         <>
           <button
             onClick={() => setIsProfileOpen((prev) => !prev)}

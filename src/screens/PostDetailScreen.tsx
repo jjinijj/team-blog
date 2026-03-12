@@ -8,7 +8,7 @@ import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
-import { readPostById } from '../api/supabaseApi';
+import { readPostById, recordView } from '../api/supabaseApi';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -35,6 +35,9 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       try {
         const data = await readPostById(id);
         setPost(data);
+        if (user && data) {
+          recordView(id, user.id, data.author_id);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -42,7 +45,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       }
     };
     fetch();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) {
     return (
@@ -50,15 +53,49 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
             <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
-              <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+              <span className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
               <span className="text-sm font-semibold">목록으로</span>
             </button>
           </div>
         </header>
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-lg text-gray-400">불러오는 중...</p>
+        <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-12 lg:py-20 animate-pulse">
+          {/* 날짜 + 뱃지 */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-4 w-24 bg-gray-200 rounded-full" />
+            <div className="h-4 w-16 bg-gray-200 rounded-full" />
+          </div>
+          {/* 제목 */}
+          <div className="space-y-3 mb-8">
+            <div className="h-10 bg-gray-200 rounded-lg w-full" />
+            <div className="h-10 bg-gray-200 rounded-lg w-3/4" />
+          </div>
+          {/* 작성자 + 통계 */}
+          <div className="flex items-center justify-between py-6 border-y border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
+              <div className="space-y-2">
+                <div className="h-3.5 w-24 bg-gray-200 rounded-full" />
+                <div className="h-3 w-16 bg-gray-200 rounded-full" />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="h-3.5 w-12 bg-gray-200 rounded-full" />
+              <div className="h-3.5 w-16 bg-gray-200 rounded-full" />
+            </div>
+          </div>
+          {/* 본문 */}
+          <div className="mt-10 space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-5/6" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-4/5" />
+            <div className="mt-6 h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-3/4" />
+          </div>
         </main>
       </div>
     );
@@ -154,9 +191,15 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <span>📖</span>
-              <span>{Math.ceil(post.content.length / 1000)} min read</span>
+            <div className="flex items-center gap-4 text-gray-500 text-sm">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                <span>{post.view_count.toLocaleString()}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span>📖</span>
+                <span>{Math.ceil(post.content.length / 1000)} min read</span>
+              </span>
             </div>
           </div>
         </header>

@@ -15,10 +15,16 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>(
+    () => (localStorage.getItem('blog_sort_order') as 'newest' | 'oldest' | 'popular') ?? 'newest'
+  );
 
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    localStorage.setItem('blog_sort_order', sortOrder);
+  }, [sortOrder]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -62,8 +68,10 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
     const sorted = searchKeyword === '' ? [...posts] : getSearchedPosts();
     if (sortOrder === 'newest') {
       return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else {
+    } else if (sortOrder === 'oldest') {
       return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else {
+      return sorted.sort((a, b) => b.view_count - a.view_count || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
   };
 
@@ -98,7 +106,9 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
             <div className="flex items-center gap-2 pb-2">
               <div className="relative group">
                 <button className="flex items-center gap-2 px-3 h-8 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:border-blue-500 transition-all">
-                  <span className="text-gray-900">{sortOrder === 'newest' ? '최신순' : '등록순'}</span>
+                  <span className="text-gray-900">
+                    {sortOrder === 'newest' ? '최신순' : sortOrder === 'oldest' ? '등록순' : '인기순'}
+                  </span>
                   <span className="text-xs">▼</span>
                 </button>
                 <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-200">
@@ -120,6 +130,15 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
                     등록순
                     {sortOrder === 'oldest' && <span>✓</span>}
                   </button>
+                  <button
+                    onClick={() => setSortOrder('popular')}
+                    className={`w-full text-left px-4 py-2 text-sm font-medium flex items-center justify-between transition-colors ${
+                      sortOrder === 'popular' ? 'text-blue-500 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    인기순
+                    {sortOrder === 'popular' && <span>✓</span>}
+                  </button>
                 </div>
               </div>
             </div>
@@ -136,7 +155,25 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
           </div>
 
           {loading ? (
-            <p className="text-center text-gray-400 text-base py-20">불러오는 중...</p>
+            <div className="flex flex-col animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <div key={i}>
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-5 h-5 rounded-full bg-gray-200 shrink-0" />
+                      <div className="h-3 w-20 bg-gray-200 rounded-full" />
+                      <div className="h-3 w-16 bg-gray-200 rounded-full" />
+                    </div>
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 bg-gray-200 rounded w-full" />
+                      <div className="h-3.5 bg-gray-200 rounded w-5/6" />
+                    </div>
+                  </div>
+                  {i < 4 && <div className="h-px bg-gray-200 my-2 mx-4" />}
+                </div>
+              ))}
+            </div>
           ) : getSortedPosts().length === 0 ? (
             <p className="text-center text-gray-400 text-base py-20">아직 글이 없습니다.</p>
           ) : (

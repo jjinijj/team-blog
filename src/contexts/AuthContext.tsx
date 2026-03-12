@@ -8,6 +8,7 @@ interface AuthContextType extends AuthState {
     signIn: (email: string, password: string) => Promise<{error: Error | null}>;
     signOut: () => Promise<void>;
     refreshUserInfo: () => Promise<void>;
+    profileReady: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +20,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({children} : AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [profileReady, setProfileReady] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [displayName, setDisplayName] = useState<string | null>(null);
     const [avatarColor, setAvatarColor] = useState<string>('#3b82f6');
@@ -34,55 +36,36 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
             if (error) {
                 console.error("❌ [fetchUserInfo] 에러:", error);
                 setIsAdmin(false);
-                return;
+            } else {
+                setIsAdmin(data?.is_admin ?? false);
+                setDisplayName(data?.display_name ?? null);
+                setAvatarColor(data?.avatar_color ?? '#3b82f6');
             }
-
-            setIsAdmin(data?.is_admin ?? false);
-            setDisplayName(data?.display_name ?? null);
-            setAvatarColor(data?.avatar_color ?? '#3b82f6');
-
         } catch (error) {
             console.error("🔴 [fetchUserInfo] catch:", error);
             setIsAdmin(false);
+        } finally {
+            setProfileReady(true);
         }
     };
 
     useEffect(() => {
-        const initializeAuth = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user ?? null);
-
-                if (session?.user) {
-                    setTimeout(async () => {
-                        await fetchUserInfo(session.user.id);
-                    }, 0);
-                }
-
-                setLoading(false);
-
-            } catch (error) {
-                console.error("❌ Auth 초기화 오류:", error);
-                setLoading(false);
-            }
-        };
-
-        initializeAuth();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             setUser(session?.user ?? null);
 
             if (session?.user) {
-                setTimeout(async () => {
-                    await fetchUserInfo(session.user.id);
-                }, 100);
+                const timeout = setTimeout(() => setProfileReady(true), 3000);
+                fetchUserInfo(session.user.id).finally(() => clearTimeout(timeout));
             } else {
                 setIsAdmin(false);
                 setDisplayName(null);
                 setAvatarColor('#3b82f6');
+                setProfileReady(true);
             }
 
-            setLoading(false);
+            if (event === 'INITIAL_SESSION') {
+                setLoading(false);
+            }
         });
 
         return () => { subscription.unsubscribe(); }
@@ -141,6 +124,7 @@ export const AuthProvider = ({children} : AuthProviderProps) => {
     const value = {
         user,
         loading,
+        profileReady,
         isAdmin,
         displayName,
         avatarColor,
