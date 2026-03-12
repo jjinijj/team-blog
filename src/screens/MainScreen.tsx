@@ -15,10 +15,16 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>(
+    () => (localStorage.getItem('blog_sort_order') as 'newest' | 'oldest' | 'popular') ?? 'newest'
+  );
 
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    localStorage.setItem('blog_sort_order', sortOrder);
+  }, [sortOrder]);
 
   useEffect(() => {
     const fetch = async () => {
