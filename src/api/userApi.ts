@@ -10,14 +10,14 @@ export interface UserProfile {
 }
 
 // 프로필 조회
-export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+export const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
   const { data, error } = await supabase
     .from('users')
     .select('*')
     .eq('id', userId)
     .single();
 
-  if (error) return null;
+  if (error) throw error;
   return data as UserProfile;
 };
 

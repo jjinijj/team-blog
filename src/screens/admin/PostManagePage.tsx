@@ -5,7 +5,7 @@ import {
   readPosts,
   deletePost,
   deleteMultiplePosts,
-} from '../../api/supabaseApi';
+} from '../../api/postApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
 
 /**

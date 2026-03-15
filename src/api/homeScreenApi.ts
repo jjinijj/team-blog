@@ -25,14 +25,14 @@ export interface TeamMember {
 }
 
 // 홈 화면 설정 조회 (id=1 고정)
-export const fetchHomeScreenConfig = async (): Promise<HomeScreenConfig | null> => {
+export const fetchHomeScreenConfig = async (): Promise<HomeScreenConfig> => {
   const { data, error } = await supabase
     .from('home_screen_config')
     .select('*')
     .eq('id', 1)
     .single();
 
-  if (error) return null;
+  if (error) throw error;
   return data as HomeScreenConfig;
 };
 
@@ -54,7 +54,7 @@ export const fetchTeamMembers = async (): Promise<TeamMember[]> => {
     .select('id, display_name, avatar_color, show_in_team')
     .order('display_name');
 
-  if (error) return [];
+  if (error) throw error;
   return data as TeamMember[];
 };
 

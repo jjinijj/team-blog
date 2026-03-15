@@ -37,6 +37,7 @@ const Toggle = ({
 const HomeScreenPage = () => {
   const [activeTab, setActiveTab] = useState<ConfigTab>('layout');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<'success' | 'error' | null>(null);
 
@@ -64,12 +65,12 @@ const HomeScreenPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [config, members] = await Promise.all([
-        fetchHomeScreenConfig(),
-        fetchTeamMembers(),
-      ]);
+      try {
+        const [config, members] = await Promise.all([
+          fetchHomeScreenConfig(),
+          fetchTeamMembers(),
+        ]);
 
-      if (config) {
         setHeroVisible(config.hero_visible);
         setHeroBadgeText(config.hero_badge_text);
         setHeroHeadline(config.hero_headline);
@@ -82,10 +83,13 @@ const HomeScreenPage = () => {
         setCardLayout(config.card_layout ?? 'grid');
         setTeamVisible(config.team_visible);
         setTeamDescription(config.team_description);
+        setTeamMembers(members);
+      } catch (e) {
+        console.error(e);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-
-      setTeamMembers(members);
-      setLoading(false);
     };
 
     load();
@@ -137,6 +141,14 @@ const HomeScreenPage = () => {
     return (
       <div className="flex-1 p-6 flex items-center justify-center">
         <p className="text-slate-400 text-sm">불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-6 flex items-center justify-center">
+        <p className="text-red-400 text-sm">설정을 불러오지 못했습니다. 새로고침 해주세요.</p>
       </div>
     );
   }

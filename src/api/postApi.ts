@@ -86,7 +86,7 @@ export const readMyPosts = async(userId: string): Promise<Post[]> => {
 }
 
 // 단건 조회 - published 글 또는 본인 글
-export const readPostById = async (postId: string): Promise<Post | null> => {
+export const readPostById = async (postId: string): Promise<Post> => {
     const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -96,7 +96,7 @@ export const readPostById = async (postId: string): Promise<Post | null> => {
         .eq('id', postId)
         .single();
 
-    if (error) return null;
+    if (error) throw error;
     return mapPost(data);
 };
 

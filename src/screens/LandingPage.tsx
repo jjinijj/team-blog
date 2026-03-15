@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../types/Post';
-import { readPosts } from '../api/supabaseApi';
+import { readPosts } from '../api/postApi';
 import { fetchHomeScreenConfig, fetchTeamMembers, type HomeScreenConfig, type TeamMember } from '../api/homeScreenApi';
 import SiteHeader from '../component/SiteHeader';
 import LogoMark from '../component/LogoMark';
@@ -13,6 +13,7 @@ const LandingPage = () => {
   const [config, setConfig] = useState<HomeScreenConfig | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -20,12 +21,27 @@ const LandingPage = () => {
       fetchHomeScreenConfig(),
       fetchTeamMembers(),
     ]).then(([posts, cfg, members]) => {
-      setRecentPosts(posts.slice(0, cfg?.latest_posts_count ?? 3));
+      setRecentPosts(posts.slice(0, cfg.latest_posts_count ?? 3));
       setConfig(cfg);
       setTeamMembers(members.filter((m) => m.show_in_team));
+    }).catch((e) => {
+      console.error(e);
+      setError(true);
+    }).finally(() => {
       setLoading(false);
     });
   }, []);
+
+  if (error) {
+    return (
+      <div className="relative flex min-h-screen w-full flex-col bg-slate-50 dark:bg-slate-950">
+        <SiteHeader />
+        <main className="flex-grow flex items-center justify-center">
+          <p className="text-slate-400 text-sm">페이지를 불러오지 못했습니다. 새로고침 해주세요.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">

@@ -137,31 +137,22 @@
 
 ---
 
-#### API 파일명 리팩토링
-- [ ] `supabaseApi.ts` → `postApi.ts`
-- [ ] `adminApi.ts` → `authApi.ts`
-- [ ] import 경로 일괄 수정
+#### API 파일명 리팩토링 ✅
+- [x] `supabaseApi.ts` → `postApi.ts`
+- [x] `AdminApi.ts` → `allowedEmailApi.ts`
+- [x] import 경로 일괄 수정
 
 ---
 
-#### API-컴포넌트 간 에러 처리 일관성 정비
+#### API-컴포넌트 간 에러 처리 일관성 정비 ✅
 
-현재 파일마다 에러 처리 패턴이 다름:
-
-| 파일 | 조회 실패 시 | 쓰기 실패 시 |
-|------|------------|------------|
-| `supabaseApi.ts` | `readPostById`만 `null` 반환, 나머지 `throw` | `throw` |
-| `homeScreenApi.ts` | `null` / `[]` 반환 (throw 안 함) | `throw` |
-| `userApi.ts` | `null` 반환 | `throw` |
-| `CommentApi.ts` | `throw` | `throw` |
-
-**목표**: 조회도 `throw` + 컴포넌트에서 `try/catch`로 에러 상태 관리 (에러 vs 빈 데이터 구분)
-
-- [ ] `homeScreenApi.ts` — `fetchHomeScreenConfig`, `fetchTeamMembers` `null`/`[]` 반환 → `throw`로 변경
-- [ ] `userApi.ts` — `fetchUserProfile` `null` 반환 → `throw`로 변경
-- [ ] `supabaseApi.ts` — `readPostById` `null` 반환 → `throw`로 변경
-- [ ] 각 컴포넌트(`HomeScreenPage`, `ProfileScreen`, `PostDetailScreen` 등)에 `error` 상태 추가 및 에러 UI 표시
-- [ ] `HomeScreenPage` `load()` 함수에 `try/catch/finally` 추가 (`setLoading(false)` 보장)
+- [x] `homeScreenApi.ts` — `fetchHomeScreenConfig`, `fetchTeamMembers` `throw`로 변경
+- [x] `userApi.ts` — `fetchUserProfile` `throw`로 변경
+- [x] `postApi.ts` — `readPostById` `throw`로 변경
+- [x] `HomeScreenPage` — `try/catch/finally` + 에러 UI 추가
+- [x] `LandingPage` — `.catch()/.finally()` + 에러 UI 추가
+- [x] `PostDetailScreen` — 에러 상태 분리 (네트워크 에러 vs 글 없음)
+- [x] `ProfileLayout` — `.catch(console.error)` 추가
 
 ---
 **예상 소요**: 1시간

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 import { getRelativeTime } from '../utils/DataFormat';
 import SiteHeader from '../component/SiteHeader';
-import { readPosts } from '../api/supabaseApi';
+import { readPosts } from '../api/postApi';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
