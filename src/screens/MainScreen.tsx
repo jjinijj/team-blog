@@ -50,7 +50,8 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   };
 
   const stripHtml = (html: string): string => {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const withoutImages = html.replace(/!\[[^\]]*\]\([^)]*\)/g, '[이미지]');
+    const doc = new DOMParser().parseFromString(withoutImages, 'text/html');
     return doc.body.textContent || '';
   };
 
