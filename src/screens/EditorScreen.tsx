@@ -7,6 +7,7 @@ import { useDraft } from '../hooks/useDraft';
 import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
 import ProfileDropdown from '../component/Profiledropdown';
 import { uploadPostImage, linkImagesToPost } from '../api/imageApi';
+import { readPostById } from '../api/postApi';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -37,7 +38,10 @@ export const EditorScreen = ({
   editingPost
 }: EditorScreenProps) => {
   const { id } = useParams<{ id: string }>();
-  const postToEdit = id && posts ? posts.find(post => post.id === id) : editingPost;
+  const [fetchedPost, setFetchedPost] = useState<Post | null>(null);
+  const postToEdit = id
+    ? (posts?.find(post => post.id === id) ?? fetchedPost)
+    : editingPost;
 
   const [title, setTitle] = useState('');
   const [markdownContent, setMarkdownContent] = useState('');
@@ -58,6 +62,12 @@ export const EditorScreen = ({
 
   // ── 임시저장 ───────────────────────────────────
   const { saveDraft, clearDraft, hasDraft, draftData, dismissDraft } = useDraft(postToEdit?.id);
+
+  // ── edit 모드: posts prop에 없으면 직접 조회 ──
+  useEffect(() => {
+    if (!id || posts?.find(post => post.id === id)) return;
+    readPostById(id).then(setFetchedPost).catch(() => navigate('/blog'));
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 권한 체크 ──────────────────────────────────
   useEffect(() => {
