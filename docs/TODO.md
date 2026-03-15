@@ -252,7 +252,7 @@
 - [x] 에디터 툴바 추가 (Bold, Italic, Link, H1, H2, Quote, Code, Image — Markdown Supported + Guide 버튼)
   - [x] Bold, Italic, Link, H1, H2, Quote, Code 버튼 동작 연결
   - [x] Code 블록 삽입 시 줄 시작 보장 (중간 삽입 시 `\n` 자동 추가)
-  - [x] Image 버튼 비활성 유지
+  - [x] Image 버튼 활성화 → 이미지 업로드 기능으로 연결 (13-1에서 구현)
 - [x] 에디터 작성자 아바타 색상을 사용자 설정 색상(`avatarColor`)으로 반영
 - [x] 렌더러 인라인 코드 백틱 노출 버그 수정 (Tailwind `prose` 클래스 `code::before/after` content 제거)
 
@@ -623,6 +623,32 @@
 
 ### Phase 7: 파일 & 이미지
 
+#### 13-1. 글 본문 이미지 업로드 ✅
+**예상 소요**: 2-3시간
+
+- [x] Supabase Storage 버킷 생성 (`post-images`, 읽기: 전체, 쓰기/삭제: 로그인 사용자)
+- [x] DB 스키마
+  - [x] `post_images` 테이블 생성 (id, post_id nullable FK+CASCADE, author_id, storage_path, url)
+  - [x] RLS UPDATE 정책 추가 (`auth.uid() = author_id`)
+- [x] API 레이어 (`imageApi.ts` 신규)
+  - [x] `uploadPostImage` — Storage 업로드 + `post_images` INSERT (post_id=null)
+  - [x] `linkImagesToPost` — 저장 완료 후 post_id 일괄 업데이트
+  - [x] `deleteStorageImagesForPosts` — 글 삭제 전 Storage 파일 삭제
+- [x] EditorScreen 연동
+  - [x] 툴바 Image 버튼 활성화 + hidden `<input type="file">` 연결
+  - [x] 업로드 중 플레이스홀더 텍스트 삽입 (`![⠋ 이미지 업로드 중...](uploading:id)`) → 완료 시 실제 이미지로 교체
+  - [x] 동시 다중 업로드 지원 (placeholderId로 각각 추적)
+  - [x] 50MB 용량 제한
+  - [x] 새 글: uploadedImageIds 배열에 누적 → 저장 후 linkImagesToPost 호출
+  - [x] 수정 글: 업로드 즉시 linkImagesToPost 호출
+- [x] App.tsx 연동
+  - [x] `handleDeletePost` / `handleDeleteMultiplePosts`에서 Storage 파일 선삭제
+  - [x] `handleAddPost` 반환타입 `Promise<string | null>`로 변경 (post ID 전달용)
+- [x] 글 목록 미리보기 이미지 처리
+  - [x] `![...](url)` 형태를 `[이미지]`로 치환 (MainScreen `stripHtml`, LandingPage 정규식)
+
+---
+
 #### 13-0. 이미지 업로드 (홈 화면용)
 **예상 소요**: 1-2시간
 
@@ -731,6 +757,19 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-15
+- ✅ **글 본문 이미지 업로드 완료** (`imageApi.ts` 신규, EditorScreen 연동)
+  - Storage 업로드 → `post_images` INSERT (post_id=null) → 저장 시 linkImagesToPost로 post_id 연결
+  - 업로드 중 플레이스홀더 삽입 후 완료 시 실제 이미지 마크다운으로 교체 (Medium 방식)
+  - 동시 다중 업로드: placeholderId(랜덤 문자열)로 각 업로드를 독립 추적
+  - 글 삭제 시 Storage 파일 선삭제 → DB CASCADE 삭제
+  - **RLS 주의**: UPDATE 정책 없으면 에러 없이 0행 업데이트 — `{ count: 'exact' }`로 감지
+- ✅ **글 수정 시 빈 에디터 버그 수정**
+  - `posts` prop은 MainScreen 로드 시에만 채워짐 → 직접 `/edit/:id` 접근이나 MyPostsScreen 경유 시 항상 빈 에디터
+  - EditorScreen 내 `readPostById` 직접 조회 fallback 추가 (`posts` prop 우선, 없으면 API 조회)
+- ✅ **글 미리보기 이미지 링크 처리**
+  - MainScreen `stripHtml`, LandingPage 정규식 모두 `![...](url)` → `[이미지]` 치환
 
 ### 2026-03-13
 - ✅ **조회수 기능 완료** — `post_views` 테이블, `record_post_view` RPC, 24시간 내 재조회/본인 글 제외, `view_count` 캐시 컬럼
