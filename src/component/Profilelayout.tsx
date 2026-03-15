@@ -10,7 +10,7 @@ const ProfileLayout = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetchUserProfile(user.id).then(setProfile);
+    fetchUserProfile(user.id).then(setProfile).catch(console.error);
   }, [user]);
 
   const handleLogout = async () => {

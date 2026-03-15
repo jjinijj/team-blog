@@ -5,7 +5,7 @@ import EditorScreen from './screens/EditorScreen';
 import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import { Post, NewPost, UpdatePost } from './types/Post';
-import { createPost, deleteMultiplePosts, deletePost, updatePost } from './api/supabaseApi';
+import { createPost, deleteMultiplePosts, deletePost, updatePost } from './api/postApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminGuard from './component/admin/AdminGuard';

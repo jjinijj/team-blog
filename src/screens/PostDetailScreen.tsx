@@ -8,7 +8,7 @@ import { RichTextRenderer } from '../utils/richTextRenderer';
 import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
-import { readPostById, recordView } from '../api/supabaseApi';
+import { readPostById, recordView } from '../api/postApi';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -27,11 +27,13 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     const fetch = async () => {
       setLoading(true);
+      setError(false);
       try {
         const data = await readPostById(id);
         setPost(data);
@@ -40,6 +42,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         }
       } catch (e) {
         console.error(e);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -101,7 +104,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
     );
   }
 
-  if (!post) {
+  if (error || !post) {
     return (
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
@@ -115,7 +118,9 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-lg text-gray-500">글을 찾을 수 없습니다.</p>
+          <p className="text-lg text-gray-500">
+            {error ? '글을 불러오지 못했습니다. 새로고침 해주세요.' : '글을 찾을 수 없습니다.'}
+          </p>
         </main>
       </div>
     );
