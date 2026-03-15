@@ -6,6 +6,7 @@ import { DocumentNode } from "../utils/richTextTypes";
 import { useDraft } from '../hooks/useDraft';
 import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
 import ProfileDropdown from '../component/Profiledropdown';
+import { uploadPostImage, linkImagesToPost } from '../api/imageApi';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -15,7 +16,7 @@ interface EditorScreenProps {
     contentType: 'richtext' | 'markdown',
     contentJson: DocumentNode | null,
     status: 'draft' | 'published' | 'private',
-  ) => void;
+  ) => Promise<string | null>;
   onUpdatePost?: (
     postId: string,
     title: string,
@@ -47,6 +48,10 @@ export const EditorScreen = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageIds, setUploadedImageIds] = useState<string[]>([]);
 
   const { user, loading, displayName, avatarColor } = useAuth();
   const navigate = useNavigate();
@@ -229,8 +234,44 @@ export const EditorScreen = ({
     }
   }, [markdownContent, applyInlineWrap]);
 
+  // ── 이미지 업로드 ──────────────────────────────
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    e.target.value = '';
+
+    const placeholderId = Math.random().toString(36).slice(2);
+    const placeholder = `![⠋ 이미지 업로드 중...](uploading:${placeholderId})`;
+    const insertPos = textareaRef.current?.selectionStart ?? 0;
+
+    // 커서 위치에 플레이스홀더 즉시 삽입
+    setMarkdownContent((prev) => prev.slice(0, insertPos) + placeholder + prev.slice(insertPos));
+
+    setIsUploading(true);
+    try {
+      const { url, imageId } = await uploadPostImage(file, user.id);
+
+      if (postToEdit?.id) {
+        await linkImagesToPost([imageId], postToEdit.id);
+      } else {
+        setUploadedImageIds((prev) => [...prev, imageId]);
+      }
+
+      // 플레이스홀더를 실제 이미지 마크다운으로 교체
+      setMarkdownContent((prev) => prev.replace(placeholder, `![이미지](${url})`));
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (err) {
+      // 실패 시 플레이스홀더 제거
+      setMarkdownContent((prev) => prev.replace(placeholder, ''));
+      alert('이미지 업로드에 실패했습니다.');
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [user, postToEdit?.id]);
+
   // ── 저장 ──────────────────────────────────────
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title.trim()) {
       alert('제목을 입력해주세요.');
       return;
@@ -243,7 +284,10 @@ export const EditorScreen = ({
     if (postToEdit && onUpdatePost) {
       onUpdatePost(postToEdit.id, title, markdownContent, 'markdown', null, status);
     } else {
-      onAddPost(title, markdownContent, 'markdown', null, status);
+      const newPostId = await onAddPost(title, markdownContent, 'markdown', null, status);
+      if (newPostId && uploadedImageIds.length > 0) {
+        linkImagesToPost(uploadedImageIds, newPostId).catch(console.error);
+      }
     }
 
     clearDraft();
@@ -400,9 +444,23 @@ export const EditorScreen = ({
                   <button onClick={applyCodeBlock} title="Code Block" className={btnClass}>
                     <span className="material-symbols-outlined text-[20px]">code</span>
                   </button>
-                  <button disabled title="Image" className="p-2 rounded transition-colors opacity-40 cursor-not-allowed text-slate-500 dark:text-slate-400">
-                    <span className="material-symbols-outlined text-[20px]">image</span>
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={isUploading}
+                    title="이미지 업로드"
+                    className={`p-2 rounded transition-colors text-slate-500 dark:text-slate-400 ${isUploading ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {isUploading ? 'hourglass_empty' : 'image'}
+                    </span>
                   </button>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
                 </>
               );
             })()}
