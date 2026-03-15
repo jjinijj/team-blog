@@ -4,7 +4,7 @@ import {
   readAllowedEmails,
   createAllowedEmail,
   deleteAllowedEmail,
-} from '../../api/AdminApi';
+} from '../../api/allowedEmailApi';
 
 /**
  * 이메일 화이트리스트 관리 페이지

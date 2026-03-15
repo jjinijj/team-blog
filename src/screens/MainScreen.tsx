@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 import { getRelativeTime } from '../utils/DataFormat';
 import SiteHeader from '../component/SiteHeader';
-import { readPosts } from '../api/supabaseApi';
+import { readPosts } from '../api/postApi';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
@@ -50,7 +50,8 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
   };
 
   const stripHtml = (html: string): string => {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const withoutImages = html.replace(/!\[[^\]]*\]\([^)]*\)/g, '[이미지]');
+    const doc = new DOMParser().parseFromString(withoutImages, 'text/html');
     return doc.body.textContent || '';
   };
 

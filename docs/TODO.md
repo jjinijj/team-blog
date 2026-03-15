@@ -137,10 +137,22 @@
 
 ---
 
-#### API 파일명 리팩토링
-- [ ] `supabaseApi.ts` → `postApi.ts`
-- [ ] `adminApi.ts` → `authApi.ts`
-- [ ] import 경로 일괄 수정
+#### API 파일명 리팩토링 ✅
+- [x] `supabaseApi.ts` → `postApi.ts`
+- [x] `AdminApi.ts` → `allowedEmailApi.ts`
+- [x] import 경로 일괄 수정
+
+---
+
+#### API-컴포넌트 간 에러 처리 일관성 정비 ✅
+
+- [x] `homeScreenApi.ts` — `fetchHomeScreenConfig`, `fetchTeamMembers` `throw`로 변경
+- [x] `userApi.ts` — `fetchUserProfile` `throw`로 변경
+- [x] `postApi.ts` — `readPostById` `throw`로 변경
+- [x] `HomeScreenPage` — `try/catch/finally` + 에러 UI 추가
+- [x] `LandingPage` — `.catch()/.finally()` + 에러 UI 추가
+- [x] `PostDetailScreen` — 에러 상태 분리 (네트워크 에러 vs 글 없음)
+- [x] `ProfileLayout` — `.catch(console.error)` 추가
 
 ---
 **예상 소요**: 1시간
@@ -572,12 +584,12 @@
 
 #### 12. 기타 편의 기능
 
-- [ ] 조회수 (1-2시간)
-  - [ ] `post_views` 테이블 생성 (post_id, user_id, viewed_at)
-  - [ ] 같은 유저 24시간 내 재조회 카운트 제외
-  - [ ] 본인 글 조회 제외
-  - [ ] `posts` 테이블에 `view_count` 캐시 컬럼 추가 (집계 성능용)
-  - [ ] 인기 글 정렬 옵션 (MainScreen, LandingPage)
+- [x] 조회수 (1-2시간)
+  - [x] `post_views` 테이블 생성 (post_id, user_id, viewed_at)
+  - [x] 같은 유저 24시간 내 재조회 카운트 제외
+  - [x] 본인 글 조회 제외
+  - [x] `posts` 테이블에 `view_count` 캐시 컬럼 추가 (집계 성능용)
+  - [x] 인기 글 정렬 옵션 (MainScreen, LandingPage)
   
 - [ ] 다크모드 (1-2시간)
   - [ ] Tailwind 다크모드 활용
@@ -719,6 +731,15 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-13
+- ✅ **조회수 기능 완료** — `post_views` 테이블, `record_post_view` RPC, 24시간 내 재조회/본인 글 제외, `view_count` 캐시 컬럼
+- ✅ **인기순 정렬 완료** — MainScreen, LandingPage에서 `view_count` 기준 정렬 적용
+- 🔍 **API 에러 처리 일관성 문제 발견**
+  - 파일마다 조회 실패 시 패턴이 다름 (`null` 반환 vs `throw`)
+  - `CommentApi.ts`는 throw, `homeScreenApi.ts`/`userApi.ts`는 null 반환
+  - 정비 방향: 조회도 throw + 컴포넌트에서 catch → 에러/빈 데이터 구분 가능, 사용자에게 에러 UI 표시 가능
+  - 실무에서는 React Query/SWR 전제 하에 throw 패턴이 일반적
 
 ### 2026-02-19
 - ✅ **임시저장 (Auto-save) 완료**

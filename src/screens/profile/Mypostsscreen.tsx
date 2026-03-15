@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoMark from '../../component/LogoMark';
 import { Post } from '../../types/Post';
-import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/supabaseApi';
+import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/postApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
 
 type FilterStatus = 'all' | 'published' | 'draft' | 'private';
