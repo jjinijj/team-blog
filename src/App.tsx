@@ -6,6 +6,7 @@ import PostDetailScreen from './screens/PostDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import { Post, NewPost, UpdatePost } from './types/Post';
 import { createPost, deleteMultiplePosts, deletePost, updatePost } from './api/postApi';
+import { deleteStorageImagesForPosts } from './api/imageApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminGuard from './component/admin/AdminGuard';
@@ -31,6 +32,7 @@ function AppContent() {
   const handleDeletePost = async (postId: string) => {
     if (window.confirm('글을 삭제하시겠습니까?')) {
       try {
+        await deleteStorageImagesForPosts([postId]);
         await deletePost(postId);
         setPosts(posts.filter((post) => postId !== post.id));
         navigate('/blog');
@@ -44,8 +46,9 @@ function AppContent() {
   const handleDeleteMultiplePosts = async (deletePosts: Post[]) => {
     if (window.confirm('선택한 글들을 모두 삭제하시겠습니까?')) {
       const ids = deletePosts.map(post => post.id);
-      
+
       try {
+        await deleteStorageImagesForPosts(ids);
         await deleteMultiplePosts(ids);
         setPosts(prev => prev.filter(post => !deletePosts.includes(post)));
       } catch (error) {
@@ -61,7 +64,7 @@ const handleAddPost = async (
   contentType: 'richtext' | 'markdown',
   contentJson: DocumentNode | null,
   status: 'draft' | 'published' | 'private',
-) => {
+): Promise<string | null> => {
   const newPost: NewPost = {
     title,
     content,
@@ -77,9 +80,11 @@ const handleAddPost = async (
     const date = await createPost(newPost);
     setPosts([date, ...posts]);
     navigate(`/post/${date.id}`);
+    return date.id;
   } catch (error) {
     console.error('글 생성 실패:', error);
     alert('글 생성에 실패했습니다.');
+    return null;
   }
 };
 

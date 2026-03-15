@@ -138,7 +138,7 @@ const LandingPage = () => {
                           {post.title}
                         </h3>
                         <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-1 mb-1">
-                          {post.content.replace(/[#*`>\-_~\[\]]/g, '').slice(0, 100)}
+                          {post.content.replace(/!\[[^\]]*\]\([^)]*\)/g, '[이미지]').replace(/[#*`>\-_~\[\]]/g, '').slice(0, 100)}
                         </p>
                         <p className="text-xs text-slate-400">
                           {post.author_name || post.author_email} · {getAbsoluteDay(post.created_at)}
@@ -159,7 +159,7 @@ const LandingPage = () => {
                         {post.title}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 mb-5 line-clamp-3 leading-relaxed text-sm flex-1">
-                        {post.content.replace(/[#*`>\-_~\[\]]/g, '').slice(0, 120)}
+                        {post.content.replace(/!\[[^\]]*\]\([^)]*\)/g, '[이미지]').replace(/[#*`>\-_~\[\]]/g, '').slice(0, 120)}
                       </p>
                       <div className="flex items-center gap-3 mt-auto">
                         <div
