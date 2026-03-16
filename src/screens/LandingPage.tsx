@@ -185,11 +185,11 @@ const LandingPage = () => {
         {!loading && config?.team_visible && (
           <section className="px-4 lg:px-20 py-20 bg-slate-50 dark:bg-slate-900/50">
             <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col lg:flex-row items-center gap-16">
-                <div className="flex-1">
+              <div className="flex flex-row items-center gap-16">
+                <div className="flex-1 text-right">
                   {/* 겹치는 아바타 */}
                   {teamMembers.length > 0 && (
-                    <div className="flex -space-x-4 mb-8">
+                    <div className="flex justify-end -space-x-4 mb-8">
                       {teamMembers.slice(0, 5).map((member) => (
                         <div
                           key={member.id}
@@ -213,14 +213,24 @@ const LandingPage = () => {
                   </p>
                   <button
                     onClick={() => navigate('/team')}
-                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-8 py-3 rounded-xl hover:opacity-90 transition-opacity"
+                    className="inline-block bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-8 py-3 rounded-xl hover:opacity-90 transition-opacity"
                   >
                     팀 소개
                   </button>
                 </div>
                 <div className="flex-1 relative flex items-center justify-center">
-                  <div className="w-72 h-72 bg-primary/10 dark:bg-primary/5 rounded-[40px] absolute -rotate-6" />
-                  <div className="relative z-10 w-72 h-72 bg-primary/20 dark:bg-primary/10 rounded-[40px]" />
+                  {config.team_image_url ? (
+                    <img
+                      src={config.team_image_url}
+                      alt="팀 이미지"
+                      className="w-72 h-72 object-cover rounded-[40px] shadow-xl"
+                    />
+                  ) : (
+                    <>
+                      <div className="w-72 h-72 bg-primary/10 dark:bg-primary/5 rounded-[40px] absolute -rotate-6" />
+                      <div className="relative z-10 w-72 h-72 bg-primary/20 dark:bg-primary/10 rounded-[40px]" />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
