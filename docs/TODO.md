@@ -30,11 +30,11 @@
 
 ---
 
-#### 1-1. 라우팅 보호 리팩토링
+#### 1-1. 라우팅 보호 리팩토링 ✅
 
-- [ ] `AuthGuard` 컴포넌트 생성 (로그인 여부만 체크)
-- [ ] `/write`, `/edit/:id` 라우트에 `AuthGuard` 적용
-- [ ] `EditorScreen` 내부의 로그인 체크 `useEffect` 제거 (작성자 체크는 유지)
+- [x] `AuthGuard` 컴포넌트 생성 (로그인 여부만 체크)
+- [x] `/write`, `/edit/:id`, `/my-posts`, `/profile` 라우트에 `AuthGuard` 적용
+- [x] `EditorScreen` 내부의 로그인 체크 `useEffect` 제거 (작성자 체크는 유지)
 
 ---
 
@@ -784,6 +784,13 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-17
+- ✅ **AuthGuard 라우팅 보호 리팩토링 완료** (1-1)
+  - `AuthGuard` 컴포넌트 신규 생성 (`src/component/AuthGuard.tsx`) — 미로그인 시 `/login` 리다이렉트
+  - `/write`, `/edit/:id`, `/my-posts`, `/profile` 라우트를 `AuthGuard`로 보호
+  - `EditorScreen` 내부 로그인 체크 `useEffect` 제거, `loading` 상태 제거
+  - 작성자 체크(`author_id !== user.id`) useEffect는 유지
 
 ### 2026-03-16
 - ✅ **홈 화면 팀 이미지 업로드 완료** (13-0)
