@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   fetchHomeScreenConfig,
   saveHomeScreenConfig,
@@ -6,6 +6,7 @@ import {
   updateTeamMemberVisibility,
   type TeamMember,
 } from '../../api/homeScreenApi';
+import { uploadTeamImage, deleteTeamImage } from '../../api/imageApi';
 
 type ConfigTab = 'layout' | 'global' | 'seo';
 
@@ -55,7 +56,10 @@ const HomeScreenPage = () => {
 
   const [teamVisible, setTeamVisible] = useState(false);
   const [teamDescription, setTeamDescription] = useState('');
+  const [teamImageUrl, setTeamImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const tabs: { id: ConfigTab; label: string }[] = [
     { id: 'layout', label: '레이아웃 빌더' },
@@ -83,6 +87,7 @@ const HomeScreenPage = () => {
         setCardLayout(config.card_layout ?? 'grid');
         setTeamVisible(config.team_visible);
         setTeamDescription(config.team_description);
+        setTeamImageUrl(config.team_image_url);
         setTeamMembers(members);
       } catch (e) {
         console.error(e);
@@ -112,6 +117,7 @@ const HomeScreenPage = () => {
         card_layout: cardLayout,
         team_visible: teamVisible,
         team_description: teamDescription,
+        team_image_url: teamImageUrl,
       });
       setSaveMessage('success');
     } catch {
@@ -119,6 +125,33 @@ const HomeScreenPage = () => {
     } finally {
       setSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
+
+  const handleTeamImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setIsUploadingImage(true);
+    try {
+      if (teamImageUrl) await deleteTeamImage(teamImageUrl);
+      const { url } = await uploadTeamImage(file);
+      setTeamImageUrl(url);
+    } catch (err) {
+      alert('이미지 업로드에 실패했습니다.');
+      console.error(err);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleTeamImageRemove = async () => {
+    if (!teamImageUrl) return;
+    try {
+      await deleteTeamImage(teamImageUrl);
+      setTeamImageUrl(null);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -385,6 +418,57 @@ const HomeScreenPage = () => {
                     rows={2}
                     value={teamDescription}
                     onChange={(e) => setTeamDescription(e.target.value)}
+                  />
+                </div>
+
+                {/* 팀 이미지 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                    팀 이미지
+                  </label>
+                  {teamImageUrl ? (
+                    <div className="space-y-2">
+                      <img
+                        src={teamImageUrl}
+                        alt="팀 이미지"
+                        className="w-full max-w-sm h-48 object-cover rounded-xl border border-slate-200 dark:border-slate-700"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => imageInputRef.current?.click()}
+                          disabled={isUploadingImage}
+                          className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                        >
+                          {isUploadingImage ? '업로드 중...' : '이미지 교체'}
+                        </button>
+                        <button
+                          onClick={handleTeamImageRemove}
+                          className="px-3 py-1.5 text-xs font-bold rounded-lg border border-red-200 dark:border-red-900/50 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          이미지 제거
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      className="w-full max-w-sm h-32 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-blue-400 hover:text-blue-400 disabled:opacity-50 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-3xl">
+                        {isUploadingImage ? 'hourglass_empty' : 'add_photo_alternate'}
+                      </span>
+                      <span className="text-xs font-medium">
+                        {isUploadingImage ? '업로드 중...' : '이미지 업로드'}
+                      </span>
+                    </button>
+                  )}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleTeamImageUpload}
                   />
                 </div>
 
