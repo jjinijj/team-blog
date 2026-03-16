@@ -670,6 +670,24 @@
 
 ---
 
+#### 이미지 업로드 — 알려진 이슈 / 향후 고려사항
+
+> 현재 의도적으로 미처리(C안: 현 규모에서 허용). 트래픽/용량 문제 발생 시 재검토.
+
+**A. 고아(orphan) 이미지 누적**
+- 현상: 이미지를 업로드한 뒤 글을 저장하지 않으면 `post_images.post_id = null`인 행과 Storage 파일이 영구 잔류
+- 선택지:
+  - A안: EditorScreen `beforeunload` 핸들러에서 미저장 `uploadedImageIds` 삭제 API 호출 (SPA 이탈 감지 불완전)
+  - B안: Supabase Cron / Edge Function — 24시간 이상 `post_id = null`인 `post_images` 행을 주기적으로 조회 → Storage 파일 삭제 → DB 행 삭제
+  - C안: ✅ 현재 채택 — 소규모 팀 블로그 수준에서 용량 문제 미미, 단순성 우선
+
+**B. 에디터에서 이미지 마크다운 삭제 시 Storage 파일 미정리**
+- 현상: 글 수정 중 `![이미지](url)` 구문을 직접 지워도 Storage의 실제 파일은 그대로 남음
+- 해결 방향: 저장 시 이전 content와 현재 content를 비교해 사라진 이미지 URL을 감지 → Storage 삭제
+- 현재 미구현 사유: 구현 복잡도 대비 효용 낮음 (A와 같은 맥락)
+
+---
+
 #### 13. 파일 첨부 기능
 **예상 소요**: 2-3시간
 
