@@ -57,7 +57,7 @@ export const EditorScreen = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageIds, setUploadedImageIds] = useState<string[]>([]);
 
-  const { user, loading, displayName, avatarColor } = useAuth();
+  const { user, displayName, avatarColor } = useAuth();
   const navigate = useNavigate();
 
   // ── 임시저장 ───────────────────────────────────
@@ -69,19 +69,14 @@ export const EditorScreen = ({
     readPostById(id).then(setFetchedPost).catch(() => navigate('/blog'));
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 권한 체크 ──────────────────────────────────
+  // ── 작성자 체크 (본인 글만 수정 가능) ──────────────
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-    if (postToEdit && postToEdit.author_id !== user.id) {
+    if (!user || !postToEdit) return;
+    if (postToEdit.author_id !== user.id) {
       alert('본인이 작성한 글만 수정할 수 있습니다.');
       navigate('/');
     }
-  }, [user, loading, postToEdit, navigate]);
+  }, [user, postToEdit, navigate]);
 
   // ── 수정 모드 초기 데이터 로드 ──────────────────
   useEffect(() => {
@@ -303,13 +298,6 @@ export const EditorScreen = ({
     clearDraft();
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">로딩 중...</div>
-      </div>
-    );
-  }
 
   if (!user) return null;
   if (postToEdit && postToEdit.author_id !== user.id) return null;

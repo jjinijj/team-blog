@@ -10,6 +10,7 @@ import { deleteStorageImagesForPosts } from './api/imageApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminGuard from './component/admin/AdminGuard';
+import AuthGuard from './component/AuthGuard';
 import AdminLayout from './component/admin/AdminLayout';
 import Dashboard from './screens/admin/Dashboard';
 import WhitelistPage from './screens/admin/WhitelistPage';
@@ -154,52 +155,55 @@ const handleUpdatePost = async (
         }
       />
       
-      {/* 글쓰기 */}
-      <Route
-        path="/write"
-        element={
-          <EditorScreen 
-            onGoToMain={() => navigate('/blog')} 
-            onAddPost={handleAddPost}
-            editingPost={undefined}
-          />
-        }
-      />
-      
-      {/* 글 수정 */}
-      <Route
-        path="/edit/:id"
-        element={
-          <EditorScreen 
-            posts={posts}
-            onGoToMain={() => navigate('/blog')} 
-            onAddPost={handleAddPost}
-            onUpdatePost={handleUpdatePost}
-          />
-        }
-      />
-      
       {/* 글 상세 */}
       <Route
         path="/post/:id"
         element={
-          <PostDetailScreen 
+          <PostDetailScreen
             onEdit={(postId) => navigate(`edit/${postId}`)}
             onDelete={handleDeletePost}
           />
         }
       />
 
-      {/* 내 글 보기 */}
-      <Route
-        path="/my-posts"
-        element={
-          <MyPostsScreen 
-            onGoToMain={() => navigate('/blog')}
-            onEditPost={(postId) => navigate(`edit/${postId}`)}
-          />
-        }
-      />
+      {/* 로그인 필요 라우트 */}
+      <Route element={<AuthGuard />}>
+        {/* 글쓰기 */}
+        <Route
+          path="/write"
+          element={
+            <EditorScreen
+              onGoToMain={() => navigate('/blog')}
+              onAddPost={handleAddPost}
+              editingPost={undefined}
+            />
+          }
+        />
+
+        {/* 글 수정 */}
+        <Route
+          path="/edit/:id"
+          element={
+            <EditorScreen
+              posts={posts}
+              onGoToMain={() => navigate('/blog')}
+              onAddPost={handleAddPost}
+              onUpdatePost={handleUpdatePost}
+            />
+          }
+        />
+
+        {/* 내 글 보기 */}
+        <Route
+          path="/my-posts"
+          element={
+            <MyPostsScreen
+              onGoToMain={() => navigate('/blog')}
+              onEditPost={(postId) => navigate(`edit/${postId}`)}
+            />
+          }
+        />
+      </Route>
 
       {/* 관리자 라우트 - 중첩 구조 */}
           <Route path="/admin" element={<AdminGuard />}>
@@ -219,11 +223,13 @@ const handleUpdatePost = async (
           <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* 사용자 페이지 라우트 - 중첩 구조 */}
-          <Route path="/profile" element={<ProfileLayout />}>
-            <Route index element={<Navigate to="edit" replace />} />
-            <Route path="edit" element={<EditProfilePage />} />
-            <Route path="password" element={<ChangePasswordPage />} />
-          </Route>
+      <Route element={<AuthGuard />}>
+        <Route path="/profile" element={<ProfileLayout />}>
+          <Route index element={<Navigate to="edit" replace />} />
+          <Route path="edit" element={<EditProfilePage />} />
+          <Route path="password" element={<ChangePasswordPage />} />
+        </Route>
+      </Route>
 
           {/* 404 - 존재하지 않는 경로는 홈으로 */}
           <Route path="*" element={<Navigate to="/" replace />} />
