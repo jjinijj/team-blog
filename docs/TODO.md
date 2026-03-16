@@ -186,25 +186,20 @@
 #### 3-4. 팀 소개 페이지
 **예상 소요**: 1-2시간
 
-- [ ] DB 스키마
-  - [ ] `team_info` 테이블 생성 (싱글 로우)
-    ```sql
-    - id: int (항상 1)
-    - title: text (팀 이름)
-    - description: text (팀 소개 본문)
-    - updated_at: timestamp
-    ```
-  - [ ] `users` 테이블에 `show_in_team` 컬럼 추가 (boolean, default true)
-  - [ ] RLS 정책 (`team_info` 읽기: 전체, 수정: 관리자만)
-- [ ] 공개 페이지 (`/about`)
-  - [ ] 팀 이름 + 소개 텍스트 표시
-  - [ ] 멤버 카드 목록 (`show_in_team = true`인 users 조회, 아바타 + 이름 + 이메일)
-  - [ ] 헤더/내비에 About 링크 추가
-- [ ] 관리자 편집
-  - [ ] 관리자 페이지(`/admin`)에 팀 소개 편집 탭 추가
-  - [ ] 팀 이름 / 소개 텍스트 수정 폼 (textarea)
-  - [ ] 저장 시 `team_info` upsert
-  - [ ] 멤버 목록 관리 (전체 유저 표시, `show_in_team` 토글)
+> **현재 상태**: 팀 관련 설정은 `home_screen_config`(team_visible, team_description)와 `users.show_in_team`으로 관리자 페이지에서 이미 구현됨. LandingPage 팀 섹션도 동작 중. 별도 `/team` 페이지는 placeholder 상태. `team_info` 테이블은 만들지 않고 `home_screen_config`로 통합된 구조.
+
+- [x] DB 스키마
+  - [x] `users` 테이블에 `show_in_team` 컬럼 추가 (boolean, default true)
+  - [x] 팀 소개 텍스트: `home_screen_config.team_description` 으로 통합 (`team_info` 테이블 불필요)
+- [x] 관리자 편집 (`/admin/home-screen` 팀 소개 섹션)
+  - [x] 팀 소개 섹션 표시 여부 토글 (`team_visible`)
+  - [x] 팀 소개 문구 수정 폼 (`team_description`)
+  - [x] 멤버 목록 관리 (`show_in_team` 토글, optimistic update)
+- [x] LandingPage 팀 섹션 렌더링 (show_in_team 멤버 카드, team_description)
+- [ ] `/team` 공개 페이지 구현 (현재 placeholder "준비 중")
+  - [ ] 팀 소개 텍스트 표시
+  - [ ] 멤버 카드 목록 (아바타 + 이름 + 이메일)
+  - [ ] 헤더/내비에 Team 링크 연결
 
 ---
 
@@ -651,6 +646,8 @@
 
 #### 13-0. 이미지 업로드 (홈 화면용)
 **예상 소요**: 1-2시간
+
+> **현재 상태**: 미구현. LandingPage 팀 섹션은 `home_screen_config`(team_visible, team_description, show_in_team)로 이미 동작 중이나, 팀 이미지 업로드는 별도로 구현되지 않음. `/team` 페이지는 placeholder ("준비 중") 상태.
 
 - [ ] Supabase Storage 버킷 생성 (`home-images`, 공개 읽기 / 관리자 쓰기)
 - [ ] `home_screen_config` 테이블에 `team_image_url TEXT` 컬럼 추가
