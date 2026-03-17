@@ -30,11 +30,11 @@
 
 ---
 
-#### 1-1. 라우팅 보호 리팩토링
+#### 1-1. 라우팅 보호 리팩토링 ✅
 
-- [ ] `AuthGuard` 컴포넌트 생성 (로그인 여부만 체크)
-- [ ] `/write`, `/edit/:id` 라우트에 `AuthGuard` 적용
-- [ ] `EditorScreen` 내부의 로그인 체크 `useEffect` 제거 (작성자 체크는 유지)
+- [x] `AuthGuard` 컴포넌트 생성 (로그인 여부만 체크)
+- [x] `/write`, `/edit/:id`, `/my-posts`, `/profile` 라우트에 `AuthGuard` 적용
+- [x] `EditorScreen` 내부의 로그인 체크 `useEffect` 제거 (작성자 체크는 유지)
 
 ---
 
@@ -645,16 +645,41 @@
 ---
 
 #### 13-0. 이미지 업로드 (홈 화면용)
+=======
 **예상 소요**: 1-2시간
 
-> **현재 상태**: 미구현. LandingPage 팀 섹션은 `home_screen_config`(team_visible, team_description, show_in_team)로 이미 동작 중이나, 팀 이미지 업로드는 별도로 구현되지 않음. `/team` 페이지는 placeholder ("준비 중") 상태.
+- [x] Supabase Storage 버킷 생성 (`home-images`, 공개 읽기 / 관리자 쓰기)
+  - [x] RLS 정책 4개 추가 (SELECT: 전체, INSERT/UPDATE/DELETE: 관리자만)
+- [x] `home_screen_config` 테이블에 `team_image_url TEXT` 컬럼 추가
+- [x] API (`imageApi.ts`)
+  - [x] `uploadTeamImage` — `home-images` 버킷 업로드, `{ url, storagePath }` 반환
+  - [x] `deleteTeamImage` — URL에서 경로 추출 후 Storage 파일 삭제
+- [x] 관리자 페이지 팀 소개 섹션에 이미지 업로드 UI
+  - [x] 이미지 없음: 점선 업로드 버튼
+  - [x] 이미지 있음: 미리보기 + 교체/제거 버튼
+  - [x] 교체 시 기존 파일 자동 삭제
+  - [x] 저장 시 `team_image_url` DB 반영
+- [x] LandingPage 팀 섹션에 이미지 표시
+  - [x] `team_image_url` 있으면 이미지, 없으면 기존 장식용 도형 유지
+  - [x] 텍스트/아바타/버튼 우측 정렬, 이미지는 우측 고정
 
-- [ ] Supabase Storage 버킷 생성 (`home-images`, 공개 읽기 / 관리자 쓰기)
-- [ ] `home_screen_config` 테이블에 `team_image_url TEXT` 컬럼 추가
-- [ ] 관리자 페이지 팀 소개 섹션에 이미지 업로드 UI
-  - [ ] 파일 선택 → Storage 업로드 → URL 저장
-  - [ ] 현재 이미지 미리보기 + 교체 버튼
-- [ ] LandingPage 팀 섹션에 이미지 표시 (url 있으면 이미지, 없으면 현재 장식용 도형 유지)
+---
+
+#### 이미지 업로드 — 알려진 이슈 / 향후 고려사항
+
+> 현재 의도적으로 미처리(C안: 현 규모에서 허용). 트래픽/용량 문제 발생 시 재검토.
+
+**A. 고아(orphan) 이미지 누적**
+- 현상: 이미지를 업로드한 뒤 글을 저장하지 않으면 `post_images.post_id = null`인 행과 Storage 파일이 영구 잔류
+- 선택지:
+  - A안: EditorScreen `beforeunload` 핸들러에서 미저장 `uploadedImageIds` 삭제 API 호출 (SPA 이탈 감지 불완전)
+  - B안: Supabase Cron / Edge Function — 24시간 이상 `post_id = null`인 `post_images` 행을 주기적으로 조회 → Storage 파일 삭제 → DB 행 삭제
+  - C안: ✅ 현재 채택 — 소규모 팀 블로그 수준에서 용량 문제 미미, 단순성 우선
+
+**B. 에디터에서 이미지 마크다운 삭제 시 Storage 파일 미정리**
+- 현상: 글 수정 중 `![이미지](url)` 구문을 직접 지워도 Storage의 실제 파일은 그대로 남음
+- 해결 방향: 저장 시 이전 content와 현재 content를 비교해 사라진 이미지 URL을 감지 → Storage 삭제
+- 현재 미구현 사유: 구현 복잡도 대비 효용 낮음 (A와 같은 맥락)
 
 ---
 
@@ -754,6 +779,29 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-17
+- ✅ **AuthGuard 라우팅 보호 리팩토링 완료** (1-1)
+  - `AuthGuard` 컴포넌트 신규 생성 (`src/component/AuthGuard.tsx`) — 미로그인 시 `/login` 리다이렉트
+  - `/write`, `/edit/:id`, `/my-posts`, `/profile` 라우트를 `AuthGuard`로 보호
+  - `EditorScreen` 내부 로그인 체크 `useEffect` 제거, `loading` 상태 제거
+  - 작성자 체크(`author_id !== user.id`) useEffect는 유지
+
+### 2026-03-16
+- ✅ **홈 화면 팀 이미지 업로드 완료** (13-0)
+  - `home-images` Storage 버킷 + RLS 4개 정책 (읽기: 전체, 쓰기/수정/삭제: 관리자)
+  - `home_screen_config.team_image_url` 컬럼 추가
+  - `uploadTeamImage`, `deleteTeamImage` API 추가 (`imageApi.ts`)
+  - 관리자 페이지: 점선 업로드 버튼 → 이미지 미리보기 + 교체/제거, 저장 시 DB 반영
+  - LandingPage: 이미지 있으면 표시, 없으면 장식용 도형 유지 / 텍스트 우측 정렬
+  - **RLS 주의**: Storage 버킷 정책에 `is_admin` 서브쿼리로 관리자 체크
+- ✅ **글 수정 시 빈 에디터 버그 수정**
+  - `posts` prop 없을 때 `readPostById` fallback 조회 추가 (EditorScreen)
+- ✅ **글 미리보기 이미지 링크 처리** — `![...](url)` → `[이미지]` 치환 (MainScreen, LandingPage)
+- ✅ **글 본문 이미지 업로드 완료** (13-1)
+  - 업로드 중 플레이스홀더 삽입 → 완료 시 실제 이미지 교체 (Medium 방식)
+  - 새 글: `uploadedImageIds` 추적 → 저장 후 `linkImagesToPost` / 수정 글: 즉시 연결
+  - 글 삭제 시 Storage 파일 선삭제
 
 ### 2026-03-15
 - ✅ **글 본문 이미지 업로드 완료** (`imageApi.ts` 신규, EditorScreen 연동)

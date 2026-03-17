@@ -14,6 +14,7 @@ export interface HomeScreenConfig {
   card_layout: 'grid' | 'list';
   team_visible: boolean;
   team_description: string;
+  team_image_url: string | null;
   updated_at: string;
 }
 
