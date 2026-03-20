@@ -21,6 +21,7 @@ const mapPost = (post: any): Post => ({
     status: post.status,
 
     view_count: post.view_count ?? 0,
+    is_pinned: post.is_pinned ?? false,
 
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
@@ -146,6 +147,16 @@ export const deletePost = async (postId: string): Promise<void> => {
 export const recordView = async (postId: string, userId: string, authorId: string | null): Promise<void> => {
     if (userId === authorId) return;
     await supabase.rpc('record_post_view', { p_post_id: postId, p_user_id: userId });
+};
+
+// TOGGLE PIN
+export const togglePinPost = async (postId: string, isPinned: boolean): Promise<void> => {
+    const { error } = await supabase
+        .from('posts')
+        .update({ is_pinned: isPinned })
+        .eq('id', postId);
+
+    if (error) throw error;
 };
 
 // DELETE MULTIPLE
