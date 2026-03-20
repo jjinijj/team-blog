@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Post } from '../../types/Post';
 import { getRelativeTime } from '../../utils/DataFormat';
+import { ROUTES } from '../../types/routes';
 
 // 관리자 설정으로 교체 예정
 export const RECENT_POST_LIMIT = 10;
@@ -26,9 +27,9 @@ function RecentView({ recentPosts, loading, onViewPost }: RecentViewProps) {
     e.preventDefault();
     const keyword = searchInput.trim();
     if (keyword) {
-      navigate(`/posts?all=true&q=${encodeURIComponent(keyword)}`);
+      navigate(`${ROUTES.POSTS}?all=true&q=${encodeURIComponent(keyword)}`);
     } else {
-      navigate('/posts?all=true');
+      navigate(`${ROUTES.POSTS}?all=true`);
     }
   };
 
@@ -141,7 +142,7 @@ function RecentView({ recentPosts, loading, onViewPost }: RecentViewProps) {
             {/* 더보기 버튼 */}
             <div className="mt-8 flex justify-center pb-8">
               <button
-                onClick={() => navigate('/posts?all=true')}
+                onClick={() => navigate(`${ROUTES.POSTS}?all=true`)}
                 className="flex items-center justify-center gap-3 px-10 h-12 bg-blue-500 text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-all shadow-md hover:shadow-lg"
               >
                 <span>전체 글 보기</span>

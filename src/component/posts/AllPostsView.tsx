@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Post } from '../../types/Post';
 import { getRelativeTime } from '../../utils/DataFormat';
 import { searchPosts } from '../../api/postApi';
+import { ROUTES } from '../../types/routes';
 
 // 관리자 설정으로 교체 예정
 export const ALL_POSTS_PAGE_SIZE = 10;
@@ -302,7 +303,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       {/* 최근 글 보기 버튼 */}
       <div className="mt-4 flex justify-center">
         <button
-          onClick={() => navigate('/posts')}
+          onClick={() => navigate(ROUTES.POSTS)}
           className="flex items-center gap-2 text-sm text-slate-500 hover:text-blue-500 transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>

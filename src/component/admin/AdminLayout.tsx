@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../types/routes';
 
 /**
  * 관리자 페이지 레이아웃
@@ -12,7 +13,7 @@ const AdminLayout: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate(ROUTES.LOGIN);
   };
 
   return (
@@ -35,7 +36,7 @@ const AdminLayout: React.FC = () => {
           <nav className="flex flex-col gap-1 grow">
             {/* Dashboard */}
             <NavLink
-              to="/admin/dashboard"
+              to={ROUTES.ADMIN_DASHBOARD}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
@@ -64,7 +65,7 @@ const AdminLayout: React.FC = () => {
 
             {/* Home Screen */}
             <NavLink
-              to="/admin/home-screen"
+              to={ROUTES.ADMIN_HOME_SCREEN}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
@@ -93,7 +94,7 @@ const AdminLayout: React.FC = () => {
 
             {/* Whitelist */}
             <NavLink
-              to="/admin/whitelist"
+              to={ROUTES.ADMIN_WHITELIST}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
@@ -122,7 +123,7 @@ const AdminLayout: React.FC = () => {
 
             {/* Blog Posts */}
             <NavLink
-              to="/admin/posts"
+              to={ROUTES.ADMIN_POSTS}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
@@ -152,7 +153,7 @@ const AdminLayout: React.FC = () => {
             {/* 하단 메뉴 */}
             <div className="mt-auto border-t border-slate-200 pt-4 space-y-1">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(ROUTES.HOME)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors w-full text-left"
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>

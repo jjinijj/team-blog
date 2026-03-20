@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { readPosts } from '../../api/postApi';
 import { readAllowedEmails } from '../../api/allowedEmailApi';
+import {ROUTES} from '../../types/routes'
 
 /**
  * 관리자 대시보드
@@ -108,7 +109,7 @@ const Dashboard: React.FC = () => {
         <h2 className="text-lg font-bold text-slate-900 mb-4">빠른 작업</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
-            onClick={() => navigate('/admin/posts')}
+            onClick={() => navigate(ROUTES.ADMIN_POSTS)}
             className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-blue-600">article</span>

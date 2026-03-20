@@ -6,6 +6,7 @@ import SiteHeader from '../component/SiteHeader';
 import { readPinnedPosts, readRecentPosts } from '../api/postApi';
 import RecentView, { RECENT_POST_LIMIT } from '../component/posts/RecentView';
 import AllPostsView from '../component/posts/AllPostsView';
+import { ROUTES } from '../types/routes';
 
 interface MainScreenProps {
   onGoToEditor: () => void;
@@ -44,7 +45,7 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
 
   const handleWriteClick = () => {
     if (!user) {
-      navigate('/login');
+      navigate(ROUTES.LOGIN);
     } else {
       onGoToEditor();
     }

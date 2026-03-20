@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { Routes, useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,7 @@ import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
 import ProfileDropdown from '../component/Profiledropdown';
+import { ROUTES } from '../types/routes';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -91,7 +92,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
+            <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -145,7 +146,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
+            <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -170,7 +171,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
         <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
-          <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
+          <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
             <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
               <span className="material-symbols-outlined">arrow_back</span>
             </span>
