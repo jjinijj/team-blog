@@ -9,6 +9,7 @@ import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
+import ProfileDropdown from '../component/Profiledropdown';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -191,6 +192,14 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* 구분선 + 프로필 드롭다운 */}
+            {user && (
+              <>
+                <div className="h-6 w-px bg-slate-200 mx-2" />
+                <ProfileDropdown />
+              </>
             )}
           </div>
         </div>
