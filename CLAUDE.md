@@ -38,15 +38,17 @@ VITE_SUPABASE_ANON_KEY=...
 
 - [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) — 인증 상태의 단일 출처: `user`, `loading`, `isAdmin`, `displayName`, `avatarColor`. 로그인 시 `users` 테이블을 조회해 확장 필드를 채운다.
 - 회원가입은 화이트리스트 기반: `signUp`이 계정 생성 전 `allowed_emails` 테이블을 확인한다.
-- 관리자 라우트는 [src/component/admin/AdminGuard.tsx](src/component/admin/AdminGuard.tsx)가 `isAdmin`을 검사해 보호한다.
+- 로그인 필요 라우트는 [src/component/AuthGuard.tsx](src/component/AuthGuard.tsx)가, 관리자 라우트는 [src/component/admin/AdminGuard.tsx](src/component/admin/AdminGuard.tsx)가 보호한다. 자세한 내용은 하단 "인증 처리 방식" 참고.
 
 ### Supabase API 레이어
 
 - [src/supabaseClient.ts](src/supabaseClient.ts) — 단일 Supabase 클라이언트 인스턴스 (`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 사용)
-- [src/api/supabaseApi.ts](src/api/supabaseApi.ts) — `posts` 테이블 CRUD (`users!author_id` 조인으로 작성자 정보 포함)
-- [src/api/AdminApi.ts](src/api/AdminApi.ts) — `allowed_emails` 화이트리스트 관리
+- [src/api/postApi.ts](src/api/postApi.ts) — `posts` 테이블 CRUD (`users!author_id` 조인으로 작성자 정보 포함)
+- [src/api/allowedEmailApi.ts](src/api/allowedEmailApi.ts) — `allowed_emails` 화이트리스트 관리
 - [src/api/userApi.ts](src/api/userApi.ts) — 사용자 프로필 수정
 - [src/api/CommentApi.ts](src/api/CommentApi.ts) — `comments` 테이블 CRUD
+- [src/api/imageApi.ts](src/api/imageApi.ts) — Supabase Storage 이미지 업로드/삭제, DB 레코드 연결
+- [src/api/homeScreenApi.ts](src/api/homeScreenApi.ts) — `home_screen_config` 테이블 읽기/쓰기
 
 ### 콘텐츠 시스템 (두 가지 모드)
 
@@ -72,13 +74,13 @@ VITE_SUPABASE_ANON_KEY=...
 
 ### 스크린 & 컴포넌트
 
-- [src/screens/](src/screens/) — 페이지 단위 컴포넌트 (`MainScreen`, `EditorScreen`, `PostDetailScreen`, `AuthScreen`, `admin/` 하위 관리자 페이지, `profile/` 하위 프로필 페이지)
+- [src/screens/](src/screens/) — 페이지 단위 컴포넌트 (`LandingPage`, `MainScreen`, `EditorScreen`, `PostDetailScreen`, `AuthScreen`, `Mypostsscreen`, `TeamPage`, `ContactPage`, `admin/` 하위 관리자 페이지, `profile/` 하위 프로필 페이지)
 - [src/component/](src/component/) — 재사용 컴포넌트 (`comments/` 하위 디렉토리 포함)
 - [src/hooks/](src/hooks/) — `useDraft`, `useComments`
 
 ### 데이터베이스 테이블
 
-`posts`, `users`, `allowed_emails`, `comments`
+`posts`, `users`, `allowed_emails`, `comments`, `post_images`, `home_screen_config`
 
 ### 포스트 공개 범위 규칙
 
@@ -92,6 +94,7 @@ VITE_SUPABASE_ANON_KEY=...
 - **Material Symbols Outlined** — `<span class="material-symbols-outlined">아이콘명</span>` 형태로 사용
 - **Inter** — 전체 body 기본 폰트
 
-### EditorScreen 인증 처리 방식
+### 인증 처리 방식
 
-`/write`, `/edit/:id` 라우트에는 별도의 라우트 가드가 없다. 대신 `EditorScreen` 내부의 `useEffect`에서 `user`가 없으면 `navigate('/login')`으로 직접 리다이렉트한다. 관리자 라우트(`/admin`)가 `AdminGuard` 컴포넌트로 보호되는 것과 다른 방식이다.
+- `/write`, `/edit/:id`, `/my-posts`, `/profile/*` 라우트는 [src/component/AuthGuard.tsx](src/component/AuthGuard.tsx)로 보호된다. 로그인 상태 확인 후 미인증 시 `/login`으로 리다이렉트.
+- 관리자 라우트(`/admin/*`)는 [src/component/admin/AdminGuard.tsx](src/component/admin/AdminGuard.tsx)가 `isAdmin`을 검사해 보호한다.

@@ -72,8 +72,8 @@ team-blog/
 │   ├── contexts/
 │   │   └── AuthContext.tsx        # 전역 인증 상태
 │   ├── api/                       # Supabase API 레이어
-│   │   ├── supabaseApi.ts         # 게시글 CRUD
-│   │   ├── AdminApi.ts            # 화이트리스트 관리
+│   │   ├── postApi.ts             # 게시글 CRUD
+│   │   ├── allowedEmailApi.ts     # 화이트리스트 관리
 │   │   ├── userApi.ts             # 사용자 프로필
 │   │   ├── CommentApi.ts          # 댓글 CRUD
 │   │   ├── imageApi.ts            # 이미지 업로드/삭제

@@ -102,8 +102,8 @@ BrowserRouter  (src/index.tsx)
 
 | 파일 | 역할 |
 |------|------|
-| `supabaseApi.ts` (postApi) | `posts` 테이블 CRUD (`users!author_id` 조인) |
-| `AdminApi.ts` (allowedEmailApi) | `allowed_emails` 화이트리스트 관리 |
+| `postApi.ts` | `posts` 테이블 CRUD (`users!author_id` 조인) |
+| `allowedEmailApi.ts` | `allowed_emails` 화이트리스트 관리 |
 | `userApi.ts` | 사용자 프로필 수정 |
 | `CommentApi.ts` | `comments` 테이블 CRUD |
 | `imageApi.ts` | Supabase Storage 이미지 업로드/삭제, DB 레코드 연결 |
