@@ -4,7 +4,7 @@ import ProfileDropdown from './Profiledropdown';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
-  { label: 'Articles', path: '/blog' },
+  { label: 'Articles', path: '/posts' },
   { label: 'Team', path: '/team' },
   { label: 'Contact', path: '/contact' },
 ];

@@ -36,7 +36,7 @@ function AppContent() {
         await deleteStorageImagesForPosts([postId]);
         await deletePost(postId);
         setPosts(posts.filter((post) => postId !== post.id));
-        navigate('/blog');
+        navigate('/posts');
       } catch (error) {
         console.error('글 삭제 실패:', error);
         alert('글 삭제에 실패했습니다.');
@@ -130,7 +130,7 @@ const handleUpdatePost = async (
       <Route path="/login"
              element={
              <AuthScreen
-              goToMain={() => navigate('/blog')}
+              goToMain={() => navigate('/posts')}
             />
           }
         />
@@ -146,7 +146,7 @@ const handleUpdatePost = async (
 
       {/* 메인 화면 (블로그 글 목록) */}
       <Route
-        path="/blog"
+        path="/posts"
         element={
           <MainScreen
             onViewPost={(postId) => navigate(`/post/${postId}`)}
@@ -173,7 +173,7 @@ const handleUpdatePost = async (
           path="/write"
           element={
             <EditorScreen
-              onGoToMain={() => navigate('/blog')}
+              onGoToMain={() => navigate('/posts')}
               onAddPost={handleAddPost}
               editingPost={undefined}
             />
@@ -186,7 +186,7 @@ const handleUpdatePost = async (
           element={
             <EditorScreen
               posts={posts}
-              onGoToMain={() => navigate('/blog')}
+              onGoToMain={() => navigate('/posts')}
               onAddPost={handleAddPost}
               onUpdatePost={handleUpdatePost}
             />
@@ -198,7 +198,7 @@ const handleUpdatePost = async (
           path="/my-posts"
           element={
             <MyPostsScreen
-              onGoToMain={() => navigate('/blog')}
+              onGoToMain={() => navigate('/posts')}
               onEditPost={(postId) => navigate(`edit/${postId}`)}
             />
           }

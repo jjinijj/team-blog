@@ -66,7 +66,7 @@ export const EditorScreen = ({
   // ── edit 모드: posts prop에 없으면 직접 조회 ──
   useEffect(() => {
     if (!id || posts?.find(post => post.id === id)) return;
-    readPostById(id).then(setFetchedPost).catch(() => navigate('/blog'));
+    readPostById(id).then(setFetchedPost).catch(() => navigate('/posts'));
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 작성자 체크 (본인 글만 수정 가능) ──────────────

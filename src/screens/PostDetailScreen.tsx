@@ -91,7 +91,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+            <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -145,7 +145,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+            <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -170,7 +170,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
         <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
-          <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+          <button onClick={() => navigate('/posts')} className="flex items-center gap-4">
             <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
               <span className="material-symbols-outlined">arrow_back</span>
             </span>
