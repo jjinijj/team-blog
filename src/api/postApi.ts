@@ -21,6 +21,7 @@ const mapPost = (post: any): Post => ({
     status: post.status,
 
     view_count: post.view_count ?? 0,
+    is_pinned: post.is_pinned ?? false,
 
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
@@ -71,6 +72,67 @@ export const readPosts = async (): Promise<Post[]> => {
     if (error) throw error;
 
     return data.map(mapPost);
+};
+
+// READ PINNED POSTS
+export const readPinnedPosts = async (): Promise<Post[]> => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .eq('status', 'published')
+        .eq('is_pinned', true)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data.map(mapPost);
+};
+
+// READ RECENT POSTS (핀 고정 글 제외, limit 개수만)
+export const readRecentPosts = async (limit: number): Promise<Post[]> => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .eq('status', 'published')
+        .eq('is_pinned', false)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+    return data.map(mapPost);
+};
+
+// SEARCH POSTS (서버사이드 검색 + 정렬 + 페이징)
+export const searchPosts = async (options: {
+    keyword?: string;
+    sort?: 'newest' | 'oldest' | 'popular';
+    page: number;
+    pageSize: number;
+}): Promise<{ data: Post[]; total: number }> => {
+    const { keyword, sort = 'newest', page, pageSize } = options;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+        .from('posts')
+        .select(`*, users!author_id(email,display_name,avatar_color)`, { count: 'exact' })
+        .eq('status', 'published');
+
+    if (keyword) {
+        query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+    }
+
+    if (sort === 'newest') {
+        query = query.order('created_at', { ascending: false });
+    } else if (sort === 'oldest') {
+        query = query.order('created_at', { ascending: true });
+    } else {
+        // popular: 조회수 내림차순, 동점이면 최신순
+        query = query.order('view_count', { ascending: false }).order('created_at', { ascending: false });
+    }
+
+    const { data, error, count } = await query.range(from, to);
+    if (error) throw error;
+    return { data: data.map(mapPost), total: count ?? 0 };
 };
 
 // READ
@@ -146,6 +208,16 @@ export const deletePost = async (postId: string): Promise<void> => {
 export const recordView = async (postId: string, userId: string, authorId: string | null): Promise<void> => {
     if (userId === authorId) return;
     await supabase.rpc('record_post_view', { p_post_id: postId, p_user_id: userId });
+};
+
+// TOGGLE PIN
+export const togglePinPost = async (postId: string, isPinned: boolean): Promise<void> => {
+    const { error } = await supabase
+        .from('posts')
+        .update({ is_pinned: isPinned })
+        .eq('id', postId);
+
+    if (error) throw error;
 };
 
 // DELETE MULTIPLE

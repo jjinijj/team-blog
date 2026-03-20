@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../types/routes';
 
 export const ProfileDropdown = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -21,7 +22,7 @@ export const ProfileDropdown = () => {
   const handleLogout = async () => {
     setIsProfileOpen(false);
     await signOut();
-    navigate('/login');
+    navigate(ROUTES.LOGIN);
   };
 
   const initial = (displayName ?? user?.email ?? 'U')[0].toUpperCase();
@@ -60,14 +61,14 @@ export const ProfileDropdown = () => {
 
               {/* 메뉴 */}
               <button
-                onClick={() => { setIsProfileOpen(false); navigate('/profile'); }}
+                onClick={() => { setIsProfileOpen(false); navigate(ROUTES.PROFILE); }}
                 className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
               >
                 <span>사용자 정보</span>
               </button>
 
               <button
-                onClick={() => { setIsProfileOpen(false); navigate('/my-posts'); }}
+                onClick={() => { setIsProfileOpen(false); navigate(ROUTES.MY_POSTS); }}
                 className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
               >
                 <span>내 글 보기</span>
@@ -77,7 +78,7 @@ export const ProfileDropdown = () => {
                 <>
                   <div className="my-1 h-px bg-gray-100" />
                   <button
-                    onClick={() => { setIsProfileOpen(false); navigate('/admin'); }}
+                    onClick={() => { setIsProfileOpen(false); navigate(ROUTES.ADMIN); }}
                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-3"
                   >
                     <span>⚙️</span>
@@ -99,7 +100,7 @@ export const ProfileDropdown = () => {
         </>
       ) : (
         <button
-          onClick={() => navigate('/login')}
+          onClick={() => navigate(ROUTES.LOGIN)}
           className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
         >
           로그인

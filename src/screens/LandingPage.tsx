@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { readPosts } from '../api/postApi';
+import { ROUTES } from '../types/routes';
 import { fetchHomeScreenConfig, fetchTeamMembers, type HomeScreenConfig, type TeamMember } from '../api/homeScreenApi';
 import SiteHeader from '../component/SiteHeader';
 import LogoMark from '../component/LogoMark';
@@ -87,7 +88,7 @@ const LandingPage = () => {
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <button
-                      onClick={() => navigate(config?.hero_cta_url || '/blog')}
+                      onClick={() => navigate(config?.hero_cta_url || ROUTES.POSTS)}
                       className="bg-primary text-white font-bold px-8 py-3 rounded-lg flex items-center gap-2 group hover:bg-primary/90 transition-colors"
                     >
                       {config?.hero_cta_text ?? '블로그 보기'}
@@ -110,7 +111,7 @@ const LandingPage = () => {
                   <p className="text-slate-500 dark:text-slate-400">팀의 최신 이야기</p>
                 </div>
                 <button
-                  onClick={() => navigate('/blog')}
+                  onClick={() => navigate(ROUTES.POSTS)}
                   className="text-primary font-bold flex items-center gap-1 hover:underline text-sm"
                 >
                   전체 보기 <span className="material-symbols-outlined text-[18px]">chevron_right</span>
