@@ -30,7 +30,30 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        textarea.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 복사 실패 시 무시
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -160,8 +183,12 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
             </button>
 
             {/* 공유 버튼 */}
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
-              <span className="material-symbols-outlined">share</span>
+            <button
+              onClick={handleShare}
+              className={`p-2 transition-colors rounded-lg hover:bg-slate-100 ${copied ? 'text-green-500' : 'text-slate-400 hover:text-slate-600'}`}
+              title={copied ? '링크가 복사되었습니다!' : '링크 복사'}
+            >
+              <span className="material-symbols-outlined">{copied ? 'check' : 'share'}</span>
             </button>
 
             {/* 더보기 드롭다운 (본인 글만) */}
