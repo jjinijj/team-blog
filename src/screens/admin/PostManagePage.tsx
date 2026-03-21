@@ -30,6 +30,8 @@ const PostManagePage: React.FC = () => {
   const [maxPinned, setMaxPinned] = useState(3);
   const [maxPinnedInput, setMaxPinnedInput] = useState(3);
   const [savingMax, setSavingMax] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     loadData();
@@ -60,6 +62,9 @@ const PostManagePage: React.FC = () => {
     (post.author_email ?? '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
     (post.author_name ?? '').toLowerCase().includes(searchKeyword.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
+  const pagedPosts = filteredPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const handleTogglePin = async (post: Post) => {
     const willPin = !post.is_pinned;
@@ -277,7 +282,7 @@ const PostManagePage: React.FC = () => {
           <input
             type="text"
             value={searchKeyword}
-            onChange={e => setSearchKeyword(e.target.value)}
+            onChange={e => { setSearchKeyword(e.target.value); setCurrentPage(1); }}
             className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary outline-none text-sm shadow-sm"
             placeholder="Search posts by title or author..."
           />
@@ -326,7 +331,7 @@ const PostManagePage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredPosts.map(post => {
+                  pagedPosts.map(post => {
                     const badge = STATUS_BADGE[post.status] ?? { label: post.status, className: 'bg-slate-100 text-slate-700' };
                     return (
                       <tr key={post.id} className="hover:bg-slate-50/50 transition-colors">
@@ -435,6 +440,37 @@ const PostManagePage: React.FC = () => {
             <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">
               Showing {filteredPosts.length} of {posts.length} posts
             </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded text-xs font-bold transition-colors ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
