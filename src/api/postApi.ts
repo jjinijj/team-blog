@@ -210,6 +210,18 @@ export const recordView = async (postId: string, userId: string, authorId: strin
     await supabase.rpc('record_post_view', { p_post_id: postId, p_user_id: userId });
 };
 
+// READ ALL POSTS FOR ADMIN (모든 status 포함)
+export const readAllPostsForAdmin = async (): Promise<Post[]> => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data.map(mapPost);
+};
+
 // TOGGLE PIN
 export const togglePinPost = async (postId: string, isPinned: boolean): Promise<void> => {
     const { error } = await supabase
