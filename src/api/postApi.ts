@@ -23,6 +23,10 @@ const mapPost = (post: any): Post => ({
     view_count: post.view_count ?? 0,
     is_pinned: post.is_pinned ?? false,
 
+    tags: Array.isArray(post.post_tags)
+      ? post.post_tags.map((pt: any) => pt.tags).filter(Boolean)
+      : [],
+
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
 });

@@ -1,3 +1,6 @@
+import type { Tag } from '../api/tagApi';
+export type { Tag };
+
 export interface Post{
     id : string;
     title: string;
@@ -17,6 +20,8 @@ export interface Post{
 
     view_count: number;
     is_pinned: boolean;
+
+    tags: Tag[];
 
     // legacy
     isMarkdown: boolean;
