@@ -8,6 +8,7 @@ import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
 import ProfileDropdown from '../component/Profiledropdown';
 import { uploadPostImage, linkImagesToPost } from '../api/imageApi';
 import { readPostById } from '../api/postApi';
+import { ROUTES } from '../types/routes';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -66,7 +67,7 @@ export const EditorScreen = ({
   // ── edit 모드: posts prop에 없으면 직접 조회 ──
   useEffect(() => {
     if (!id || posts?.find(post => post.id === id)) return;
-    readPostById(id).then(setFetchedPost).catch(() => navigate('/blog'));
+    readPostById(id).then(setFetchedPost).catch(() => navigate(ROUTES.POSTS));
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 작성자 체크 (본인 글만 수정 가능) ──────────────
@@ -74,7 +75,7 @@ export const EditorScreen = ({
     if (!user || !postToEdit) return;
     if (postToEdit.author_id !== user.id) {
       alert('본인이 작성한 글만 수정할 수 있습니다.');
-      navigate('/');
+      navigate(ROUTES.HOME);
     }
   }, [user, postToEdit, navigate]);
 

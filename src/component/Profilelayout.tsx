@@ -1,22 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchUserProfile, UserProfile } from '../api/userApi'
+import { fetchUserProfile, UserProfile } from '../api/userApi';
+import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
+import { ROUTES } from '../types/routes';
 
 const ProfileLayout = () => {
   const { user, avatarColor, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [siteName, setSiteNameState] = useState<string | null>(getCachedSiteName());
 
   useEffect(() => {
     if (!user) return;
     fetchUserProfile(user.id).then(setProfile).catch(console.error);
   }, [user]);
 
+  useEffect(() => {
+    getSiteName().then(setSiteNameState).catch(() => {});
+  }, []);
+
   const handleLogout = async () => {
     if (!window.confirm('로그아웃 하시겠습니까?')) return;
     await signOut();
-    navigate('/login');
+    navigate(ROUTES.LOGIN);
   };
 
   return (
@@ -27,12 +34,12 @@ const ProfileLayout = () => {
           {/* 로고 */}
           <div
             className="flex items-center gap-3 mb-8 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(ROUTES.HOME)}
           >
             <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
               <span className="material-symbols-outlined text-xl">terminal</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">TeamBlog</span>
+            {siteName && <span className="text-lg font-bold tracking-tight">{siteName}</span>}
           </div>
 
           {/* 사용자 정보 */}
@@ -54,7 +61,7 @@ const ProfileLayout = () => {
           {/* 메뉴 */}
           <nav className="space-y-1">
             <NavLink
-              to="/profile/edit"
+              to={ROUTES.PROFILE_EDIT}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                   isActive
@@ -74,7 +81,7 @@ const ProfileLayout = () => {
             </NavLink>
 
             <NavLink
-              to="/profile/password"
+              to={ROUTES.PROFILE_PASSWORD}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                   isActive

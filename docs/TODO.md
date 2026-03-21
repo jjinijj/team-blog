@@ -186,25 +186,20 @@
 #### 3-4. 팀 소개 페이지
 **예상 소요**: 1-2시간
 
-- [ ] DB 스키마
-  - [ ] `team_info` 테이블 생성 (싱글 로우)
-    ```sql
-    - id: int (항상 1)
-    - title: text (팀 이름)
-    - description: text (팀 소개 본문)
-    - updated_at: timestamp
-    ```
-  - [ ] `users` 테이블에 `show_in_team` 컬럼 추가 (boolean, default true)
-  - [ ] RLS 정책 (`team_info` 읽기: 전체, 수정: 관리자만)
-- [ ] 공개 페이지 (`/about`)
-  - [ ] 팀 이름 + 소개 텍스트 표시
-  - [ ] 멤버 카드 목록 (`show_in_team = true`인 users 조회, 아바타 + 이름 + 이메일)
-  - [ ] 헤더/내비에 About 링크 추가
-- [ ] 관리자 편집
-  - [ ] 관리자 페이지(`/admin`)에 팀 소개 편집 탭 추가
-  - [ ] 팀 이름 / 소개 텍스트 수정 폼 (textarea)
-  - [ ] 저장 시 `team_info` upsert
-  - [ ] 멤버 목록 관리 (전체 유저 표시, `show_in_team` 토글)
+> **현재 상태**: 팀 관련 설정은 `home_screen_config`(team_visible, team_description)와 `users.show_in_team`으로 관리자 페이지에서 이미 구현됨. LandingPage 팀 섹션도 동작 중. 별도 `/team` 페이지는 placeholder 상태. `team_info` 테이블은 만들지 않고 `home_screen_config`로 통합된 구조.
+
+- [x] DB 스키마
+  - [x] `users` 테이블에 `show_in_team` 컬럼 추가 (boolean, default true)
+  - [x] 팀 소개 텍스트: `home_screen_config.team_description` 으로 통합 (`team_info` 테이블 불필요)
+- [x] 관리자 편집 (`/admin/home-screen` 팀 소개 섹션)
+  - [x] 팀 소개 섹션 표시 여부 토글 (`team_visible`)
+  - [x] 팀 소개 문구 수정 폼 (`team_description`)
+  - [x] 멤버 목록 관리 (`show_in_team` 토글, optimistic update)
+- [x] LandingPage 팀 섹션 렌더링 (show_in_team 멤버 카드, team_description)
+- [ ] `/team` 공개 페이지 구현 (현재 placeholder "준비 중")
+  - [ ] 팀 소개 텍스트 표시
+  - [ ] 멤버 카드 목록 (아바타 + 이름 + 이메일)
+  - [ ] 헤더/내비에 Team 링크 연결
 
 ---
 
@@ -460,16 +455,18 @@
 
 ### Phase 5: 확장 기능
 
-#### 6. 포스트 페이징
+#### 6. 포스트 페이징 ✅
 **예상 소요**: 1-2시간
 
-- [ ] 페이지네이션 UI
-  - [ ] 페이지 번호 표시
-  - [ ] 이전/다음 버튼
-  - [ ] 페이지당 글 수 설정 (10개, 20개 등)
-- [ ] 쿼리 수정
-  - [ ] LIMIT, OFFSET 활용
-  - [ ] 전체 글 수 조회 (페이지 수 계산)
+- [x] 페이지네이션 UI
+  - [x] 페이지 번호 표시
+  - [x] 이전/다음 버튼 (chevron_left/chevron_right)
+  - [x] 페이지당 글 수 서버에서 조회 (`site_config.posts_per_page`)
+- [x] 쿼리 수정
+  - [x] LIMIT, OFFSET 활용 (클라이언트 slice)
+  - [x] 전체 글 수 조회 (페이지 수 계산)
+- [x] AllPostsView 서버 페이지 크기 적용 (`getPostsPerPage` 로드 전 fetch 방지)
+- [x] PostManagePage 페이지네이션 추가 (검색 시 1페이지로 자동 초기화)
 
 ---
 
@@ -495,17 +492,19 @@
 
 ---
 
-#### 8. 핀 고정 글 (공지사항)
+#### 8. 핀 고정 글 (공지사항) ✅
 **예상 소요**: 30분
 
-- [ ] DB 스키마
-  - [ ] `posts` 테이블에 `is_pinned` 컬럼 추가
-- [ ] 권한 설정
-  - [ ] 관리자만 핀 설정/해제 가능
-- [ ] UI 업데이트
-  - [ ] 메인 화면 상단에 고정 글 표시
-  - [ ] 📌 아이콘으로 표시
-  - [ ] 최대 3개까지 고정
+- [x] DB 스키마
+  - [x] `posts` 테이블에 `is_pinned` 컬럼 추가
+- [x] 권한 설정
+  - [x] 관리자만 핀 설정/해제 가능 (PostManagePage에서 토글)
+- [x] UI 업데이트
+  - [x] 메인 화면 상단에 고정 글 표시
+  - [x] 핀 아이콘으로 표시
+  - [x] `site_config.max_pinned_posts` 기반 최대 고정 수 설정
+  - [x] 최대 수 줄일 때 초과 고정 글 자동 해제 (정렬 하위순)
+  - [x] `site_config` 테이블 활용 (`max_pinned_posts`, `posts_per_page`, `site_name`)
 
 ---
 
@@ -600,9 +599,9 @@
   - [ ] localStorage에 최근 본 글 ID 저장
   - [ ] 사이드바에 표시
   
-- [ ] 글 공유 (30분)
-  - [ ] URL 복사 버튼
-  - [ ] 클립보드 복사 + 토스트 메시지
+- [x] 글 공유 (30분)
+  - [x] URL 복사 버튼 (헤더 공유 아이콘)
+  - [x] 클립보드 복사 + 버튼 상태 전환 (`share` → `check` 2초)
 
 ---
 
@@ -768,14 +767,15 @@
 - [ ] (추후) 좋아요/반응
 
 ### 📅 Milestone 5: 확장 기능
-- [ ] 포스트 페이징
+- [x] 포스트 페이징
 - [x] 임시저장
 - [x] 글 상태 관리 (Draft/Published/Private)
-- [ ] 핀 고정 글
+- [x] 핀 고정 글
 - [ ] 북마크
 - [ ] 검색 고도화
 - [ ] 알림 시스템
-- [ ] 기타 편의 기능 (조회수, 다크모드, 최근 본 글, 글 공유)
+- [ ] 기타 편의 기능 (조회수, 다크모드, 최근 본 글)
+- [x] 글 공유 (URL 복사)
 
 ### 📅 Milestone 6: 파일 관리
 - [ ] 파일 첨부/다운로드
@@ -784,6 +784,45 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-21
+- ✅ **site_config API 레이어 완성** (`siteConfigApi.ts`)
+  - `getPostsPerPage`, `setPostsPerPage` — `site_config.posts_per_page` 읽기/쓰기
+  - `getSiteName`, `setSiteName` — `site_config.site_name` 읽기/쓰기 + localStorage 캐시 갱신
+  - `getCachedSiteName` — localStorage에서 동기 반환 (없으면 `null`, 플래시 방지용)
+- ✅ **PostManagePage 다수 개선**
+  - 저장 버튼 색상 버그 수정 (`bg-primary` → `bg-blue-600`, 조건부 클래스로 활성/비활성 분기)
+  - 최대 고정 수 줄일 때 초과 고정 글 자동 해제 (`pinnedPosts.slice(maxPinnedInput)` → `Promise.all` 해제)
+  - 비공개(private) 글: `visibility_off` 아이콘 표시 + 클릭 시 "비공개 글은 볼 수 없음" 안내
+  - 페이지네이션 추가 (서버 `posts_per_page` 기반, 검색 시 1페이지 초기화)
+- ✅ **AllPostsView 서버 페이지 크기 적용**
+  - 하드코딩 `PAGE_SIZE = 10` 제거 → `getPostsPerPage()` 서버 조회
+  - `pageSize === 0` 가드로 서버 값 로드 전 fetch 방지
+- ✅ **사이트 설정 관리자 페이지 신규** (`/admin/settings`, `SiteSettingsPage.tsx`)
+  - 사이트명 변경 — `setSiteName` API 연결, localStorage 캐시 즉시 갱신
+  - 글 표시 수 설정 — 슬라이더(min=4, max=48, step=4), `setPostsPerPage` API 연결
+  - 브랜드 컬러 스와치 UI — 5가지 프리셋, API 미연결 (테이블 필드 없음)
+  - `AdminLayout` 사이드바에 Settings 메뉴 추가 (`ADMIN_SETTINGS` 라우트)
+- ✅ **SiteFooter 공통 컴포넌트 추출** (`src/component/SiteFooter.tsx`)
+  - LandingPage, TeamPage, ContactPage 중복 푸터 코드 통합
+  - MainScreen, PostDetailScreen에도 SiteFooter 추가
+  - 사이트명 localStorage 캐시 → 서버 조회 패턴 동일하게 적용
+- ✅ **사이트명 하드코딩 제거 — 전체 페이지**
+  - `SiteHeader`, `AuthScreen`, `Mypostsscreen`, `Profilelayout` 모두 서버 값으로 교체
+  - 초기값 `getCachedSiteName()` (첫 방문: `null`, 재방문: 캐시 문자열) → 깜빡임 없음
+  - `{siteName && <span>{siteName}</span>}` 패턴으로 로드 전 렌더링 없음
+  - **배운 점**: 캐시 초기값 패턴 — `null`에서 문자열로 전환 시 한 번만 렌더링, 스켈레톤 불필요
+
+### 2026-03-20
+- ✅ **글 공유 기능 완료** (12)
+  - 글 상세 헤더에 공유 버튼 추가 — 클릭 시 현재 URL 클립보드 복사
+  - 복사 성공 시 아이콘 `share` → `check` (초록) 2초 후 원복
+  - `navigator.clipboard` 미지원 시 `textarea` + `execCommand` fallback 처리
+- ✅ **PostDetailScreen 헤더 UI 재구성**
+  - 수정/삭제 버튼 → `more_vert` 드롭다운으로 이동 (본인 글에만 표시)
+  - 북마크 버튼 추가 (UI만, 기능 미구현)
+  - `ProfileDropdown` 컴포넌트 추가 (MainScreen, EditorScreen과 동일)
+- ✅ **문서 정비** — `ARCHITECTURE.md` 신규 생성, `README.md` / `CLAUDE.md` 현재 상태로 업데이트
 
 ### 2026-03-17
 - ✅ **AuthGuard 라우팅 보호 리팩토링 완료** (1-1)

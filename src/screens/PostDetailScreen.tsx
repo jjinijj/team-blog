@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,9 @@ import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
+import ProfileDropdown from '../component/Profiledropdown';
+import SiteFooter from '../component/SiteFooter';
+import { ROUTES } from '../types/routes';
 
 interface PostDetailScreenProps {
   onEdit: (postId: string) => void;
@@ -28,6 +31,41 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        textarea.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 복사 실패 시 무시
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -55,7 +93,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+            <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -109,7 +147,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       <div className="flex flex-col min-h-screen bg-white">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
           <div className="max-w-7xl mx-auto h-16 flex items-center">
-            <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+            <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
               <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
                 <span className="material-symbols-outlined">arrow_back</span>
               </span>
@@ -134,28 +172,65 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
         <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
-          <button onClick={() => navigate('/blog')} className="flex items-center gap-4">
+          <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-4">
             <span className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
               <span className="material-symbols-outlined">arrow_back</span>
             </span>
             <span className="text-sm font-semibold">목록으로</span>
           </button>
-          {post.author_id === user?.id && (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => onEdit(post.id)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
-              >
-                수정
-              </button>
-              <button
-                onClick={() => onDelete(post.id)}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
-              >
-                삭제
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            {/* 북마크 버튼 */}
+            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
+              <span className="material-symbols-outlined">bookmark</span>
+            </button>
+
+            {/* 공유 버튼 */}
+            <button
+              onClick={handleShare}
+              className={`p-2 transition-colors rounded-lg hover:bg-slate-100 ${copied ? 'text-green-500' : 'text-slate-400 hover:text-slate-600'}`}
+              title={copied ? '링크가 복사되었습니다!' : '링크 복사'}
+            >
+              <span className="material-symbols-outlined">{copied ? 'check' : 'share'}</span>
+            </button>
+
+            {/* 더보기 드롭다운 (본인 글만) */}
+            {post.author_id === user?.id && (
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(prev => !prev)}
+                  className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100"
+                >
+                  <span className="material-symbols-outlined">more_vert</span>
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50">
+                    <button
+                      onClick={() => { setMenuOpen(false); onEdit(post.id); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                      수정
+                    </button>
+                    <button
+                      onClick={() => { setMenuOpen(false); onDelete(post.id); }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 구분선 + 프로필 드롭다운 */}
+            {user && (
+              <>
+                <div className="h-6 w-px bg-slate-200 mx-2" />
+                <ProfileDropdown />
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -225,6 +300,8 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         {/* Comments */}
         <CommentsSection postId={post.id} />
       </main>
+
+      <SiteFooter />
     </div>
   );
 };

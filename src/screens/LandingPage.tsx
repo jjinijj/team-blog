@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { readPosts } from '../api/postApi';
+import { ROUTES } from '../types/routes';
 import { fetchHomeScreenConfig, fetchTeamMembers, type HomeScreenConfig, type TeamMember } from '../api/homeScreenApi';
 import SiteHeader from '../component/SiteHeader';
-import LogoMark from '../component/LogoMark';
+import SiteFooter from '../component/SiteFooter';
 import { getAbsoluteDay } from '../utils/DataFormat';
 
 const LandingPage = () => {
@@ -87,7 +88,7 @@ const LandingPage = () => {
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <button
-                      onClick={() => navigate(config?.hero_cta_url || '/blog')}
+                      onClick={() => navigate(config?.hero_cta_url || ROUTES.POSTS)}
                       className="bg-primary text-white font-bold px-8 py-3 rounded-lg flex items-center gap-2 group hover:bg-primary/90 transition-colors"
                     >
                       {config?.hero_cta_text ?? '블로그 보기'}
@@ -110,7 +111,7 @@ const LandingPage = () => {
                   <p className="text-slate-500 dark:text-slate-400">팀의 최신 이야기</p>
                 </div>
                 <button
-                  onClick={() => navigate('/blog')}
+                  onClick={() => navigate(ROUTES.POSTS)}
                   className="text-primary font-bold flex items-center gap-1 hover:underline text-sm"
                 >
                   전체 보기 <span className="material-symbols-outlined text-[18px]">chevron_right</span>
@@ -124,7 +125,7 @@ const LandingPage = () => {
                   {recentPosts.map(post => (
                     <div
                       key={post.id}
-                      onClick={() => navigate(`/post/${post.id}`)}
+                      onClick={() => navigate(ROUTES.POST_DETAIL(post.id))}
                       className="flex items-start gap-5 p-5 group cursor-pointer bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       <div
@@ -152,7 +153,7 @@ const LandingPage = () => {
                   {recentPosts.map(post => (
                     <div
                       key={post.id}
-                      onClick={() => navigate(`/post/${post.id}`)}
+                      onClick={() => navigate(ROUTES.POST_DETAIL(post.id))}
                       className="flex flex-col group cursor-pointer bg-white dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:shadow-md transition-all"
                     >
                       <h3 className="text-lg font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">
@@ -212,7 +213,7 @@ const LandingPage = () => {
                     {config.team_description}
                   </p>
                   <button
-                    onClick={() => navigate('/team')}
+                    onClick={() => navigate(ROUTES.TEAM)}
                     className="inline-block bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-8 py-3 rounded-xl hover:opacity-90 transition-opacity"
                   >
                     팀 소개
@@ -239,16 +240,7 @@ const LandingPage = () => {
 
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-100 dark:bg-slate-900 px-4 lg:px-20 py-10 border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <LogoMark size="sm" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Team Blog</span>
-          </div>
-          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} Team Blog. All rights reserved.</p>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   );

@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../types/routes';
 
 const AuthGuard = () => {
   const { user, loading } = useAuth();
@@ -16,7 +17,7 @@ const AuthGuard = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return <Outlet />;
