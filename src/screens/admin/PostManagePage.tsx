@@ -367,11 +367,17 @@ const PostManagePage: React.FC = () => {
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-1">
                               <button
-                                onClick={() => navigate(ROUTES.POST_DETAIL(post.id))}
+                                onClick={() =>
+                                  post.status === 'private'
+                                    ? setError('비공개 글은 관리자도 열람할 수 없습니다.')
+                                    : navigate(ROUTES.POST_DETAIL(post.id))
+                                }
                                 className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                title="View"
+                                title={post.status === 'private' ? '비공개 글' : 'View'}
                               >
-                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>visibility</span>
+                                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                                  {post.status === 'private' ? 'visibility_off' : 'visibility'}
+                                </span>
                               </button>
                               <button
                                 onClick={() => handleTogglePin(post)}
