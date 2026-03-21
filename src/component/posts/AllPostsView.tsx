@@ -5,6 +5,7 @@ import { getRelativeTime } from '../../utils/DataFormat';
 import { searchPosts } from '../../api/postApi';
 import { getPostsPerPage } from '../../api/siteConfigApi';
 import { ROUTES } from '../../types/routes';
+import { fetchTags, type Tag } from '../../api/tagApi';
 
 interface AllPostsViewProps {
   onViewPost: (postId: string) => void;
@@ -25,11 +26,13 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
   const [loading, setLoading] = useState(true);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [pageSize, setPageSize] = useState(0);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
 
   const totalPages = Math.max(1, Math.ceil(total / (pageSize || 1)));
 
   useEffect(() => {
     getPostsPerPage().then(setPageSize).catch(() => setPageSize(10));
+    fetchTags().then(setAllTags).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -120,6 +123,25 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
             </button>
           </div>
         </form>
+
+        {/* Tags */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {allTags.map(tag => (
+              <button
+                key={tag.id}
+                onClick={() => updateParams({ tag: tagSlug === tag.slug ? null : tag.slug, page: '1' })}
+                className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                  tagSlug === tag.slug
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600'
+                }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Sort */}
         <div className="flex items-center justify-end">
