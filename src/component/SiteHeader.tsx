@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogoMark from './LogoMark';
 import ProfileDropdown from './Profiledropdown';
 import { ROUTES } from '../types/routes';
+import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 
 const NAV_ITEMS = [
   { label: 'Home', path: ROUTES.HOME },
@@ -13,6 +15,12 @@ const NAV_ITEMS = [
 const SiteHeader = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [siteName, setSiteName] = useState<string | null>(getCachedSiteName());
+
+  useEffect(() => {
+    getSiteName().then(setSiteName).catch(() => {});
+  }, []);
+
   const isActive = (path: string) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path);
 
@@ -22,7 +30,7 @@ const SiteHeader = () => {
         <div className="flex items-center gap-8">
           <button onClick={() => navigate(ROUTES.HOME)} className="flex items-center gap-3">
             <LogoMark size="md" />
-            <h2 className="text-xl font-bold tracking-tight">Team Blog</h2>
+            {siteName && <h2 className="text-xl font-bold tracking-tight">{siteName}</h2>}
           </button>
           <nav className="hidden md:flex items-center gap-6">
             {NAV_ITEMS.map(({ label, path }) => (

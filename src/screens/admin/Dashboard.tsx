@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => navigate('/admin/whitelist')}
+            onClick={() => navigate(ROUTES.ADMIN_WHITELIST)}
             className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-green-600">verified_user</span>
@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => navigate('/editor')}
+            onClick={() => navigate(ROUTES.WRITE)}
             className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-purple-600">add</span>
@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(ROUTES.HOME)}
             className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-orange-600">home</span>

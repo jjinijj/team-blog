@@ -2,17 +2,23 @@ import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchUserProfile, UserProfile } from '../api/userApi';
+import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 import { ROUTES } from '../types/routes';
 
 const ProfileLayout = () => {
   const { user, avatarColor, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [siteName, setSiteNameState] = useState<string | null>(getCachedSiteName());
 
   useEffect(() => {
     if (!user) return;
     fetchUserProfile(user.id).then(setProfile).catch(console.error);
   }, [user]);
+
+  useEffect(() => {
+    getSiteName().then(setSiteNameState).catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     if (!window.confirm('로그아웃 하시겠습니까?')) return;
@@ -33,7 +39,7 @@ const ProfileLayout = () => {
             <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
               <span className="material-symbols-outlined text-xl">terminal</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">TeamBlog</span>
+            {siteName && <span className="text-lg font-bold tracking-tight">{siteName}</span>}
           </div>
 
           {/* 사용자 정보 */}

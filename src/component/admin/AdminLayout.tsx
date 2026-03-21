@@ -150,6 +150,35 @@ const AdminLayout: React.FC = () => {
               )}
             </NavLink>
 
+            {/* Settings */}
+            <NavLink
+              to={ROUTES.ADMIN_SETTINGS}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-blue-600/10 text-blue-600'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className="material-symbols-outlined"
+                    style={{
+                      fontSize: '20px',
+                      fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
+                    }}
+                  >
+                    settings
+                  </span>
+                  <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                    Settings
+                  </span>
+                </>
+              )}
+            </NavLink>
+
             {/* 하단 메뉴 */}
             <div className="mt-auto border-t border-slate-200 pt-4 space-y-1">
               <button

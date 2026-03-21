@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LogoMark from '../component/LogoMark';
+import { ROUTES } from '../types/routes';
+import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 
 type AuthMode = 'login' | 'signup';
 
@@ -13,6 +15,11 @@ interface AuthScreenProp {
 const AuthScreen = ({goToMain} : AuthScreenProp) => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>('login');
+  const [siteName, setSiteNameState] = useState<string | null>(getCachedSiteName());
+
+  useEffect(() => {
+    getSiteName().then(setSiteNameState).catch(() => {});
+  }, []);
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
@@ -91,9 +98,9 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden px-4 py-12 bg-gray-50">
       {/* Header/Logo Area */}
       <div className="mb-12 flex flex-col items-center gap-4">
-        <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <button onClick={() => navigate(ROUTES.HOME)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <LogoMark size="lg" />
-          <span className="text-xl font-bold tracking-tight">Team Blog</span>
+          {siteName && <span className="text-xl font-bold tracking-tight">{siteName}</span>}
         </button>
         <h1 className="text-gray-900 tracking-tight text-[32px] font-bold leading-tight">
           {mode === 'login' ? '다시 오신 것을 환영합니다' : '팀에 합류하세요'}

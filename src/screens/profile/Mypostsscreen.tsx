@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoMark from '../../component/LogoMark';
+import { getSiteName, getCachedSiteName } from '../../api/siteConfigApi';
 import { Post } from '../../types/Post';
 import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/postApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
+import { ROUTES } from '../../types/routes';
 
 type FilterStatus = 'all' | 'published' | 'draft' | 'private';
 type SortOrder = 'newest' | 'oldest';
@@ -99,7 +101,12 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [siteName, setSiteNameState] = useState<string | null>(getCachedSiteName());
   const [posts, setPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    getSiteName().then(setSiteNameState).catch(() => {});
+  }, []);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
@@ -208,11 +215,11 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
           </button>
           <button onClick={onGoToMain} className="flex items-center gap-3">
             <LogoMark size="md" />
-            <h2 className="text-xl font-bold tracking-tight">Team Blog</h2>
+            {siteName && <h2 className="text-xl font-bold tracking-tight">{siteName}</h2>}
           </button>
         </div>
         <button
-          onClick={() => navigate('/editor')}
+          onClick={() => navigate(ROUTES.WRITE)}
           className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-all"
         >
           <span className="material-symbols-outlined text-sm">edit</span>
@@ -358,7 +365,7 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
                         </div>
                         <div>
                           <button
-                            onClick={() => !isSelectMode && navigate(`/post/${post.id}`)}
+                            onClick={() => !isSelectMode && navigate(ROUTES.POST_DETAIL(post.id))}
                             className={`text-base font-semibold text-slate-900 dark:text-slate-100 transition-colors text-left ${
                               isSelectMode ? 'cursor-default' : 'group-hover:text-blue-600 cursor-pointer'
                             }`}
