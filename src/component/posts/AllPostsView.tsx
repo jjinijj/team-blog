@@ -17,6 +17,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
   const keyword = searchParams.get('q') ?? '';
   const sort = (searchParams.get('sort') as 'newest' | 'oldest' | 'popular') ?? 'newest';
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const tagSlug = searchParams.get('tag') ?? '';
 
   const [searchInput, setSearchInput] = useState(keyword);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -45,6 +46,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
           sort,
           page,
           pageSize,
+          tagSlug: tagSlug || undefined,
         });
         setPosts(result.data);
         setTotal(result.total);
@@ -55,7 +57,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       }
     };
     fetch();
-  }, [keyword, sort, page, pageSize]);
+  }, [keyword, sort, page, pageSize, tagSlug]);
 
   const updateParams = (updates: Record<string, string | null>) => {
     const next = new URLSearchParams(searchParams);
@@ -159,12 +161,22 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       {/* Posts Section */}
       <div className="flex flex-col">
         <div className="flex items-center justify-between mb-4 px-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            {keyword ? '검색 결과' : '전체 게시물'}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {tagSlug ? `#${tagSlug}` : keyword ? '검색 결과' : '전체 게시물'}
+            </h2>
+            {tagSlug && (
+              <button
+                onClick={() => updateParams({ tag: null, page: '1' })}
+                className="flex items-center gap-0.5 text-xs text-blue-500 hover:text-blue-700 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            )}
+          </div>
           {!loading && (
             <span className="text-xs font-medium text-slate-400">
-              {keyword ? `${total}개 발견` : `총 ${total}개`}
+              {keyword || tagSlug ? `${total}개 발견` : `총 ${total}개`}
             </span>
           )}
         </div>

@@ -112,15 +112,38 @@ export const searchPosts = async (options: {
     sort?: 'newest' | 'oldest' | 'popular';
     page: number;
     pageSize: number;
+    tagSlug?: string;
 }): Promise<{ data: Post[]; total: number }> => {
-    const { keyword, sort = 'newest', page, pageSize } = options;
+    const { keyword, sort = 'newest', page, pageSize, tagSlug } = options;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
+
+    // 태그 슬러그로 해당 태그의 post_id 목록 조회
+    let tagPostIds: string[] | null = null;
+    if (tagSlug) {
+        const { data: tagData } = await supabase
+            .from('tags')
+            .select('id')
+            .eq('slug', tagSlug)
+            .single();
+        if (tagData) {
+            const { data: ptData } = await supabase
+                .from('post_tags')
+                .select('post_id')
+                .eq('tag_id', tagData.id);
+            tagPostIds = ptData?.map((pt: any) => pt.post_id) ?? [];
+        }
+    }
 
     let query = supabase
         .from('posts')
         .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`, { count: 'exact' })
         .eq('status', 'published');
+
+    if (tagPostIds !== null) {
+        if (tagPostIds.length === 0) return { data: [], total: 0 };
+        query = query.in('id', tagPostIds);
+    }
 
     if (keyword) {
         query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
