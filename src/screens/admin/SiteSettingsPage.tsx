@@ -188,7 +188,7 @@ const SiteSettingsPage: React.FC = () => {
                     }`}
                     style={{
                       backgroundColor: color.value,
-                      ringColor: selectedColor === color.value ? color.value : undefined,
+                      outlineColor: selectedColor === color.value ? color.value : undefined,
                     }}
                   />
                 ))}
