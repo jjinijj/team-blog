@@ -75,7 +75,7 @@ export const EditorScreen = ({
     if (!user || !postToEdit) return;
     if (postToEdit.author_id !== user.id) {
       alert('본인이 작성한 글만 수정할 수 있습니다.');
-      navigate('/');
+      navigate(ROUTES.HOME);
     }
   }, [user, postToEdit, navigate]);
 

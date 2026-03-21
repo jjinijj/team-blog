@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LogoMark from '../component/LogoMark';
+import { ROUTES } from '../types/routes';
 
 type AuthMode = 'login' | 'signup';
 
@@ -91,7 +92,7 @@ const AuthScreen = ({goToMain} : AuthScreenProp) => {
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden px-4 py-12 bg-gray-50">
       {/* Header/Logo Area */}
       <div className="mb-12 flex flex-col items-center gap-4">
-        <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <button onClick={() => navigate(ROUTES.HOME)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <LogoMark size="lg" />
           <span className="text-xl font-bold tracking-tight">Team Blog</span>
         </button>

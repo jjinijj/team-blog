@@ -5,6 +5,7 @@ import LogoMark from '../../component/LogoMark';
 import { Post } from '../../types/Post';
 import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/postApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
+import { ROUTES } from '../../types/routes';
 
 type FilterStatus = 'all' | 'published' | 'draft' | 'private';
 type SortOrder = 'newest' | 'oldest';
@@ -212,7 +213,7 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
           </button>
         </div>
         <button
-          onClick={() => navigate('/editor')}
+          onClick={() => navigate(ROUTES.WRITE)}
           className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-all"
         >
           <span className="material-symbols-outlined text-sm">edit</span>
@@ -358,7 +359,7 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
                         </div>
                         <div>
                           <button
-                            onClick={() => !isSelectMode && navigate(`/post/${post.id}`)}
+                            onClick={() => !isSelectMode && navigate(ROUTES.POST_DETAIL(post.id))}
                             className={`text-base font-semibold text-slate-900 dark:text-slate-100 transition-colors text-left ${
                               isSelectMode ? 'cursor-default' : 'group-hover:text-blue-600 cursor-pointer'
                             }`}

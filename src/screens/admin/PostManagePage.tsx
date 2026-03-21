@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../../types/Post';
+import { ROUTES } from '../../types/routes';
 import {
   readPosts,
   deletePost,
@@ -263,7 +264,7 @@ const PostManagePage: React.FC = () => {
                         <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-1">
                             <button
-                                onClick={() => navigate(`/post/${post.id}`)}
+                                onClick={() => navigate(ROUTES.POST_DETAIL(post.id))}
                                 className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
                                 title="View"
                             >
