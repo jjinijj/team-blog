@@ -5,6 +5,7 @@ import { getRelativeTime } from '../../utils/DataFormat';
 import { searchPosts } from '../../api/postApi';
 import { getPostsPerPage } from '../../api/siteConfigApi';
 import { ROUTES } from '../../types/routes';
+import { fetchTags, type Tag } from '../../api/tagApi';
 
 interface AllPostsViewProps {
   onViewPost: (postId: string) => void;
@@ -17,6 +18,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
   const keyword = searchParams.get('q') ?? '';
   const sort = (searchParams.get('sort') as 'newest' | 'oldest' | 'popular') ?? 'newest';
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const tagSlug = searchParams.get('tag') ?? '';
 
   const [searchInput, setSearchInput] = useState(keyword);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -24,11 +26,13 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
   const [loading, setLoading] = useState(true);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [pageSize, setPageSize] = useState(0);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
 
   const totalPages = Math.max(1, Math.ceil(total / (pageSize || 1)));
 
   useEffect(() => {
     getPostsPerPage().then(setPageSize).catch(() => setPageSize(10));
+    fetchTags().then(setAllTags).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -45,6 +49,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
           sort,
           page,
           pageSize,
+          tagSlug: tagSlug || undefined,
         });
         setPosts(result.data);
         setTotal(result.total);
@@ -55,7 +60,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       }
     };
     fetch();
-  }, [keyword, sort, page, pageSize]);
+  }, [keyword, sort, page, pageSize, tagSlug]);
 
   const updateParams = (updates: Record<string, string | null>) => {
     const next = new URLSearchParams(searchParams);
@@ -119,6 +124,25 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
           </div>
         </form>
 
+        {/* Tags */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {allTags.map(tag => (
+              <button
+                key={tag.id}
+                onClick={() => updateParams({ tag: tagSlug === tag.slug ? null : tag.slug, page: '1' })}
+                className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                  tagSlug === tag.slug
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600'
+                }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Sort */}
         <div className="flex items-center justify-end">
           <div className="relative pb-2">
@@ -159,12 +183,22 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       {/* Posts Section */}
       <div className="flex flex-col">
         <div className="flex items-center justify-between mb-4 px-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            {keyword ? '검색 결과' : '전체 게시물'}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {tagSlug ? `#${tagSlug}` : keyword ? '검색 결과' : '전체 게시물'}
+            </h2>
+            {tagSlug && (
+              <button
+                onClick={() => updateParams({ tag: null, page: '1' })}
+                className="flex items-center gap-0.5 text-xs text-blue-500 hover:text-blue-700 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            )}
+          </div>
           {!loading && (
             <span className="text-xs font-medium text-slate-400">
-              {keyword ? `${total}개 발견` : `총 ${total}개`}
+              {keyword || tagSlug ? `${total}개 발견` : `총 ${total}개`}
             </span>
           )}
         </div>

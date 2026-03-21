@@ -1,3 +1,6 @@
+import type { Tag } from '../api/tagApi';
+export type { Tag };
+
 export interface Post{
     id : string;
     title: string;
@@ -18,12 +21,14 @@ export interface Post{
     view_count: number;
     is_pinned: boolean;
 
+    tags: Tag[];
+
     // legacy
     isMarkdown: boolean;
 }
 
-export type NewPost = Omit<Post, 'id' | 'created_at' | 'updated_at' | 'author_name' | 'author_color' | 'view_count' | 'is_pinned'>;
-export type UpdatePost = Omit<Post, 'created_at' | 'updated_at' | 'author_id' | 'author_name' | 'author_color' | 'view_count' | 'is_pinned'>;
+export type NewPost = Omit<Post, 'id' | 'created_at' | 'updated_at' | 'author_name' | 'author_color' | 'view_count' | 'is_pinned' | 'tags'>;
+export type UpdatePost = Omit<Post, 'created_at' | 'updated_at' | 'author_id' | 'author_name' | 'author_color' | 'view_count' | 'is_pinned' | 'tags'>;
 
 export const getRenderMode = (post: Post): 'markdown' | 'richtext' => {
     if(post.content_type){

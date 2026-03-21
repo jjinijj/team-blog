@@ -8,6 +8,7 @@ import { DraftRecoveryBanner } from '../component/DraftRecoveryBanner';
 import ProfileDropdown from '../component/Profiledropdown';
 import { uploadPostImage, linkImagesToPost } from '../api/imageApi';
 import { readPostById } from '../api/postApi';
+import { fetchTags, setPostTags, Tag } from '../api/tagApi';
 import { ROUTES } from '../types/routes';
 
 interface EditorScreenProps {
@@ -58,11 +59,26 @@ export const EditorScreen = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageIds, setUploadedImageIds] = useState<string[]>([]);
 
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   const { user, displayName, avatarColor } = useAuth();
   const navigate = useNavigate();
 
   // ── 임시저장 ───────────────────────────────────
   const { saveDraft, clearDraft, hasDraft, draftData, dismissDraft } = useDraft(postToEdit?.id);
+
+  // ── 전체 태그 로드 ────────────────────────────
+  useEffect(() => {
+    fetchTags().then(setAllTags).catch(() => {});
+  }, []);
+
+  // ── 수정 모드 태그 초기화 ─────────────────────
+  useEffect(() => {
+    if (postToEdit?.tags) {
+      setSelectedTagIds(postToEdit.tags.map(t => t.id));
+    }
+  }, [postToEdit?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── edit 모드: posts prop에 없으면 직접 조회 ──
   useEffect(() => {
@@ -288,11 +304,13 @@ export const EditorScreen = ({
     }
 
     if (postToEdit && onUpdatePost) {
+      await setPostTags(postToEdit.id, selectedTagIds).catch(console.error);
       onUpdatePost(postToEdit.id, title, markdownContent, 'markdown', null, status);
     } else {
       const newPostId = await onAddPost(title, markdownContent, 'markdown', null, status);
-      if (newPostId && uploadedImageIds.length > 0) {
-        linkImagesToPost(uploadedImageIds, newPostId).catch(console.error);
+      if (newPostId) {
+        if (uploadedImageIds.length > 0) linkImagesToPost(uploadedImageIds, newPostId).catch(console.error);
+        if (selectedTagIds.length > 0) setPostTags(newPostId, selectedTagIds).catch(console.error);
       }
     }
 
@@ -484,7 +502,7 @@ export const EditorScreen = ({
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <div className="flex items-center gap-3 py-2 border-y border-gray-50 mb-6">
+          <div className="flex items-center gap-3 py-2 border-t border-gray-50 mb-0">
             <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: avatarColor }}>
               {(displayName || user.email)?.[0]?.toUpperCase() || 'A'}
             </div>
@@ -492,6 +510,34 @@ export const EditorScreen = ({
               작성자 <span className="text-gray-900">{displayName || user.email || 'Unknown'}</span>
             </span>
           </div>
+
+          {/* 태그 선택 */}
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 py-3 border-b border-gray-50 mb-6">
+              <span className="text-xs font-medium text-gray-400 mr-1">태그</span>
+              {allTags.map(tag => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTagIds(prev =>
+                        isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                      )
+                    }
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                      isSelected
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* 본문 */}
           <textarea

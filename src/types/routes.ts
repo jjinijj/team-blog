@@ -15,6 +15,7 @@ export const ROUTES = {
   ADMIN_WHITELIST: '/admin/whitelist',
   ADMIN_HOME_SCREEN: '/admin/home-screen',
   ADMIN_SETTINGS: '/admin/settings',
+  ADMIN_TAGS: '/admin/tags',
 
   PROFILE: '/profile',
   PROFILE_EDIT: '/profile/edit',

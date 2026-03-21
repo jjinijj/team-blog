@@ -249,11 +249,25 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-8 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-4 tracking-tight">
             {post.title}
           </h1>
 
-          <div className="flex items-center justify-between py-6 border-y border-gray-100">
+          {post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {post.tags.map(tag => (
+                <button
+                  key={tag.id}
+                  onClick={() => navigate(`${ROUTES.POSTS}?tag=${tag.slug}&all=true`)}
+                  className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between py-6 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div
                 className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold"
