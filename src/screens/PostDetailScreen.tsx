@@ -10,6 +10,7 @@ import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
 import ProfileDropdown from '../component/Profiledropdown';
+import SiteFooter from '../component/SiteFooter';
 import { ROUTES } from '../types/routes';
 
 interface PostDetailScreenProps {
@@ -299,6 +300,8 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         {/* Comments */}
         <CommentsSection postId={post.id} />
       </main>
+
+      <SiteFooter />
     </div>
   );
 };

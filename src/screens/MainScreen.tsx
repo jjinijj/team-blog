@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Post } from '../types/Post';
 import SiteHeader from '../component/SiteHeader';
+import SiteFooter from '../component/SiteFooter';
 import { readPinnedPosts, readRecentPosts } from '../api/postApi';
 import RecentView, { RECENT_POST_LIMIT } from '../component/posts/RecentView';
 import AllPostsView from '../component/posts/AllPostsView';
@@ -107,6 +108,8 @@ function MainScreen({ onGoToEditor, onViewPost }: MainScreenProps) {
           />
         )}
       </main>
+
+      <SiteFooter />
 
       {/* Floating Action Button */}
       <button

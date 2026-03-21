@@ -5,7 +5,7 @@ import { readPosts } from '../api/postApi';
 import { ROUTES } from '../types/routes';
 import { fetchHomeScreenConfig, fetchTeamMembers, type HomeScreenConfig, type TeamMember } from '../api/homeScreenApi';
 import SiteHeader from '../component/SiteHeader';
-import LogoMark from '../component/LogoMark';
+import SiteFooter from '../component/SiteFooter';
 import { getAbsoluteDay } from '../utils/DataFormat';
 
 const LandingPage = () => {
@@ -240,16 +240,7 @@ const LandingPage = () => {
 
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-100 dark:bg-slate-900 px-4 lg:px-20 py-10 border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <LogoMark size="sm" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Team Blog</span>
-          </div>
-          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} Team Blog. All rights reserved.</p>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   );
