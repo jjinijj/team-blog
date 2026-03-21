@@ -68,7 +68,8 @@ export const readPosts = async (): Promise<Post[]> => {
         .from('posts')
         .select(`
             *,
-            users!author_id(email,display_name,avatar_color)
+            users!author_id(email,display_name,avatar_color),
+            post_tags(tags(*))
         `)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
@@ -82,7 +83,7 @@ export const readPosts = async (): Promise<Post[]> => {
 export const readPinnedPosts = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .eq('status', 'published')
         .eq('is_pinned', true)
         .order('created_at', { ascending: false });
@@ -95,7 +96,7 @@ export const readPinnedPosts = async (): Promise<Post[]> => {
 export const readRecentPosts = async (limit: number): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .eq('status', 'published')
         .eq('is_pinned', false)
         .order('created_at', { ascending: false })
@@ -118,7 +119,7 @@ export const searchPosts = async (options: {
 
     let query = supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`, { count: 'exact' })
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`, { count: 'exact' })
         .eq('status', 'published');
 
     if (keyword) {
@@ -142,7 +143,7 @@ export const searchPosts = async (options: {
 // READ
 export const readMyPosts = async(userId: string): Promise<Post[]> => {
     const {data, error} = await supabase.from('posts')
-                                        .select('*, users!author_id(email,display_name,avatar_color)')
+                                        .select('*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))')
                                         .eq('author_id', userId)
                                         .order('created_at',{ascending: false});
     if(error)
@@ -157,7 +158,8 @@ export const readPostById = async (postId: string): Promise<Post> => {
         .from('posts')
         .select(`
             *,
-            users!author_id(email,display_name,avatar_color)
+            users!author_id(email,display_name,avatar_color),
+            post_tags(tags(*))
         `)
         .eq('id', postId)
         .single();
@@ -218,7 +220,7 @@ export const recordView = async (postId: string, userId: string, authorId: strin
 export const readAllPostsForAdmin = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
 
