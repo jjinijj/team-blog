@@ -8,7 +8,7 @@ import {
   deleteMultiplePosts,
   togglePinPost,
 } from '../../api/postApi';
-import { getMaxPinnedPosts, setMaxPinnedPosts } from '../../api/siteConfigApi';
+import { getMaxPinnedPosts, setMaxPinnedPosts, getPostsPerPage } from '../../api/siteConfigApi';
 import { getAbsoluteTime } from '../../utils/DataFormat';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -31,7 +31,7 @@ const PostManagePage: React.FC = () => {
   const [maxPinnedInput, setMaxPinnedInput] = useState(3);
   const [savingMax, setSavingMax] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     loadData();
@@ -40,13 +40,15 @@ const PostManagePage: React.FC = () => {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [data, max] = await Promise.all([
+      const [data, max, perPage] = await Promise.all([
         readAllPostsForAdmin(),
         getMaxPinnedPosts(),
+        getPostsPerPage(),
       ]);
       setPosts(data);
       setMaxPinned(max);
       setMaxPinnedInput(max);
+      setPageSize(perPage);
     } catch (err) {
       console.error('데이터 로드 실패:', err);
       setError('데이터를 불러오는데 실패했습니다.');
@@ -63,8 +65,8 @@ const PostManagePage: React.FC = () => {
     (post.author_name ?? '').toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
-  const pagedPosts = filteredPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / pageSize));
+  const pagedPosts = filteredPosts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleTogglePin = async (post: Post) => {
     const willPin = !post.is_pinned;

@@ -3,10 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Post } from '../../types/Post';
 import { getRelativeTime } from '../../utils/DataFormat';
 import { searchPosts } from '../../api/postApi';
+import { getPostsPerPage } from '../../api/siteConfigApi';
 import { ROUTES } from '../../types/routes';
-
-// 관리자 설정으로 교체 예정
-export const ALL_POSTS_PAGE_SIZE = 10;
 
 interface AllPostsViewProps {
   onViewPost: (postId: string) => void;
@@ -25,14 +23,20 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [pageSize, setPageSize] = useState(0);
 
-  const totalPages = Math.max(1, Math.ceil(total / ALL_POSTS_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / (pageSize || 1)));
+
+  useEffect(() => {
+    getPostsPerPage().then(setPageSize).catch(() => setPageSize(10));
+  }, []);
 
   useEffect(() => {
     setSearchInput(keyword);
   }, [keyword]);
 
   useEffect(() => {
+    if (pageSize === 0) return;
     const fetch = async () => {
       setLoading(true);
       try {
@@ -40,7 +44,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
           keyword: keyword || undefined,
           sort,
           page,
-          pageSize: ALL_POSTS_PAGE_SIZE,
+          pageSize,
         });
         setPosts(result.data);
         setTotal(result.total);
@@ -51,7 +55,7 @@ function AllPostsView({ onViewPost }: AllPostsViewProps) {
       }
     };
     fetch();
-  }, [keyword, sort, page]);
+  }, [keyword, sort, page, pageSize]);
 
   const updateParams = (updates: Record<string, string | null>) => {
     const next = new URLSearchParams(searchParams);
