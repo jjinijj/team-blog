@@ -45,3 +45,23 @@ export const getSiteName = async (): Promise<string> => {
   if (error) throw error;
   return data.value;
 };
+
+// site_config 테이블의 사이트 이름을 업데이트한다 (관리자 전용)
+export const setSiteName = async (name: string): Promise<void> => {
+  const { error } = await supabase
+    .from('site_config')
+    .update({ value: name, updated_at: new Date().toISOString() })
+    .eq('key', 'site_name');
+
+  if (error) throw error;
+};
+
+// site_config 테이블의 페이지당 표시할 글 수를 업데이트한다 (관리자 전용)
+export const setPostsPerPage = async (count: number): Promise<void> => {
+  const { error } = await supabase
+    .from('site_config')
+    .update({ value: String(count), updated_at: new Date().toISOString() })
+    .eq('key', 'posts_per_page');
+
+  if (error) throw error;
+};
