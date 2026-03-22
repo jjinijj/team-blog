@@ -536,14 +536,15 @@
 - [x] 에디터 태그 선택 UI (관리자 지정 태그 중 선택)
 - [x] 글 상세 태그 표시 + 클릭 시 /posts?tag= 필터링
 - [x] AllPostsView 검색바 하단 태그 칩 표시 (클릭 시 태그 필터, 재클릭 시 해제)
+- [x] RecentView 검색바 하단 태그 칩 표시 (클릭 시 AllPostsView 태그 필터로 이동)
 
 #### 9-2. 태그 기능 개선
 > 우선순위 기준: 필요한 기능인가 + 작업시간이 짧은가
 
 **바로 할 만한 것 (작업시간 짧음)**
-- [ ] 태그별 글 수 표시 — 태그 칩에 `(3)` 형태로 글 수 표시 (`fetchTags`에서 `post_tags` count 조인)
-- [ ] 태그 이름/슬러그 수정 — TagManagePage에 edit 기능 추가 (현재는 삭제 후 재생성만 가능)
-- [ ] 사용 중인 태그 삭제 시 경고 — 해당 태그가 달린 글 수를 안내 후 확인 요구
+- [x] 태그별 글 수 표시 — `fetchTags`에서 `post_tags(count)` 조인, TagManagePage 목록에 표시
+- [x] 태그 이름/슬러그 수정 — TagManagePage에 edit 기능 추가 (태그 클릭 → 에디터 전환, slug 자동생성)
+- [x] 사용 중인 태그 삭제 시 경고 — 해당 태그가 달린 글 수를 안내 후 확인 요구
 
 **조금 더 걸리는 것**
 - [ ] 내 글 보기(MyPostsScreen)에서도 태그 필터 지원
@@ -802,6 +803,17 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-23
+- ✅ **태그 기능 개선** (9-2 일부)
+  - `tagApi.ts`: `fetchTags`에 `post_tags(count)` 조인 추가 → `post_count` 필드 반환
+  - `tagApi.ts`: `createTag(name, slug)` → `createTag(name)` — slug 내부 자동 생성으로 변경
+  - `tagApi.ts`: `updateTag(id, name)` 추가 — slug 자동 생성
+  - `TagManagePage.tsx` 전면 개편: 슬러그 입력창 제거, 에디터/목록 분리 UI, 태그 클릭 시 수정 모드 전환, 재클릭 또는 외부 클릭 시 해제, 삭제 버튼은 수정 모드에서만 표시, 사용 중인 글 수 경고 확인창
+  - `TagChips.tsx` 신규 컴포넌트 추출: 태그 칩 UI 재사용 (AllPostsView, RecentView 공통)
+  - `RecentView.tsx`: 검색바 하단 태그 칩 표시 추가, TagChips 컴포넌트 사용
+  - `PostDetailScreen.tsx`: 태그~작성자 섹션 사이 상단 구분선 제거 (`border-y` → `border-b`)
+- ✅ **이미지 업로드** — Supabase Storage 연동, 글 작성 중 이미지 업로드 후 URL 삽입, post_id는 발행 시 연결
 
 ### 2026-03-22
 - ✅ **Vercel 빌드 에러 수정**
