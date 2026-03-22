@@ -5,24 +5,44 @@ export interface Tag {
   name: string;
   slug: string;
   created_at: string;
+  post_count?: number;
 }
 
-// 전체 태그 조회
+// 전체 태그 조회 (포스트 수 포함)
 export const fetchTags = async (): Promise<Tag[]> => {
   const { data, error } = await supabase
     .from('tags')
-    .select('*')
+    .select('*, post_tags(count)')
     .order('name', { ascending: true });
 
   if (error) throw error;
-  return data;
+  return data.map((tag: any) => ({
+    ...tag,
+    post_count: tag.post_tags?.[0]?.count ?? 0,
+    post_tags: undefined,
+  }));
 };
 
-// 태그 생성 (관리자 전용)
-export const createTag = async (name: string, slug: string): Promise<Tag> => {
+// 태그 생성 (관리자 전용) — slug는 name에서 자동 생성
+export const createTag = async (name: string): Promise<Tag> => {
+  const slug = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, '');
   const { data, error } = await supabase
     .from('tags')
     .insert([{ name, slug }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { ...data, post_count: 0 };
+};
+
+// 태그 수정 (관리자 전용) — slug는 name에서 자동 생성
+export const updateTag = async (id: string, name: string): Promise<Tag> => {
+  const slug = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, '');
+  const { data, error } = await supabase
+    .from('tags')
+    .update({ name, slug })
+    .eq('id', id)
     .select()
     .single();
 
