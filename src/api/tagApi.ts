@@ -36,6 +36,20 @@ export const createTag = async (name: string): Promise<Tag> => {
   return { ...data, post_count: 0 };
 };
 
+// 태그 수정 (관리자 전용) — slug는 name에서 자동 생성
+export const updateTag = async (id: string, name: string): Promise<Tag> => {
+  const slug = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, '');
+  const { data, error } = await supabase
+    .from('tags')
+    .update({ name, slug })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 // 태그 삭제 (관리자 전용)
 export const deleteTag = async (id: string): Promise<void> => {
   const { error } = await supabase
