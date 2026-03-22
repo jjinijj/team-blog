@@ -27,8 +27,8 @@ const AdminLayout: React.FC = () => {
               <span className="material-symbols-outlined text-white">admin_panel_settings</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-slate-900 text-base font-bold leading-none">Blog Admin</h1>
-              <p className="text-slate-500 text-xs font-normal">Management Platform</p>
+              <h1 className="text-slate-900 text-base font-bold leading-none">블로그 관리</h1>
+              <p className="text-slate-500 text-xs font-normal">관리자 콘솔</p>
             </div>
           </div>
 
@@ -57,7 +57,7 @@ const AdminLayout: React.FC = () => {
                     dashboard
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Dashboard
+                    대시보드
                   </span>
                 </>
               )}
@@ -86,7 +86,7 @@ const AdminLayout: React.FC = () => {
                     home_app_logo
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Home Screen
+                    홈 화면
                   </span>
                 </>
               )}
@@ -115,7 +115,7 @@ const AdminLayout: React.FC = () => {
                     verified_user
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Whitelist
+                    화이트리스트
                   </span>
                 </>
               )}
@@ -144,7 +144,7 @@ const AdminLayout: React.FC = () => {
                     article
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Blog Posts
+                    게시글 관리
                   </span>
                 </>
               )}
@@ -173,7 +173,7 @@ const AdminLayout: React.FC = () => {
                     label
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Tags
+                    태그 관리
                   </span>
                 </>
               )}
@@ -202,7 +202,7 @@ const AdminLayout: React.FC = () => {
                     settings
                   </span>
                   <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                    Settings
+                    설정
                   </span>
                 </>
               )}
@@ -234,7 +234,7 @@ const AdminLayout: React.FC = () => {
 
           {/* 사용자 정보 */}
           <div className="mt-4 px-3 py-2.5 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-500 mb-1">Logged in as</p>
+            <p className="text-xs text-slate-500 mb-1">로그인 계정</p>
             <p className="text-sm font-medium text-slate-900 truncate">{user?.email}</p>
           </div>
         </div>

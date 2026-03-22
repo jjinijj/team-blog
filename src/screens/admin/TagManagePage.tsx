@@ -96,12 +96,13 @@ const TagManagePage = () => {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">태그 관리</h1>
+    <>
+      <header className="p-8 pb-4">
+        <h1 className="text-slate-900 text-3xl font-black tracking-tight">태그 관리</h1>
         <p className="text-slate-500 text-sm mt-1">관리자가 지정한 태그만 글에 사용할 수 있습니다.</p>
-      </div>
+      </header>
 
+      <div className="px-8 pb-8 max-w-2xl">
       {/* 에디터 영역 */}
       <section ref={editorRef} className="bg-slate-50 border border-slate-100 rounded-xl p-6 mb-6">
         <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">
@@ -151,7 +152,9 @@ const TagManagePage = () => {
         </div>
 
         {loading ? (
-          <div className="py-10 text-center text-slate-400 text-sm">불러오는 중...</div>
+          <div className="py-10 flex justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
+          </div>
         ) : error ? (
           <div className="py-10 text-center text-red-500 text-sm">{error}</div>
         ) : tags.length === 0 ? (
@@ -185,7 +188,8 @@ const TagManagePage = () => {
           </div>
         )}
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -172,8 +172,16 @@ const HomeScreenPage = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 flex items-center justify-center">
-        <p className="text-slate-400 text-sm">불러오는 중...</p>
+      <div className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col gap-1 border-b border-slate-200 dark:border-slate-800 pb-6">
+            <h2 className="text-slate-900 text-3xl font-black tracking-tight">홈 화면 설정</h2>
+            <p className="text-slate-500 text-sm mt-1">블로그 랜딩 페이지의 레이아웃과 섹션 표시 여부를 설정하세요.</p>
+          </div>
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -187,15 +195,15 @@ const HomeScreenPage = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6">
+    <div className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* 헤더 */}
         <div className="flex flex-wrap justify-between items-end gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-slate-900 text-3xl font-black tracking-tight">
               홈 화면 설정
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 max-w-xl">
+            <p className="text-slate-500 text-sm mt-1">
               블로그 랜딩 페이지의 레이아웃과 섹션 표시 여부를 설정하세요.
             </p>
           </div>

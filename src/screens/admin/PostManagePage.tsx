@@ -12,9 +12,9 @@ import { getMaxPinnedPosts, setMaxPinnedPosts, getPostsPerPage } from '../../api
 import { getAbsoluteTime } from '../../utils/DataFormat';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  published: { label: 'Published', className: 'bg-green-100 text-green-700' },
-  draft:     { label: 'Draft',     className: 'bg-slate-100 text-slate-700' },
-  private:   { label: 'Private',   className: 'bg-amber-100 text-amber-700' },
+  published: { label: '공개',     className: 'bg-green-100 text-green-700' },
+  draft:     { label: '임시저장', className: 'bg-slate-100 text-slate-700' },
+  private:   { label: '비공개',   className: 'bg-amber-100 text-amber-700' },
 };
 
 const PostManagePage: React.FC = () => {
@@ -162,8 +162,8 @@ const PostManagePage: React.FC = () => {
       <header className="p-8 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-slate-900 text-3xl font-black tracking-tight">Blog Posts</h2>
-            <p className="text-slate-500 text-sm">Manage, edit and publish articles for the team blog.</p>
+            <h2 className="text-slate-900 text-3xl font-black tracking-tight">게시글 관리</h2>
+            <p className="text-slate-500 text-sm">팀 블로그 게시글을 관리, 수정, 발행합니다.</p>
           </div>
           <div className="flex gap-2">
             {!isSelectMode ? (
@@ -215,12 +215,12 @@ const PostManagePage: React.FC = () => {
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-slate-900 text-lg font-bold">Pinned Posts Management</h3>
-                <p className="text-slate-500 text-xs">Featured content displayed at the top of the blog.</p>
+                <h3 className="text-slate-900 text-lg font-bold">고정 게시글 관리</h3>
+                <p className="text-slate-500 text-xs">블로그 상단에 표시되는 고정 글입니다.</p>
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider" htmlFor="max-pins">
-                  Max Pinned Posts:
+                  최대 고정 수:
                 </label>
                 <input
                   id="max-pins"
@@ -259,14 +259,14 @@ const PostManagePage: React.FC = () => {
                     <button
                       onClick={() => handleTogglePin(post)}
                       className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors shrink-0"
-                      title="Unpin Post"
+                      title="고정 해제"
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>keep_off</span>
                     </button>
                   </div>
                 ) : (
                   <div key={`empty-${i}`} className="flex items-center justify-center p-3 rounded-lg border border-dashed border-slate-300">
-                    <span className="text-xs text-slate-400 font-medium italic">Empty Slot</span>
+                    <span className="text-xs text-slate-400 font-medium italic">빈 슬롯</span>
                   </div>
                 );
               })}
@@ -286,7 +286,7 @@ const PostManagePage: React.FC = () => {
             value={searchKeyword}
             onChange={e => { setSearchKeyword(e.target.value); setCurrentPage(1); }}
             className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary outline-none text-sm shadow-sm"
-            placeholder="Search posts by title or author..."
+            placeholder="제목 또는 작성자로 검색..."
           />
         </div>
       </section>
@@ -298,10 +298,10 @@ const PostManagePage: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-bottom border-slate-200">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Title</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Author</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Date</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">제목</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">작성자</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">날짜</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">상태</th>
                   {isSelectMode ? (
                     <th className="px-6 py-4 w-12">
                       <input
@@ -312,7 +312,7 @@ const PostManagePage: React.FC = () => {
                       />
                     </th>
                   ) : (
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">작업</th>
                   )}
                 </tr>
               </thead>
@@ -380,7 +380,7 @@ const PostManagePage: React.FC = () => {
                                     : navigate(ROUTES.POST_DETAIL(post.id))
                                 }
                                 className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                title={post.status === 'private' ? '비공개 글' : 'View'}
+                                title={post.status === 'private' ? '비공개 글' : '보기'}
                               >
                                 <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                                   {post.status === 'private' ? 'visibility_off' : 'visibility'}
@@ -389,7 +389,7 @@ const PostManagePage: React.FC = () => {
                               <button
                                 onClick={() => handleTogglePin(post)}
                                 className={`p-2 transition-colors ${post.is_pinned ? 'text-primary' : 'text-slate-400 hover:text-primary'}`}
-                                title={post.is_pinned ? 'Unpin' : 'Pin'}
+                                title={post.is_pinned ? '고정 해제' : '고정'}
                               >
                                 <span
                                   className="material-symbols-outlined"
@@ -401,7 +401,7 @@ const PostManagePage: React.FC = () => {
                               <button
                                 onClick={() => handleDeletePost(post.id, post.title)}
                                 className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                title="Delete"
+                                title="삭제"
                               >
                                 <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
                               </button>
@@ -440,7 +440,7 @@ const PostManagePage: React.FC = () => {
 
           <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">
-              Showing {filteredPosts.length} of {posts.length} posts
+              {posts.length}개 중 {filteredPosts.length}개 표시 중
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">
