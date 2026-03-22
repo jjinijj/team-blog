@@ -7,7 +7,6 @@ const TagManagePage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [nameInput, setNameInput] = useState('');
-  const [slugInput, setSlugInput] = useState('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -18,24 +17,16 @@ const TagManagePage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleNameChange = (value: string) => {
-    setNameInput(value);
-    // 이름에서 slug 자동 생성 (소문자, 공백→하이픈, 영문/숫자/한글/하이픈만)
-    setSlugInput(value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, ''));
-  };
-
   const handleAdd = async () => {
     const name = nameInput.trim();
-    const slug = slugInput.trim();
-    if (!name || !slug) return;
+    if (!name) return;
 
     setAdding(true);
     setAddError(null);
     try {
-      const newTag = await createTag(name, slug);
+      const newTag = await createTag(name);
       setTags(prev => [...prev, newTag].sort((a, b) => a.name.localeCompare(b.name)));
       setNameInput('');
-      setSlugInput('');
     } catch (e: any) {
       setAddError(e.message?.includes('unique') ? '이미 존재하는 태그입니다.' : '태그 추가에 실패했습니다.');
     } finally {
@@ -44,7 +35,11 @@ const TagManagePage = () => {
   };
 
   const handleDelete = async (tag: Tag) => {
-    if (!window.confirm(`"${tag.name}" 태그를 삭제하시겠습니까?\n해당 태그가 달린 글에서도 제거됩니다.`)) return;
+    const count = tag.post_count ?? 0;
+    const confirmMsg = count > 0
+      ? `"${tag.name}" 태그를 삭제하시겠습니까?\n현재 ${count}개의 글에 사용 중입니다. 해당 글에서도 태그가 제거됩니다.`
+      : `"${tag.name}" 태그를 삭제하시겠습니까?`;
+    if (!window.confirm(confirmMsg)) return;
     try {
       await deleteTag(tag.id);
       setTags(prev => prev.filter(t => t.id !== tag.id));
@@ -70,36 +65,27 @@ const TagManagePage = () => {
               <input
                 type="text"
                 value={nameInput}
-                onChange={e => handleNameChange(e.target.value)}
+                onChange={e => setNameInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
                 placeholder="예: JavaScript"
                 className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-slate-500 mb-1">슬러그 (URL용)</label>
-              <input
-                type="text"
-                value={slugInput}
-                onChange={e => setSlugInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                placeholder="예: javascript"
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex items-end">
+              <button
+                onClick={handleAdd}
+                disabled={adding || !nameInput.trim()}
+                className={`h-9 px-4 text-sm font-semibold rounded-lg transition-colors ${
+                  adding || !nameInput.trim()
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {adding ? '추가 중...' : '태그 추가'}
+              </button>
             </div>
           </div>
           {addError && <p className="text-xs text-red-500">{addError}</p>}
-          <button
-            onClick={handleAdd}
-            disabled={adding || !nameInput.trim() || !slugInput.trim()}
-            className={`self-end h-9 px-4 text-sm font-semibold rounded-lg transition-colors ${
-              adding || !nameInput.trim() || !slugInput.trim()
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {adding ? '추가 중...' : '태그 추가'}
-          </button>
         </div>
       </div>
 
@@ -124,7 +110,9 @@ const TagManagePage = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                     {tag.name}
                   </span>
-                  <span className="text-xs text-slate-400">/{tag.slug}</span>
+                  <span className="text-xs text-slate-400">
+                    글 {tag.post_count ?? 0}개
+                  </span>
                 </div>
                 <button
                   onClick={() => handleDelete(tag)}
