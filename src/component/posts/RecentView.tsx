@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Post } from '../../types/Post';
 import { getRelativeTime } from '../../utils/DataFormat';
 import { ROUTES } from '../../types/routes';
+import { fetchTags, type Tag } from '../../api/tagApi';
+import TagChips from './TagChips';
 
 // 관리자 설정으로 교체 예정
 export const RECENT_POST_LIMIT = 10;
@@ -16,6 +18,11 @@ interface RecentViewProps {
 function RecentView({ recentPosts, loading, onViewPost }: RecentViewProps) {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    fetchTags().then(setAllTags).catch(() => {});
+  }, []);
 
   const stripHtml = (html: string): string => {
     const withoutImages = html.replace(/!\[[^\]]*\]\([^)]*\)/g, '');
@@ -35,27 +42,34 @@ function RecentView({ recentPosts, loading, onViewPost }: RecentViewProps) {
 
   return (
     <>
-      {/* Search */}
-      <form onSubmit={handleSearchSubmit} className="mb-10">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-slate-400 group-focus-within:text-blue-500 transition-colors text-[20px]">search</span>
+      {/* Search & Tags */}
+      <div className="flex flex-col gap-6 mb-10">
+        <form onSubmit={handleSearchSubmit}>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <span className="material-symbols-outlined text-slate-400 group-focus-within:text-blue-500 transition-colors text-[20px]">search</span>
+            </div>
+            <input
+              className="block w-full pl-12 pr-28 py-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base placeholder:text-slate-400"
+              placeholder="제목 또는 내용 검색..."
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="absolute inset-y-0 right-3 my-1.5 flex items-center px-4 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              검색
+            </button>
           </div>
-          <input
-            className="block w-full pl-12 pr-28 py-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base placeholder:text-slate-400"
-            placeholder="제목 또는 내용 검색..."
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="absolute inset-y-0 right-3 my-1.5 flex items-center px-4 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            검색
-          </button>
-        </div>
-      </form>
+        </form>
+
+        <TagChips
+          tags={allTags}
+          onTagClick={tag => navigate(`${ROUTES.POSTS}?all=true&tag=${tag.slug}`)}
+        />
+      </div>
 
       {/* Recent Posts Section */}
       <div className="flex flex-col">
