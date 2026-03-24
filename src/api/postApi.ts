@@ -23,6 +23,10 @@ const mapPost = (post: any): Post => ({
     view_count: post.view_count ?? 0,
     is_pinned: post.is_pinned ?? false,
 
+    tags: Array.isArray(post.post_tags)
+      ? post.post_tags.map((pt: any) => pt.tags).filter(Boolean)
+      : [],
+
     // 레거시 fallback
     isMarkdown: post.isMarkdown ?? false,
 });
@@ -64,7 +68,8 @@ export const readPosts = async (): Promise<Post[]> => {
         .from('posts')
         .select(`
             *,
-            users!author_id(email,display_name,avatar_color)
+            users!author_id(email,display_name,avatar_color),
+            post_tags(tags(*))
         `)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
@@ -78,7 +83,7 @@ export const readPosts = async (): Promise<Post[]> => {
 export const readPinnedPosts = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .eq('status', 'published')
         .eq('is_pinned', true)
         .order('created_at', { ascending: false });
@@ -91,7 +96,7 @@ export const readPinnedPosts = async (): Promise<Post[]> => {
 export const readRecentPosts = async (limit: number): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .eq('status', 'published')
         .eq('is_pinned', false)
         .order('created_at', { ascending: false })
@@ -107,15 +112,38 @@ export const searchPosts = async (options: {
     sort?: 'newest' | 'oldest' | 'popular';
     page: number;
     pageSize: number;
+    tagSlug?: string;
 }): Promise<{ data: Post[]; total: number }> => {
-    const { keyword, sort = 'newest', page, pageSize } = options;
+    const { keyword, sort = 'newest', page, pageSize, tagSlug } = options;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
+    // 태그 슬러그로 해당 태그의 post_id 목록 조회
+    let tagPostIds: string[] | null = null;
+    if (tagSlug) {
+        const { data: tagData } = await supabase
+            .from('tags')
+            .select('id')
+            .eq('slug', tagSlug)
+            .single();
+        if (tagData) {
+            const { data: ptData } = await supabase
+                .from('post_tags')
+                .select('post_id')
+                .eq('tag_id', tagData.id);
+            tagPostIds = ptData?.map((pt: any) => pt.post_id) ?? [];
+        }
+    }
+
     let query = supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`, { count: 'exact' })
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`, { count: 'exact' })
         .eq('status', 'published');
+
+    if (tagPostIds !== null) {
+        if (tagPostIds.length === 0) return { data: [], total: 0 };
+        query = query.in('id', tagPostIds);
+    }
 
     if (keyword) {
         query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
@@ -138,7 +166,7 @@ export const searchPosts = async (options: {
 // READ
 export const readMyPosts = async(userId: string): Promise<Post[]> => {
     const {data, error} = await supabase.from('posts')
-                                        .select('*, users!author_id(email,display_name,avatar_color)')
+                                        .select('*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))')
                                         .eq('author_id', userId)
                                         .order('created_at',{ascending: false});
     if(error)
@@ -153,7 +181,8 @@ export const readPostById = async (postId: string): Promise<Post> => {
         .from('posts')
         .select(`
             *,
-            users!author_id(email,display_name,avatar_color)
+            users!author_id(email,display_name,avatar_color),
+            post_tags(tags(*))
         `)
         .eq('id', postId)
         .single();
@@ -214,7 +243,7 @@ export const recordView = async (postId: string, userId: string, authorId: strin
 export const readAllPostsForAdmin = async (): Promise<Post[]> => {
     const { data, error } = await supabase
         .from('posts')
-        .select(`*, users!author_id(email,display_name,avatar_color)`)
+        .select(`*, users!author_id(email,display_name,avatar_color), post_tags(tags(*))`)
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
 

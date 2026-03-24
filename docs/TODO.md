@@ -528,15 +528,31 @@
 
 ---
 
-#### 9-1. 태그 기능
-**예상 소요**: 2-3시간
+#### 9-1. 태그 기능 ✅
+> 결정사항: 관리자 지정 태그만 사용 가능 (자유 입력 X)
+- [x] tags 테이블 (id, name, slug) — 관리자만 추가/삭제
+- [x] post_tags 테이블 (post_id, tag_id)
+- [x] 관리자 태그 관리 UI (/admin/tags)
+- [x] 에디터 태그 선택 UI (관리자 지정 태그 중 선택)
+- [x] 글 상세 태그 표시 + 클릭 시 /posts?tag= 필터링
+- [x] AllPostsView 검색바 하단 태그 칩 표시 (클릭 시 태그 필터, 재클릭 시 해제)
+- [x] RecentView 검색바 하단 태그 칩 표시 (클릭 시 AllPostsView 태그 필터로 이동)
 
-- [ ] DB 스키마
-  - [ ] `tags` 테이블 생성 (id, name, slug)
-  - [ ] `post_tags` 테이블 생성 (post_id, tag_id)
-- [ ] 에디터에 태그 입력 UI 추가 (쉼표 구분 입력)
-- [ ] 글 목록/상세에 태그 표시 및 태그 클릭 시 필터
-- [ ] 히어로 배지 텍스트를 인기 태그로 연동 (관리자 설정)
+#### 9-2. 태그 기능 개선
+> 우선순위 기준: 필요한 기능인가 + 작업시간이 짧은가
+
+**바로 할 만한 것 (작업시간 짧음)**
+- [x] 태그별 글 수 표시 — `fetchTags`에서 `post_tags(count)` 조인, TagManagePage 목록에 표시
+- [x] 태그 이름/슬러그 수정 — TagManagePage에 edit 기능 추가 (태그 클릭 → 에디터 전환, slug 자동생성)
+- [x] 사용 중인 태그 삭제 시 경고 — 해당 태그가 달린 글 수를 안내 후 확인 요구
+
+**조금 더 걸리는 것**
+- [ ] 내 글 보기(MyPostsScreen)에서도 태그 필터 지원
+- [ ] 랜딩 페이지에 인기 태그 섹션 (사용 빈도 높은 태그 N개 표시)
+
+**낮은 우선순위**
+- [ ] 태그 정렬 — 가나다순 / 인기순 (태그 수 많아지면 필요)
+- [ ] 태그 병합 — 두 태그를 하나로 합치기 (어드민용)
 
 ---
 
@@ -606,6 +622,9 @@
 ---
 
 ### Phase 6: 아키텍처 개선
+- [x] ROUTES 상수화 (src/constants/routes.ts)
+- [x] /blog → /posts 경로 변경
+- [x] 검색 클라이언트 → 서버사이드 전환 (Supabase .ilike 쿼리)
 
 #### 14. 렌더링 방식 개선 (CSR → SSR/SSG 검토)
 
@@ -784,6 +803,33 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-23
+- ✅ **태그 기능 개선** (9-2 일부)
+  - `tagApi.ts`: `fetchTags`에 `post_tags(count)` 조인 추가 → `post_count` 필드 반환
+  - `tagApi.ts`: `createTag(name, slug)` → `createTag(name)` — slug 내부 자동 생성으로 변경
+  - `tagApi.ts`: `updateTag(id, name)` 추가 — slug 자동 생성
+  - `TagManagePage.tsx` 전면 개편: 슬러그 입력창 제거, 에디터/목록 분리 UI, 태그 클릭 시 수정 모드 전환, 재클릭 또는 외부 클릭 시 해제, 삭제 버튼은 수정 모드에서만 표시, 사용 중인 글 수 경고 확인창
+  - `TagChips.tsx` 신규 컴포넌트 추출: 태그 칩 UI 재사용 (AllPostsView, RecentView 공통)
+  - `RecentView.tsx`: 검색바 하단 태그 칩 표시 추가, TagChips 컴포넌트 사용
+  - `PostDetailScreen.tsx`: 태그~작성자 섹션 사이 상단 구분선 제거 (`border-y` → `border-b`)
+- ✅ **이미지 업로드** — Supabase Storage 연동, 글 작성 중 이미지 업로드 후 URL 삽입, post_id는 발행 시 연결
+
+### 2026-03-22
+- ✅ **Vercel 빌드 에러 수정**
+  - `SiteSettingsPage.tsx` 191번째 줄: `ringColor`는 유효한 CSS 속성이 아님 → `outlineColor`로 교체
+- ✅ **태그 기능 전체 구현 완료** (9-1)
+  - DB: `tags` (id, name, slug), `post_tags` (post_id, tag_id) 테이블 + RLS 정책
+  - `tagApi.ts` 신규: `fetchTags`, `createTag`, `deleteTag`, `fetchTagsByPostId`, `setPostTags`
+  - `Post.ts` 타입: `tags: Tag[]` 필드 추가, `NewPost`/`UpdatePost` Omit에 `tags` 포함
+  - `postApi.ts`: 모든 select 쿼리에 `post_tags(tags(*))` 조인 추가, `searchPosts`에 `tagSlug` 파라미터 추가 (2단계 조회: slug → tag_id → post_ids → `.in()`)
+  - `ROUTES`: `ADMIN_TAGS` 추가
+  - `TagManagePage.tsx` 신규: 태그 목록 + 추가 폼(name 입력 시 slug 자동 생성, Enter 지원) + 삭제 확인 + 중복 에러 처리
+  - `AdminLayout`: Tags NavLink 추가 (`label` 아이콘)
+  - `App.tsx`: `<Route path="tags">` 추가
+  - `EditorScreen`: 태그 선택 칩 UI 추가, 저장 시 `setPostTags` 호출 (새 글: ID 받은 후, 수정 글: onUpdatePost 전)
+  - `PostDetailScreen`: 태그 뱃지 제목 하단 표시, 클릭 시 `/posts?tag=slug&all=true`, 제목~태그 사이 상단 구분선 제거
+  - `AllPostsView`: 검색바 하단 전체 태그 칩 표시, 클릭 시 태그 필터 (파란색 활성화), 재클릭 시 해제
 
 ### 2026-03-21
 - ✅ **site_config API 레이어 완성** (`siteConfigApi.ts`)

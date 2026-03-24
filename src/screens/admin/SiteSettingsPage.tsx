@@ -72,32 +72,27 @@ const SiteSettingsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-[740px] mx-auto animate-pulse space-y-8">
-        <div className="h-10 w-56 bg-slate-200 rounded-xl" />
-        <div className="space-y-4">
-          <div className="h-4 w-24 bg-slate-200 rounded-full" />
-          <div className="h-12 bg-slate-200 rounded-xl" />
+      <>
+        <header className="p-8 pb-4">
+          <h1 className="text-slate-900 text-3xl font-black tracking-tight">사이트 설정</h1>
+          <p className="text-slate-500 text-sm mt-1">사이트 이름, 글 표시 수, 브랜드 색상 등 기본 설정을 관리합니다.</p>
+        </header>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
-        <div className="space-y-4">
-          <div className="h-4 w-32 bg-slate-200 rounded-full" />
-          <div className="h-6 bg-slate-200 rounded-full" />
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-[740px] mx-auto">
+    <>
+      <header className="p-8 pb-4">
+        <h1 className="text-slate-900 text-3xl font-black tracking-tight">사이트 설정</h1>
+        <p className="text-slate-500 text-sm mt-1">사이트 이름, 글 표시 수, 브랜드 색상 등 기본 설정을 관리합니다.</p>
+      </header>
 
-        {/* 페이지 헤더 */}
-        <div className="mb-2">
-          <span className="text-[10px] uppercase tracking-widest text-blue-600 font-bold">Admin Console</span>
-        </div>
-        <div className="mb-12">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">Site Configuration</h1>
-          <p className="text-slate-500 leading-relaxed">사이트 이름, 글 표시 수, 브랜드 색상 등 기본 설정을 관리합니다.</p>
-        </div>
+      <div className="px-8 pb-8">
+      <div className="max-w-[740px]">
 
         {/* 알림 */}
         {error && (
@@ -118,11 +113,11 @@ const SiteSettingsPage: React.FC = () => {
           {/* Section: General Identity */}
           <section className="space-y-6">
             <div className="pb-2 border-b border-slate-100">
-              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">General Identity</h2>
+              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">기본 정보</h2>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2" htmlFor="site_name">
-                Site Name
+                사이트 이름
               </label>
               <input
                 id="site_name"
@@ -138,12 +133,12 @@ const SiteSettingsPage: React.FC = () => {
           {/* Section: Content Strategy */}
           <section className="space-y-6">
             <div className="pb-2 border-b border-slate-100">
-              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">Content Strategy</h2>
+              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">콘텐츠 설정</h2>
             </div>
             <div>
               <div className="flex justify-between items-end mb-4">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider" htmlFor="posts_per_page">
-                  Posts Per Page
+                  페이지당 글 수
                 </label>
                 <span className="text-3xl font-black text-blue-600">{postsPerPageInput}</span>
               </div>
@@ -158,8 +153,8 @@ const SiteSettingsPage: React.FC = () => {
                 className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
               <div className="flex justify-between mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                <span>Min: 4</span>
-                <span>Max: 48</span>
+                <span>최소: 4</span>
+                <span>최대: 48</span>
               </div>
             </div>
           </section>
@@ -167,11 +162,11 @@ const SiteSettingsPage: React.FC = () => {
           {/* Section: Visual System */}
           <section className="space-y-6">
             <div className="pb-2 border-b border-slate-100">
-              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">Visual System</h2>
+              <h2 className="text-xs uppercase tracking-widest text-slate-400 font-bold">디자인 설정</h2>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                Primary Brand Color
+                브랜드 색상
               </label>
               <p className="text-xs text-slate-400 mb-4">브랜드 컬러 설정은 준비 중입니다. 미리보기만 가능합니다.</p>
               <div className="flex items-center gap-3">
@@ -204,7 +199,7 @@ const SiteSettingsPage: React.FC = () => {
               disabled={!isDirty || saving}
               className="px-6 py-2 text-sm font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              Reset
+              초기화
             </button>
             <div className="flex gap-4">
               <button
@@ -213,7 +208,7 @@ const SiteSettingsPage: React.FC = () => {
                 disabled={!isDirty || saving}
                 className="px-8 py-3 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Cancel
+                취소
               </button>
               <button
                 type="button"
@@ -221,14 +216,15 @@ const SiteSettingsPage: React.FC = () => {
                 disabled={!isDirty || saving}
                 className="px-10 py-3 bg-blue-600 text-white rounded-lg text-sm font-black shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saving ? '저장 중...' : 'Save Changes'}
+                {saving ? '저장 중...' : '변경사항 저장'}
               </button>
             </div>
           </div>
 
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
