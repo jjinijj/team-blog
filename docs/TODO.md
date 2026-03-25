@@ -804,6 +804,20 @@
 
 ## 📝 작업 진행 노트
 
+### 2026-03-25
+- ✅ **vercel.json 추가** — SPA 라우팅 픽스 (새로고침/직접 URL 입력 시 404 방지, 모든 경로 → `index.html` 리라이트)
+- ✅ **EditorScreen 마크다운 미리보기 기능 추가**
+  - 분할 화면(Split View) 레이아웃: 좌측 에디터 + 우측 실시간 미리보기
+  - 미리보기 기본 상태: off (에디터 전체 화면, 중앙 정렬)
+  - 툴바 우측 "미리보기" 버튼 — 미리보기 꺼진 상태에서만 표시
+  - 미리보기 패널 우상단 X 버튼으로 닫기
+  - 미리보기 열릴 때 에디터 `ml-auto mr-0`, 닫힐 때 `mx-auto` (중앙 정렬)
+  - `MarkdownRenderer` 적용, prose/invert + 코드 백틱 버그 픽스 포함
+- ✅ **ComingSoonPage EmailJS 연동**
+  - `@emailjs/browser` — 백엔드 없이 Gmail 계정으로 메일 전송
+  - 상태: `idle | sending | success | error`
+  - 전송 성공 시 감사 메시지 + "다시 문의하기" 버튼, 실패 시 에러 메시지
+
 ### 2026-03-23
 - ✅ **태그 기능 개선** (9-2 일부)
   - `tagApi.ts`: `fetchTags`에 `post_tags(count)` 조인 추가 → `post_count` 필드 반환

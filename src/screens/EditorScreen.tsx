@@ -10,6 +10,7 @@ import { uploadPostImage, linkImagesToPost } from '../api/imageApi';
 import { readPostById } from '../api/postApi';
 import { fetchTags, setPostTags, Tag } from '../api/tagApi';
 import { ROUTES } from '../types/routes';
+import { MarkdownRenderer } from '../utils/markdownRender';
 
 interface EditorScreenProps {
   onGoToMain: () => void;
@@ -58,6 +59,7 @@ export const EditorScreen = ({
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageIds, setUploadedImageIds] = useState<string[]>([]);
+  const [isPreview, setIsPreview] = useState(false);
 
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -430,126 +432,165 @@ export const EditorScreen = ({
         onDismiss={dismissDraft}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-[740px] mx-auto px-8 py-12">
-          {/* 툴바 */}
-          <div className="sticky top-0 z-10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm mb-8 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
-            {(() => {
-              const btnClass = "p-2 rounded transition-colors text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200";
-              return (
-                <>
-                  <button onClick={() => applyInlineWrap('**', '**')} title="Bold" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">format_bold</span>
-                  </button>
-                  <button onClick={() => applyInlineWrap('*', '*')} title="Italic" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">format_italic</span>
-                  </button>
-                  <button onClick={applyLink} title="Link" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">link</span>
-                  </button>
-                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
-                  <button onClick={() => applyLinePrefix('# ')} title="Heading 1" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">format_h1</span>
-                  </button>
-                  <button onClick={() => applyLinePrefix('## ')} title="Heading 2" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">format_h2</span>
-                  </button>
-                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
-                  <button onClick={() => applyLinePrefix('> ')} title="Quote" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">format_quote</span>
-                  </button>
-                  <button onClick={applyCodeBlock} title="Code Block" className={btnClass}>
-                    <span className="material-symbols-outlined text-[20px]">code</span>
-                  </button>
+      <div className="flex flex-1 overflow-hidden divide-x divide-slate-200 dark:divide-slate-800">
+        {/* Left: 편집 */}
+        <main className="flex-1 overflow-y-auto">
+          <div className={`max-w-[740px] px-8 py-12 ${isPreview ? 'ml-auto mr-0' : 'mx-auto'}`}>
+            {/* 툴바 */}
+            <div className="sticky top-0 z-10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm mb-8 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
+              {(() => {
+                const btnClass = "p-2 rounded transition-colors text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200";
+                return (
+                  <>
+                    <button onClick={() => applyInlineWrap('**', '**')} title="Bold" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">format_bold</span>
+                    </button>
+                    <button onClick={() => applyInlineWrap('*', '*')} title="Italic" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">format_italic</span>
+                    </button>
+                    <button onClick={applyLink} title="Link" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">link</span>
+                    </button>
+                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
+                    <button onClick={() => applyLinePrefix('# ')} title="Heading 1" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">format_h1</span>
+                    </button>
+                    <button onClick={() => applyLinePrefix('## ')} title="Heading 2" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">format_h2</span>
+                    </button>
+                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
+                    <button onClick={() => applyLinePrefix('> ')} title="Quote" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">format_quote</span>
+                    </button>
+                    <button onClick={applyCodeBlock} title="Code Block" className={btnClass}>
+                      <span className="material-symbols-outlined text-[20px]">code</span>
+                    </button>
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={isUploading}
+                      title="이미지 업로드"
+                      className={`p-2 rounded transition-colors text-slate-500 dark:text-slate-400 ${isUploading ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {isUploading ? 'hourglass_empty' : 'image'}
+                      </span>
+                    </button>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </>
+                );
+              })()}
+              <div className="ml-auto flex items-center gap-4 px-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Markdown</span>
+                <button
+                  onClick={() => window.open('https://github.com/jjinijj/team-blog/blob/main/docs/MARKDOWN_GUIDE.md', '_blank')}
+                  className="flex items-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline uppercase tracking-widest"
+                >
+                  <span className="material-symbols-outlined text-[14px]">help</span>
+                  Guide
+                </button>
+                {!isPreview && (
                   <button
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={isUploading}
-                    title="이미지 업로드"
-                    className={`p-2 rounded transition-colors text-slate-500 dark:text-slate-400 ${isUploading ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                    onClick={() => setIsPreview(true)}
+                    className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-slate-700 uppercase tracking-widest"
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {isUploading ? 'hourglass_empty' : 'image'}
-                    </span>
+                    <span className="material-symbols-outlined text-[14px]">splitscreen_right</span>
+                    미리보기
                   </button>
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                </>
-              );
-            })()}
-            <div className="ml-auto flex items-center gap-4 px-2">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Markdown Supported</span>
+                )}
+              </div>
+            </div>
+
+            {/* 제목 */}
+            <input
+              type="text"
+              className="w-full text-5xl font-bold border-none focus:ring-0 focus:outline-none placeholder:text-gray-200 bg-transparent mb-6"
+              placeholder="제목"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+
+            <div className="flex items-center gap-3 py-2 border-t border-gray-50 mb-0">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: avatarColor }}>
+                {(displayName || user.email)?.[0]?.toUpperCase() || 'A'}
+              </div>
+              <span className="text-sm font-medium text-gray-500">
+                작성자 <span className="text-gray-900">{displayName || user.email || 'Unknown'}</span>
+              </span>
+            </div>
+
+            {/* 태그 선택 */}
+            {allTags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 py-3 border-b border-gray-50 mb-6">
+                <span className="text-xs font-medium text-gray-400 mr-1">태그</span>
+                {allTags.map(tag => {
+                  const isSelected = selectedTagIds.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedTagIds(prev =>
+                          isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                        )
+                      }
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                        isSelected
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 본문 */}
+            <textarea
+              ref={textareaRef}
+              className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed placeholder:text-gray-300 p-0 resize-none font-mono text-sm"
+              placeholder="이야기를 들려주세요... (마크다운 지원)"
+              value={markdownContent}
+              onChange={(e) => setMarkdownContent(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+        </main>
+
+        {/* Right: 미리보기 */}
+        {isPreview && (
+        <section className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-background-dark/30">
+          <div className="max-w-[740px] ml-0 mr-auto px-8 py-12">
+            <div className="mb-8 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Live Preview</span>
               <button
-                onClick={() => window.open('https://github.com/jjinijj/team-blog/blob/main/docs/MARKDOWN_GUIDE.md', '_blank')}
-                className="flex items-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline uppercase tracking-widest"
+                onClick={() => setIsPreview(false)}
+                className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                title="미리보기 닫기"
               >
-                <span className="material-symbols-outlined text-[14px]">help</span>
-                Guide
+                <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
+            <article className="prose prose-slate dark:prose-invert max-w-none [&_code]:before:content-none [&_code]:after:content-none">
+              {title && (
+                <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-6">{title}</h1>
+              )}
+              {!title && !markdownContent && (
+                <p className="text-slate-300 dark:text-slate-600 italic">왼쪽에서 작성하면 여기에 미리보기가 표시됩니다.</p>
+              )}
+              {markdownContent.trim() && <MarkdownRenderer markdown={markdownContent} />}
+            </article>
           </div>
-
-          {/* 제목 */}
-          <input
-            type="text"
-            className="w-full text-5xl font-bold border-none focus:ring-0 focus:outline-none placeholder:text-gray-200 bg-transparent mb-6"
-            placeholder="제목"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <div className="flex items-center gap-3 py-2 border-t border-gray-50 mb-0">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: avatarColor }}>
-              {(displayName || user.email)?.[0]?.toUpperCase() || 'A'}
-            </div>
-            <span className="text-sm font-medium text-gray-500">
-              작성자 <span className="text-gray-900">{displayName || user.email || 'Unknown'}</span>
-            </span>
-          </div>
-
-          {/* 태그 선택 */}
-          {allTags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 py-3 border-b border-gray-50 mb-6">
-              <span className="text-xs font-medium text-gray-400 mr-1">태그</span>
-              {allTags.map(tag => {
-                const isSelected = selectedTagIds.includes(tag.id);
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedTagIds(prev =>
-                        isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
-                      )
-                    }
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                      isSelected
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                    }`}
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 본문 */}
-          <textarea
-            ref={textareaRef}
-            className="w-full min-h-[500px] border-none focus:ring-0 focus:outline-none bg-transparent leading-relaxed placeholder:text-gray-300 p-0 resize-none font-mono text-sm"
-            placeholder="이야기를 들려주세요... (마크다운 지원)"
-            value={markdownContent}
-            onChange={(e) => setMarkdownContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-      </main>
+        </section>
+        )}
+      </div>
     </div>
   );
 };
