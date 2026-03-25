@@ -25,6 +25,7 @@ import EditProfilePage from './screens/profile/EditProfilePage';
 import ChangePasswordPage from './screens/profile/ChangePasswordPage';
 import TeamPage from './screens/TeamPage';
 import ContactPage from './screens/ContactPage';
+import ComingSoonPage from './screens/ComingSoonPage';
 import ScrollToTop from './component/ScrollToTop';
 import { ROUTES } from './types/routes';
 
@@ -146,6 +147,9 @@ const handleUpdatePost = async (
 
       {/* 연락처 */}
       <Route path={ROUTES.CONTACT} element={<ContactPage />} />
+
+      {/* 준비중 */}
+      <Route path={ROUTES.COMING_SOON} element={<ComingSoonPage />} />
 
       {/* 메인 화면 (블로그 글 목록) */}
       <Route

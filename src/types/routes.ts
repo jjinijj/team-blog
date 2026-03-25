@@ -8,6 +8,7 @@ export const ROUTES = {
   MY_POSTS: '/my-posts',
   TEAM: '/team',
   CONTACT: '/contact',
+  COMING_SOON: '/comingsoon',
 
   ADMIN: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
