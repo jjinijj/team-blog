@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchUserProfile, UserProfile } from '../api/userApi';
 import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 import { ROUTES } from '../types/routes';
+import LogoMark from './LogoMark';
+import ProfileDropdown from './Profiledropdown';
 
 const ProfileLayout = () => {
   const { user, avatarColor, signOut } = useAuth();
@@ -27,21 +29,22 @@ const ProfileLayout = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex flex-col h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20 shrink-0">
+        <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
+          <button onClick={() => navigate(ROUTES.POSTS)} className="flex items-center gap-3">
+            <LogoMark size="md" />
+            {siteName && <span className="text-base font-bold text-slate-800">{siteName}</span>}
+          </button>
+          <ProfileDropdown />
+        </div>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
         <div className="p-6 flex-1">
-          {/* 로고 */}
-          <div
-            className="flex items-center gap-3 mb-8 cursor-pointer"
-            onClick={() => navigate(ROUTES.HOME)}
-          >
-            <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-xl">terminal</span>
-            </div>
-            {siteName && <span className="text-lg font-bold tracking-tight">{siteName}</span>}
-          </div>
-
           {/* 사용자 정보 */}
           <div className="flex items-center gap-3 p-3 mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
             <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0"
@@ -120,6 +123,7 @@ const ProfileLayout = () => {
           <Outlet context={{ profile, setProfile }} />
         </div>
       </main>
+      </div>
     </div>
   );
 };

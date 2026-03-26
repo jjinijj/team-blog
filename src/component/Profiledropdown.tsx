@@ -74,6 +74,13 @@ export const ProfileDropdown = () => {
                 <span>내 글 보기</span>
               </button>
 
+              <button
+                onClick={() => { setIsProfileOpen(false); navigate(ROUTES.BOOKMARKS); }}
+                className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+              >
+                <span>북마크</span>
+              </button>
+
               {isAdmin && (
                 <>
                   <div className="my-1 h-px bg-gray-100" />
