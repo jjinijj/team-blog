@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoMark from '../../component/LogoMark';
+import ProfileDropdown from '../../component/Profiledropdown';
 import { getSiteName, getCachedSiteName } from '../../api/siteConfigApi';
 import { Post } from '../../types/Post';
 import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/postApi';
@@ -205,26 +206,14 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
   return (
     <div className="relative flex min-h-screen flex-col bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onGoToMain}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500"
-          >
-            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-          </button>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-20">
+        <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
           <button onClick={onGoToMain} className="flex items-center gap-3">
             <LogoMark size="md" />
-            {siteName && <h2 className="text-xl font-bold tracking-tight">{siteName}</h2>}
+            {siteName && <span className="text-base font-bold text-slate-800">{siteName}</span>}
           </button>
+          <ProfileDropdown />
         </div>
-        <button
-          onClick={() => navigate(ROUTES.WRITE)}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-all"
-        >
-          <span className="material-symbols-outlined text-sm">edit</span>
-          새 글 작성
-        </button>
       </header>
 
       <main className="flex flex-1 flex-col lg:flex-row">

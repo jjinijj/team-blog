@@ -508,23 +508,22 @@
 
 ---
 
-#### 9. 북마크 (즐겨찾기)
-**예상 소요**: 1-2시간
+#### 9. 북마크 (즐겨찾기) ✅
+**예상 소요**: 1-2시간 | **실제 소요**: 약 1시간
 
-- [ ] DB 스키마
-  - [ ] `bookmarks` 테이블 생성
-    ```sql
-    - id: uuid
-    - user_id: uuid (FK)
-    - post_id: uuid (FK)
-    - created_at: timestamp
-    ```
-- [ ] 북마크 CRUD
-  - [ ] 북마크 추가/제거 (토글)
-  - [ ] 내 북마크 목록 조회
-- [ ] UI 업데이트
-  - [ ] 글 상세에 북마크 버튼 (⭐)
-  - [ ] 사용자 페이지에 북마크 목록
+- [x] DB 스키마
+  - [x] `bookmarks` 테이블 생성 (id, user_id FK, post_id FK, created_at, UNIQUE(user_id, post_id))
+  - [x] RLS 정책 (본인 북마크만 접근 가능)
+- [x] 북마크 API (`bookmarkApi.ts`)
+  - [x] `toggleBookmark` — 있으면 삭제, 없으면 추가, 현재 상태 boolean 반환
+  - [x] `checkIsBookmarked` — 단순 조회
+  - [x] `fetchBookmarkedPosts` — 북마크된 글 목록 (posts join, 최신 북마크순)
+- [x] UI 업데이트
+  - [x] 글 상세 헤더에 북마크 버튼 (bookmark ↔ bookmark_added + 파란색)
+  - [x] 본인 글에서는 북마크 버튼 미표시
+  - [x] 글 진입 시 북마크 여부 자동 확인 (로그인 유저만)
+  - [x] 별도 북마크 페이지 (`/bookmarks`) — `BookmarksScreen.tsx` 신규
+  - [x] ProfileDropdown에 '북마크' 메뉴 항목 추가
 
 ---
 
@@ -759,7 +758,7 @@
 ### Tier 2 — 필요함 + 중간
 | 항목 | 예상 시간 | 비고 |
 |------|----------|------|
-| 북마크 | 1-2h | 팀 블로그에서 자주 쓸 기능 |
+| ~~북마크~~ | ~~1-2h~~ | ✅ 완료 |
 | 알림 시스템 | 2-3h | 협업 블로그에서 댓글 알림은 필수 |
 
 ### Tier 3 — 있으면 좋음 + 빠름
@@ -822,7 +821,7 @@
 - [x] 임시저장
 - [x] 글 상태 관리 (Draft/Published/Private)
 - [x] 핀 고정 글
-- [ ] 북마크
+- [x] 북마크
 - [ ] 검색 고도화
 - [ ] 알림 시스템
 - [ ] 기타 편의 기능 (조회수, 다크모드, 최근 본 글)
@@ -848,6 +847,18 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-26 (2차)
+- ✅ **북마크 기능 구현 완료**
+  - `bookmarks` 테이블 생성 (user_id, post_id FK, UNIQUE, RLS)
+  - `bookmarkApi.ts` 신규: `toggleBookmark`, `checkIsBookmarked`, `fetchBookmarkedPosts`
+  - `BookmarksScreen.tsx` 신규: 북마크 목록 페이지 (`/bookmarks`), 빈 상태 UI 포함
+  - `PostDetailScreen`: 북마크 버튼 API 연결, 본인 글에서 미표시
+  - `ProfileDropdown`: '북마크' 메뉴 항목 추가
+  - 미사용 `Routes` import 및 `execCommand` fallback 제거
+- ✅ **헤더 통일 (BookmarksScreen 스타일 기준)**
+  - `MyPostsScreen`: `bg-white/80 backdrop-blur-md` 헤더 + `ProfileDropdown` 적용
+  - `ProfileLayout`: 상단 sticky 헤더 추가 (로고 + ProfileDropdown), 사이드바에서 로고 섹션 제거
 
 ### 2026-03-26
 - ✅ **임시저장에 이미지 UUID 포함**
