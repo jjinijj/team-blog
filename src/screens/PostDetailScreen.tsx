@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Routes, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Post } from '../types/Post';
 import { MarkdownRenderer } from '../utils/markdownRender';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,7 @@ import { safeParseDoc } from '../utils/safeParseDoc';
 import CommentsSection from '../component/comments/CommentsSection';
 import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
+import { toggleBookmark, checkIsBookmarked } from '../api/bookmarkApi';
 import ProfileDropdown from '../component/Profiledropdown';
 import SiteFooter from '../component/SiteFooter';
 import { ROUTES } from '../types/routes';
@@ -33,23 +34,12 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
   const [error, setError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
-    const url = window.location.href;
     try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = url;
-        textarea.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
+      await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -77,6 +67,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         setPost(data);
         if (user && data) {
           recordView(id, user.id, data.author_id);
+          checkIsBookmarked(id).then(setBookmarked).catch(() => {});
         }
       } catch (e) {
         console.error(e);
@@ -87,6 +78,16 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
     };
     fetch();
   }, [id, user]);
+
+  const handleBookmark = async () => {
+    if (!user || !id) return;
+    try {
+      const next = await toggleBookmark(id);
+      setBookmarked(next);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (loading) {
     return (
@@ -179,10 +180,16 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
             <span className="text-sm font-semibold">목록으로</span>
           </button>
           <div className="flex items-center gap-1">
-            {/* 북마크 버튼 */}
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100">
-              <span className="material-symbols-outlined">bookmark</span>
-            </button>
+            {/* 북마크 버튼 - 본인 글 제외 */}
+            {user && post.author_id !== user.id && (
+              <button
+                onClick={handleBookmark}
+                className={`p-2 transition-colors rounded-lg hover:bg-slate-100 ${bookmarked ? 'text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}
+                title={bookmarked ? '북마크 해제' : '북마크'}
+              >
+                <span className="material-symbols-outlined">{bookmarked ? 'bookmark_added' : 'bookmark'}</span>
+              </button>
+            )}
 
             {/* 공유 버튼 */}
             <button

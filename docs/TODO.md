@@ -508,23 +508,22 @@
 
 ---
 
-#### 9. 북마크 (즐겨찾기)
-**예상 소요**: 1-2시간
+#### 9. 북마크 (즐겨찾기) ✅
+**예상 소요**: 1-2시간 | **실제 소요**: 약 1시간
 
-- [ ] DB 스키마
-  - [ ] `bookmarks` 테이블 생성
-    ```sql
-    - id: uuid
-    - user_id: uuid (FK)
-    - post_id: uuid (FK)
-    - created_at: timestamp
-    ```
-- [ ] 북마크 CRUD
-  - [ ] 북마크 추가/제거 (토글)
-  - [ ] 내 북마크 목록 조회
-- [ ] UI 업데이트
-  - [ ] 글 상세에 북마크 버튼 (⭐)
-  - [ ] 사용자 페이지에 북마크 목록
+- [x] DB 스키마
+  - [x] `bookmarks` 테이블 생성 (id, user_id FK, post_id FK, created_at, UNIQUE(user_id, post_id))
+  - [x] RLS 정책 (본인 북마크만 접근 가능)
+- [x] 북마크 API (`bookmarkApi.ts`)
+  - [x] `toggleBookmark` — 있으면 삭제, 없으면 추가, 현재 상태 boolean 반환
+  - [x] `checkIsBookmarked` — 단순 조회
+  - [x] `fetchBookmarkedPosts` — 북마크된 글 목록 (posts join, 최신 북마크순)
+- [x] UI 업데이트
+  - [x] 글 상세 헤더에 북마크 버튼 (bookmark ↔ bookmark_added + 파란색)
+  - [x] 본인 글에서는 북마크 버튼 미표시
+  - [x] 글 진입 시 북마크 여부 자동 확인 (로그인 유저만)
+  - [x] 별도 북마크 페이지 (`/bookmarks`) — `BookmarksScreen.tsx` 신규
+  - [x] ProfileDropdown에 '북마크' 메뉴 항목 추가
 
 ---
 
@@ -746,6 +745,38 @@
 
 ---
 
+## 🚦 작업 우선순위 (2026-03-26 기준)
+
+> 기준: 꼭 필요한 기능인가 + 작업 시간이 짧은가
+
+### Tier 1 — 꼭 필요 + 빠름 (바로 할 것)
+| 항목 | 예상 시간 | 비고 |
+|------|----------|------|
+| 다크모드 | 1-2h | 이미 `dark:` 클래스 전체 적용됨, 토글 + localStorage만 추가 |
+| 내 글 보기 태그 필터 | 30m-1h | 태그 시스템 이미 있음, 필터 로직만 연결 |
+
+### Tier 2 — 필요함 + 중간
+| 항목 | 예상 시간 | 비고 |
+|------|----------|------|
+| ~~북마크~~ | ~~1-2h~~ | ✅ 완료 |
+| 알림 시스템 | 2-3h | 협업 블로그에서 댓글 알림은 필수 |
+
+### Tier 3 — 있으면 좋음 + 빠름
+| 항목 | 예상 시간 | 비고 |
+|------|----------|------|
+| 랜딩 인기 태그 섹션 | 30m-1h | 태그 데이터 이미 있음 |
+| 최근 본 글 | 30m-1h | localStorage만으로 구현 |
+
+### Tier 4 — 낮은 우선순위
+- 검색 고도화
+- 파일 첨부
+- 태그 정렬/병합
+- 고아 이미지 관리 (구조적 한계 있음, 별도 검토 필요)
+- SSR/SSG 마이그레이션
+- 에디터 v2 (JSON 기반 재작성, 1.5-2주 대형 작업)
+
+---
+
 ## 🎯 마일스톤
 
 ### ✅ Milestone 1: 기본 기능 완성
@@ -790,7 +821,7 @@
 - [x] 임시저장
 - [x] 글 상태 관리 (Draft/Published/Private)
 - [x] 핀 고정 글
-- [ ] 북마크
+- [x] 북마크
 - [ ] 검색 고도화
 - [ ] 알림 시스템
 - [ ] 기타 편의 기능 (조회수, 다크모드, 최근 본 글)
@@ -799,10 +830,43 @@
 ### 📅 Milestone 6: 파일 관리
 - [ ] 파일 첨부/다운로드
 - [ ] 이미지 미리보기
+- [ ] **관리자 페이지 — 고아 이미지 일괄 삭제** ⚠️ 구조적 한계 있음 (아래 참고)
+  - `post_images` 테이블에서 `post_id = null` + `created_at` 7일 이상된 레코드 조회
+  - Storage 파일 삭제 + DB 레코드 삭제
+  - 주의: 작성 중인 draft 이미지(`post_id = null`이지만 최근 업로드)는 삭제 제외
+
+> ⚠️ **이미지 관리 구조적 한계 (미해결)**
+>
+> 현재 `post_id` FK로 고아 이미지를 판단하는 방식은 아래 케이스를 처리하지 못함:
+>
+> 1. **글 수정 중 이미지 교체**: 기존 이미지를 삭제하고 새 이미지로 교체해도 기존 이미지의 `post_id`는 그대로 → Storage에 영원히 잔류
+> 2. **크로스포스트 복붙**: A글 이미지 URL을 B글에 복붙 후 저장 → A글 삭제 시 이미지도 삭제 → B글 이미지 깨짐
+>
+> **근본 해결책**: `post_id` FK 방식을 버리고, 글 저장 시 본문 마크다운을 파싱해서 실제 참조 중인 URL만 유지하는 방식으로 전환 필요. 단, Supabase Edge Function 등 별도 크론잡 인프라가 필요해 현재 규모에선 보류.
 
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-26 (2차)
+- ✅ **북마크 기능 구현 완료**
+  - `bookmarks` 테이블 생성 (user_id, post_id FK, UNIQUE, RLS)
+  - `bookmarkApi.ts` 신규: `toggleBookmark`, `checkIsBookmarked`, `fetchBookmarkedPosts`
+  - `BookmarksScreen.tsx` 신규: 북마크 목록 페이지 (`/bookmarks`), 빈 상태 UI 포함
+  - `PostDetailScreen`: 북마크 버튼 API 연결, 본인 글에서 미표시
+  - `ProfileDropdown`: '북마크' 메뉴 항목 추가
+  - 미사용 `Routes` import 및 `execCommand` fallback 제거
+- ✅ **헤더 통일 (BookmarksScreen 스타일 기준)**
+  - `MyPostsScreen`: `bg-white/80 backdrop-blur-md` 헤더 + `ProfileDropdown` 적용
+  - `ProfileLayout`: 상단 sticky 헤더 추가 (로고 + ProfileDropdown), 사이드바에서 로고 섹션 제거
+
+### 2026-03-26
+- ✅ **임시저장에 이미지 UUID 포함**
+  - `DraftData`에 `uploadedImageIds?: string[]` 필드 추가
+  - 임시저장 복원 시 `uploadedImageIds` 함께 복원 → 글 저장 시 `linkImagesToPost` 정상 동작
+  - 기획: 고아 이미지(post_id = null, 7일 이상)는 관리자 페이지에서 일괄 삭제 예정
+- ✅ **화이트리스트 페이지 추가한 관리자 이메일 표시 수정**
+  - `added_by` UUID로 `users` 테이블 조회 후 이메일 매핑 (기존 코드는 없는 필드 참조로 항상 '알 수 없음')
 
 ### 2026-03-25
 - ✅ **vercel.json 추가** — SPA 라우팅 픽스 (새로고침/직접 URL 입력 시 404 방지, 모든 경로 → `index.html` 리라이트)

@@ -5,6 +5,7 @@ export interface DraftData {
   content: string;
   content_json: DocumentNode | null;
   content_type: 'richtext' | 'markdown';
+  uploadedImageIds?: string[];
   savedAt: string; // ISO timestamp
 }
 
