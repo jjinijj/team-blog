@@ -110,6 +110,9 @@ export const EditorScreen = ({
     if (!draftData) return;
     setTitle(draftData.title);
     setMarkdownContent(draftData.content);
+    if (draftData.uploadedImageIds?.length) {
+      setUploadedImageIds(draftData.uploadedImageIds);
+    }
     clearDraft();
   }, [draftData, clearDraft]);
 
@@ -120,6 +123,7 @@ export const EditorScreen = ({
       content: markdownContent,
       content_json: null,
       content_type: 'markdown',
+      uploadedImageIds,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
@@ -131,6 +135,7 @@ export const EditorScreen = ({
       content: markdownContent,
       content_json: null,
       content_type: 'markdown',
+      uploadedImageIds,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markdownContent]);
@@ -275,11 +280,7 @@ export const EditorScreen = ({
     try {
       const { url, imageId } = await uploadPostImage(file, user.id);
 
-      if (postToEdit?.id) {
-        await linkImagesToPost([imageId], postToEdit.id);
-      } else {
-        setUploadedImageIds((prev) => [...prev, imageId]);
-      }
+      setUploadedImageIds((prev) => [...prev, imageId]);
 
       // 플레이스홀더를 실제 이미지 마크다운으로 교체
       setMarkdownContent((prev) => prev.replace(placeholder, `![이미지](${url})`));
@@ -292,7 +293,7 @@ export const EditorScreen = ({
     } finally {
       setIsUploading(false);
     }
-  }, [user, postToEdit?.id]);
+  }, [user]);
 
   // ── 저장 ──────────────────────────────────────
   const handlePublish = async () => {
@@ -306,6 +307,7 @@ export const EditorScreen = ({
     }
 
     if (postToEdit && onUpdatePost) {
+      if (uploadedImageIds.length > 0) linkImagesToPost(uploadedImageIds, postToEdit.id).catch(console.error);
       await setPostTags(postToEdit.id, selectedTagIds).catch(console.error);
       onUpdatePost(postToEdit.id, title, markdownContent, 'markdown', null, status);
     } else {
