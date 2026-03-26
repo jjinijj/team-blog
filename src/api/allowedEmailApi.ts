@@ -51,12 +51,26 @@ export const readAllowedEmails = async() : Promise<AllowedEmail[]> => {
             throw error;
         }
 
-        return (data || []).map((item: any) => ({
+        const rows = data || [];
+
+        // added_by UUID로 users 테이블 조회
+        const uuids = [...new Set(rows.map((r: any) => r.added_by).filter(Boolean))];
+        const emailMap: Record<string, string> = {};
+
+        if (uuids.length > 0) {
+            const { data: users } = await supabase
+                .from('users')
+                .select('id, email')
+                .in('id', uuids);
+            (users || []).forEach((u: any) => { emailMap[u.id] = u.email; });
+        }
+
+        return rows.map((item: any) => ({
             id: item.id,
             email: item.email,
             added_at: item.added_at,
             added_by: item.added_by,
-            added_by_email: item.users?.email || '알 수 없음'
+            added_by_email: item.added_by ? (emailMap[item.added_by] || '알 수 없음') : '알 수 없음'
         }));
     }catch(error){
         console.error('화이트리스트 이메일 목록 조회 중 오류: ',error);
