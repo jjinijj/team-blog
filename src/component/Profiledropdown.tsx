@@ -75,6 +75,13 @@ export const ProfileDropdown = () => {
               </button>
 
               <button
+                onClick={() => { setIsProfileOpen(false); navigate(ROUTES.MY_COMMENTS); }}
+                className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+              >
+                <span>내 댓글</span>
+              </button>
+
+              <button
                 onClick={() => { setIsProfileOpen(false); navigate(ROUTES.BOOKMARKS); }}
                 className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
               >

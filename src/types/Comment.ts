@@ -14,6 +14,7 @@ export interface Comment {
   
   // JOIN으로 가져올 필드 (선택적)
   author_email?: string;         // 작성자 이메일
+  post_title?: string;           // 댓글이 달린 글 제목 (내 댓글 목록용)
 }
 
 /**
