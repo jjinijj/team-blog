@@ -7,6 +7,7 @@ import { getAbsoluteTime } from '../utils/DataFormat';
 import { ROUTES } from '../types/routes';
 import LogoMark from '../component/LogoMark';
 import ProfileDropdown from '../component/Profiledropdown';
+import NotificationBell from '../component/NotificationBell';
 import SiteFooter from '../component/SiteFooter';
 import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 
@@ -43,7 +44,10 @@ const BookmarksScreen = () => {
             <LogoMark size="md" />
             <span className="text-base font-bold text-slate-800">{siteName}</span>
           </button>
-          <ProfileDropdown />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ProfileDropdown />
+          </div>
         </div>
       </header>
 

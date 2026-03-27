@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogoMark from './LogoMark';
 import ProfileDropdown from './Profiledropdown';
+import NotificationBell from './NotificationBell';
+import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../types/routes';
 import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 
@@ -15,6 +17,7 @@ const NAV_ITEMS = [
 const SiteHeader = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const [siteName, setSiteName] = useState<string | null>(getCachedSiteName());
 
   useEffect(() => {
@@ -48,7 +51,8 @@ const SiteHeader = () => {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
+          {user && <NotificationBell />}
           <ProfileDropdown />
         </div>
       </div>
