@@ -9,6 +9,7 @@ import { createPost, deleteMultiplePosts, deletePost, updatePost } from './api/p
 import { deleteStorageImagesForPosts } from './api/imageApi';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import AdminGuard from './component/admin/AdminGuard';
 import AuthGuard from './component/AuthGuard';
 import AdminLayout from './component/admin/AdminLayout';
@@ -255,7 +256,9 @@ const handleUpdatePost = async (
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </AuthProvider>
   );
 }

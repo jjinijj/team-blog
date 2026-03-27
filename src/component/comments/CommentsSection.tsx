@@ -2,15 +2,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import * as commentApi from '../../api/CommentApi';
+import { createCommentNotification } from '../../api/notificationApi';
 import type { Comment } from '../../types/Comment';
 import CommentForm from './CommentForm';
 import CommentList from './CommentList';
 
 interface CommentsSectionProps {
   postId: string;
+  postAuthorId?: string | null;
 }
 
-export default function CommentsSection({ postId }: CommentsSectionProps) {
+export default function CommentsSection({ postId, postAuthorId }: CommentsSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +42,11 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
     try {
       const newComment = await commentApi.createComment(postId, user.id, content);
       setComments([newComment, ...comments]);
+
+      // 글 작성자에게 알림 생성 (본인 글 댓글은 RLS에서 자동 차단)
+      if (postAuthorId) {
+        createCommentNotification(postAuthorId, user.id, postId, newComment.id).catch(() => {});
+      }
     } catch (error) {
       alert('댓글 작성에 실패했습니다.');
     }

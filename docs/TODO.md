@@ -571,28 +571,27 @@
 
 ---
 
-#### 11. 알림 시스템
-**예상 소요**: 2-3시간
+#### 11. 알림 시스템 ✅
+**예상 소요**: 2-3시간 | **실제 소요**: 약 2시간
 
-- [ ] DB 스키마
-  - [ ] `notifications` 테이블 생성
-    ```sql
-    - id: uuid
-    - user_id: uuid (FK)
-    - type: text (comment, mention)
-    - post_id: uuid (FK)
-    - comment_id: uuid (FK, nullable)
-    - is_read: boolean
-    - created_at: timestamp
-    ```
-- [ ] 알림 생성 로직
-  - [ ] 내 글에 댓글 달리면 알림
-  - [ ] (선택) @멘션 시 알림
-- [ ] 알림 UI
-  - [ ] 헤더에 알림 아이콘 + 개수 표시
-  - [ ] 알림 목록 드롭다운
-  - [ ] 읽음 처리
-  - [ ] 알림 클릭 시 해당 글/댓글로 이동
+- [x] DB 스키마
+  - [x] `notifications` 테이블 생성 (id, user_id, actor_id, type, post_id, comment_id, is_read, created_at)
+  - [x] RLS 정책 (SELECT/UPDATE: 본인만, INSERT: 타인에게만 `auth.uid() != user_id`)
+  - [x] FK를 `public.users`로 변경 (PostgREST join 지원)
+  - [x] `ALTER PUBLICATION supabase_realtime ADD TABLE notifications` + `REPLICA IDENTITY FULL` (Realtime 활성화)
+- [x] 알림 생성 로직
+  - [x] 내 글에 댓글 달리면 알림 (`CommentsSection`에서 댓글 작성 후 `createCommentNotification` 호출)
+  - [x] 본인 글 본인 댓글은 RLS로 자동 차단
+- [x] 알림 UI (`NotificationBell.tsx`)
+  - [x] 모든 헤더에 벨 아이콘 + 미읽은 수 뱃지
+  - [x] 알림 목록 드롭다운 (최대 30개, 미읽은 항목 하이라이트)
+  - [x] 읽음 처리 (클릭 시 단건) + 모두 읽음 버튼
+  - [x] 알림 클릭 시 해당 글로 이동
+- [x] 아키텍처
+  - [x] `notificationApi.ts` — fetch, markAsRead, markAllAsRead, createCommentNotification
+  - [x] `NotificationContext.tsx` — 앱 레벨 Context로 상태 관리 (페이지 이동 시 뱃지 유지)
+  - [x] Supabase Realtime 구독 — `user_id=eq.{id}` 필터로 즉시 수신
+  - [x] `(선택)` @멘션 알림 — 미구현
 
 ---
 
@@ -745,7 +744,7 @@
 
 ---
 
-## 🚦 작업 우선순위 (2026-03-26 기준)
+## 🚦 작업 우선순위 (2026-03-27 기준)
 
 > 기준: 꼭 필요한 기능인가 + 작업 시간이 짧은가
 
@@ -759,7 +758,7 @@
 | 항목 | 예상 시간 | 비고 |
 |------|----------|------|
 | ~~북마크~~ | ~~1-2h~~ | ✅ 완료 |
-| 알림 시스템 | 2-3h | 협업 블로그에서 댓글 알림은 필수 |
+| ~~알림 시스템~~ | ~~2-3h~~ | ✅ 완료 |
 
 ### Tier 3 — 있으면 좋음 + 빠름
 | 항목 | 예상 시간 | 비고 |
@@ -823,8 +822,10 @@
 - [x] 핀 고정 글
 - [x] 북마크
 - [ ] 검색 고도화
-- [ ] 알림 시스템
-- [ ] 기타 편의 기능 (조회수, 다크모드, 최근 본 글)
+- [x] 알림 시스템
+- [x] 조회수
+- [ ] 다크모드
+- [ ] 최근 본 글
 - [x] 글 공유 (URL 복사)
 
 ### 📅 Milestone 6: 파일 관리
@@ -847,6 +848,17 @@
 ---
 
 ## 📝 작업 진행 노트
+
+### 2026-03-27
+- ✅ **알림 시스템 구현 완료**
+  - `notifications` 테이블 생성 + FK를 `public.users`로 변경 + Realtime 활성화 (`REPLICA IDENTITY FULL`)
+  - `notificationApi.ts` 신규: `fetchNotifications`, `fetchNotificationById`, `markAsRead`, `markAllAsRead`, `createCommentNotification`
+  - `NotificationContext.tsx` 신규: 앱 레벨 Context로 fetch + Realtime 구독 관리 (페이지 이동 시 뱃지 상태 유지)
+  - `NotificationBell.tsx` 신규: 벨 아이콘 + 미읽은 뱃지 + 드롭다운 UI
+  - `CommentsSection`: `postAuthorId` prop 추가, 댓글 작성 후 알림 생성 연결
+  - `SiteHeader` + 각 페이지 헤더에 NotificationBell 추가
+  - `CommentApi`: `createComment`/`updateComment` select에 `display_name`, `avatar_color` 추가 (즉시 올바른 이름/색상 표시)
+  - 트러블슈팅: FK가 `auth.users` 참조 → `public.users`로 변경 / Realtime 테이블 미등록 → SQL로 추가
 
 ### 2026-03-26 (2차)
 - ✅ **북마크 기능 구현 완료**

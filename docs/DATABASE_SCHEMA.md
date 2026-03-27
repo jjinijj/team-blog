@@ -1,288 +1,307 @@
-# 팀 블로그 - 데이터베이스 스키마 설정
+# 팀 블로그 - 데이터베이스 스키마
 
-## 개요
+현재 Supabase(PostgreSQL)에 구성된 전체 테이블 스키마 레퍼런스입니다.
 
-이 문서는 팀 블로그 에디터의 로그인 기능 구현을 위한 Supabase 데이터베이스 스키마 설정을 설명합니다.
-
-**작업 일자**: 2026년 2월 1일  
-**작업 목적**: 이메일 화이트리스트 기반 사용자 인증 시스템 구축
+**최종 업데이트**: 2026-03-27
 
 ---
 
-## 실행한 SQL 쿼리
+## 테이블 목록
 
-```sql
--- 1. 허용된 이메일 목록 테이블 생성
-CREATE TABLE IF NOT EXISTS allowed_emails (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  added_by UUID REFERENCES auth.users(id)
-);
-
--- 2. 이메일 검색 인덱스 생성
-CREATE INDEX IF NOT EXISTS idx_allowed_emails_email ON allowed_emails(email);
-
--- 3. RLS (Row Level Security) 활성화
-ALTER TABLE allowed_emails ENABLE ROW LEVEL SECURITY;
-
--- 4. 정책: 모든 인증된 사용자가 조회 가능
-CREATE POLICY "Anyone can view allowed emails"
-  ON allowed_emails FOR SELECT
-  TO authenticated
-  USING (true);
-
--- 5. 초기 팀 멤버 이메일 추가
-INSERT INTO allowed_emails (email) VALUES
-  ('your-email@example.com')
-ON CONFLICT (email) DO NOTHING;
-
--- 6. posts 테이블에 author_id 컬럼 추가
-ALTER TABLE posts 
-ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES auth.users(id);
-```
+| 테이블 | 설명 |
+|--------|------|
+| `public.users` | 사용자 프로필 (`auth.users` 미러링) |
+| `posts` | 게시글 |
+| `comments` | 댓글 |
+| `bookmarks` | 북마크 |
+| `notifications` | 알림 |
+| `tags` | 태그 |
+| `post_tags` | 게시글-태그 연결 |
+| `post_images` | 게시글 이미지 |
+| `post_views` | 조회수 추적 |
+| `allowed_emails` | 회원가입 화이트리스트 |
+| `home_screen_config` | 랜딩 페이지 설정 |
+| `site_config` | 사이트 전역 설정 |
 
 ---
 
-## 상세 설명
+## 테이블 상세
 
-### 1. allowed_emails 테이블 생성
+### `public.users`
+
+`auth.users` 생성 시 트리거로 자동 동기화되는 사용자 프로필 테이블.
 
 ```sql
-CREATE TABLE IF NOT EXISTS allowed_emails (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  added_by UUID REFERENCES auth.users(id)
+CREATE TABLE public.users (
+  id           uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email        text,
+  display_name text,
+  avatar_color text    DEFAULT '#3b82f6',
+  is_admin     boolean DEFAULT false,
+  show_in_team boolean DEFAULT true,
+  created_at   timestamptz DEFAULT now()
 );
 ```
 
-**목적**: 회원가입이 허용된 이메일 목록을 관리하는 화이트리스트 테이블
-
-**컬럼 설명**:
-- `id` (UUID): 각 레코드의 고유 식별자
-  - `gen_random_uuid()`: PostgreSQL 함수로 자동 UUID 생성
-  - `PRIMARY KEY`: 기본 키로 설정
-  
-- `email` (TEXT): 허용된 이메일 주소
-  - `UNIQUE`: 중복 이메일 방지
-  - `NOT NULL`: 필수 입력 필드
-  
-- `added_at` (TIMESTAMP WITH TIME ZONE): 이메일이 추가된 시각
-  - `DEFAULT NOW()`: 레코드 생성 시 현재 시각 자동 설정
-  - 타임존 정보 포함하여 정확한 시간 추적
-  
-- `added_by` (UUID): 이메일을 추가한 관리자의 사용자 ID
-  - `REFERENCES auth.users(id)`: Supabase Auth의 users 테이블과 외래키 관계
-  - 추후 누가 이메일을 추가했는지 추적 가능
-
-**사용 사례**:
-- 회원가입 시 입력한 이메일이 이 테이블에 있는지 확인
-- 관리자 페이지에서 허용된 이메일 목록 관리
+**RLS**: 읽기 전체 허용 / 수정 본인만
 
 ---
 
-### 2. 이메일 검색 인덱스 생성
+### `posts`
 
 ```sql
-CREATE INDEX IF NOT EXISTS idx_allowed_emails_email ON allowed_emails(email);
+CREATE TABLE posts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title        text NOT NULL,
+  content      text,
+  content_json jsonb,
+  content_type text CHECK (content_type IN ('markdown', 'richtext')),
+  author_id    uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  status       text DEFAULT 'published'
+                    CHECK (status IN ('draft', 'published', 'private')),
+  is_pinned    boolean DEFAULT false,
+  view_count   integer DEFAULT 0,
+  "isMarkdown" boolean DEFAULT false,  -- 레거시 호환용
+  created_at   timestamptz DEFAULT now(),
+  updated_at   timestamptz DEFAULT now()
+);
 ```
 
-**목적**: 이메일 검색 성능 최적화
+**RLS**
+- `published`: 전체 조회
+- `draft`: 본인 + 관리자
+- `private`: 본인만
+- INSERT/UPDATE/DELETE: 본인만
 
-**설명**:
-- `CREATE INDEX`: PostgreSQL 인덱스 생성
-- `IF NOT EXISTS`: 이미 존재하면 생략 (재실행 시 에러 방지)
-- `idx_allowed_emails_email`: 인덱스 이름 (관례: `idx_테이블명_컬럼명`)
-- `ON allowed_emails(email)`: allowed_emails 테이블의 email 컬럼에 인덱스 생성
-
-**효과**:
-- 회원가입 시 이메일 조회 속도 향상
-- `WHERE email = 'xxx@example.com'` 같은 쿼리가 빨라짐
-- 테이블에 수천, 수만 개의 레코드가 있어도 빠른 검색
-
-**성능 비교**:
-- 인덱스 없음: O(n) - 전체 테이블 스캔
-- 인덱스 있음: O(log n) - B-Tree 검색
+**비고**: `content_type`이 우선, `isMarkdown`은 레거시 폴백
 
 ---
 
-### 3. RLS (Row Level Security) 활성화
+### `comments`
 
 ```sql
-ALTER TABLE allowed_emails ENABLE ROW LEVEL SECURITY;
+CREATE TABLE comments (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id    uuid REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
+  author_id  uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  content    text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX ON comments(post_id);
+CREATE INDEX ON comments(created_at);
 ```
 
-**목적**: 테이블 수준의 보안 정책 활성화
-
-**RLS란?**:
-- Row Level Security의 약자
-- PostgreSQL의 보안 기능
-- **행(row) 단위**로 접근 권한을 제어
-- 테이블에 접근할 때 정책(Policy)을 통해 권한 검증
-
-**활성화 효과**:
-- RLS를 활성화하면 **기본적으로 모든 접근이 차단**됨
-- 명시적으로 정책(Policy)을 만들어야 데이터 접근 가능
-- 클라이언트에서 직접 Supabase API를 호출해도 정책에 따라 제어됨
-
-**보안 이점**:
-- SQL Injection 공격 방지
-- 권한 없는 사용자의 데이터 접근 차단
-- 서버 사이드 로직 없이도 데이터 보호
+**RLS**: 읽기 전체 / 작성 로그인 / 수정·삭제 본인만
 
 ---
 
-### 4. RLS 정책: 인증된 사용자 조회 허용
+### `bookmarks`
 
 ```sql
-CREATE POLICY "Anyone can view allowed emails"
-  ON allowed_emails FOR SELECT
-  TO authenticated
-  USING (true);
+CREATE TABLE bookmarks (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id    uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  post_id    uuid REFERENCES posts(id)         ON DELETE CASCADE NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (user_id, post_id)
+);
 ```
 
-**목적**: 로그인한 사용자가 화이트리스트를 조회할 수 있도록 허용
-
-**구문 설명**:
-- `CREATE POLICY`: 새로운 보안 정책 생성
-- `"Anyone can view allowed emails"`: 정책 이름 (사람이 읽기 쉬운 설명)
-- `ON allowed_emails`: 이 정책이 적용될 테이블
-- `FOR SELECT`: SELECT 쿼리(조회)에만 적용
-- `TO authenticated`: 인증된 사용자(로그인한 사용자)에게만 적용
-- `USING (true)`: 조건 없이 항상 허용
-
-**권한 범위**:
-- ✅ 로그인한 사용자: allowed_emails 테이블 조회 가능
-- ❌ 비로그인 사용자: 조회 불가
-- ❌ INSERT, UPDATE, DELETE: 별도 정책이 없으므로 불가
-
-**왜 조회만 허용하나?**:
-- 회원가입 시 이메일 화이트리스트 확인을 위해 필요
-- 추가/수정/삭제는 관리자만 가능하도록 제한 (별도 정책 필요)
+**RLS**: 본인 북마크만 접근 (SELECT/INSERT/UPDATE/DELETE)
 
 ---
 
-### 5. 초기 팀 멤버 이메일 추가
+### `notifications`
 
 ```sql
-INSERT INTO allowed_emails (email) VALUES
-  ('your-email@example.com')
-ON CONFLICT (email) DO NOTHING;
+CREATE TABLE notifications (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id    uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,  -- 받는 사람
+  actor_id   uuid REFERENCES public.users(id) ON DELETE SET NULL,           -- 유발한 사람
+  type       text NOT NULL CHECK (type IN ('comment')),
+  post_id    uuid REFERENCES posts(id)    ON DELETE CASCADE,
+  comment_id uuid REFERENCES comments(id) ON DELETE CASCADE,
+  is_read    boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Realtime 활성화
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+ALTER TABLE notifications REPLICA IDENTITY FULL;
 ```
 
-**목적**: 최초 관리자(본인) 이메일을 화이트리스트에 추가
-
-**구문 설명**:
-- `INSERT INTO allowed_emails (email)`: allowed_emails 테이블의 email 컬럼에 삽입
-- `VALUES ('your-email@example.com')`: 추가할 이메일 (실제 이메일로 변경 필요)
-- `ON CONFLICT (email) DO NOTHING`: 중복 시 아무 작업 안함
-
-**ON CONFLICT 설명**:
-- email 컬럼에 UNIQUE 제약조건이 있음
-- 이미 존재하는 이메일을 INSERT 하면 충돌(conflict) 발생
-- `DO NOTHING`: 충돌 시 에러 없이 무시하고 계속 진행
-- SQL을 여러 번 실행해도 안전함 (멱등성 보장)
-
-**실제 사용 예시**:
-```sql
--- 팀 멤버 여러 명 추가
-INSERT INTO allowed_emails (email) VALUES
-  ('admin@team.com'),
-  ('member1@team.com'),
-  ('member2@team.com')
-ON CONFLICT (email) DO NOTHING;
-```
+**RLS**
+- SELECT/UPDATE: 본인(`user_id = auth.uid()`)
+- INSERT: 타인에게만(`auth.uid() != user_id`) — 본인 글 본인 댓글 알림 자동 차단
 
 ---
 
-### 6. posts 테이블에 author_id 컬럼 추가
+### `tags`
 
 ```sql
-ALTER TABLE posts 
-ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES auth.users(id);
+CREATE TABLE tags (
+  id   uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text UNIQUE NOT NULL,
+  slug text UNIQUE NOT NULL
+);
 ```
 
-**목적**: 각 게시글의 작성자를 추적하기 위한 컬럼 추가
+**RLS**: 읽기 전체 / 쓰기 관리자만
 
-**구문 설명**:
-- `ALTER TABLE posts`: 기존 posts 테이블 구조 변경
-- `ADD COLUMN`: 새 컬럼 추가
-- `IF NOT EXISTS`: 이미 존재하면 무시 (재실행 시 에러 방지)
-- `author_id UUID`: 컬럼명과 데이터 타입
-- `REFERENCES auth.users(id)`: 외래키 제약조건
+---
 
-**외래키 (Foreign Key) 설명**:
-- `REFERENCES auth.users(id)`: Supabase Auth의 users 테이블의 id를 참조
-- author_id에는 실제 존재하는 사용자의 ID만 저장 가능
-- 사용자가 삭제되면 관련 처리 필요 (CASCADE 등)
+### `post_tags`
 
-**기존 데이터 처리**:
-- 이미 존재하는 게시글들의 author_id는 NULL로 설정됨
-- 추후 마이그레이션 작업으로 기존 글에 작성자 지정 가능
+```sql
+CREATE TABLE post_tags (
+  post_id uuid REFERENCES posts(id) ON DELETE CASCADE,
+  tag_id  uuid REFERENCES tags(id)  ON DELETE CASCADE,
+  PRIMARY KEY (post_id, tag_id)
+);
+```
 
-**활용 방안**:
-- 글 작성 시: 현재 로그인한 사용자의 ID를 author_id에 저장
-- 글 목록: author_id로 users 테이블과 JOIN하여 작성자 이름 표시
-- 권한 제어: 본인이 쓴 글만 수정/삭제 가능하도록 제한
+**RLS**: 읽기 전체 / 쓰기 로그인
+
+---
+
+### `post_images`
+
+```sql
+CREATE TABLE post_images (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id      uuid REFERENCES posts(id) ON DELETE CASCADE,  -- 저장 전 null
+  author_id    uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  storage_path text NOT NULL,
+  url          text NOT NULL,
+  created_at   timestamptz DEFAULT now()
+);
+```
+
+**Storage 버킷**: `post-images` (읽기 전체 / 쓰기 로그인)
+
+**비고**: 업로드 시 `post_id = null`, 글 저장 완료 후 `linkImagesToPost`로 일괄 업데이트. `post_id = null` + 7일 이상 된 레코드 = 고아 이미지 후보.
+
+---
+
+### `post_views`
+
+```sql
+CREATE TABLE post_views (
+  id        uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id   uuid REFERENCES posts(id) ON DELETE CASCADE,
+  user_id   uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  viewed_at timestamptz DEFAULT now()
+);
+```
+
+**집계 규칙**
+- 같은 유저 24시간 내 재조회는 카운트 제외
+- 본인 글 조회 제외
+- 조회 시 `posts.view_count` 캐시 컬럼 업데이트
+
+---
+
+### `allowed_emails`
+
+```sql
+CREATE TABLE allowed_emails (
+  id       uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  email    text UNIQUE NOT NULL,
+  added_at timestamptz DEFAULT now(),
+  added_by uuid REFERENCES public.users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX ON allowed_emails(email);
+```
+
+**RLS**: 읽기 로그인 전체 / 쓰기 관리자만
+
+---
+
+### `home_screen_config`
+
+싱글 로우 테이블 (`id = 1` 고정).
+
+```sql
+CREATE TABLE home_screen_config (
+  id                integer PRIMARY KEY DEFAULT 1,
+
+  -- 히어로 섹션
+  hero_visible      boolean DEFAULT true,
+  hero_badge        text,
+  hero_headline     text,
+  hero_subheadline  text,
+  hero_cta_text     text,
+  hero_cta_url      text,
+
+  -- 최신 글 섹션
+  recent_visible    boolean DEFAULT true,
+  recent_count      integer DEFAULT 6,
+  recent_sort       text    DEFAULT 'latest',
+  recent_layout     text    DEFAULT 'grid',
+
+  -- 팀 소개 섹션
+  team_visible      boolean DEFAULT true,
+  team_description  text,
+  team_image_url    text,
+
+  updated_at timestamptz DEFAULT now(),
+
+  CONSTRAINT single_row CHECK (id = 1)
+);
+```
+
+**Storage 버킷**: `home-images` (읽기 전체 / 쓰기 관리자만)
+
+**RLS**: 읽기 전체 / 쓰기 관리자만
+
+---
+
+### `site_config`
+
+```sql
+CREATE TABLE site_config (
+  id              integer PRIMARY KEY DEFAULT 1,
+  site_name       text    DEFAULT 'Team Blog',
+  posts_per_page  integer DEFAULT 10,
+  max_pinned_posts integer DEFAULT 3,
+
+  CONSTRAINT single_row CHECK (id = 1)
+);
+```
+
+**RLS**: 읽기 전체 / 쓰기 관리자만
 
 ---
 
 ## 테이블 관계도
 
 ```
-┌─────────────────────┐
-│   auth.users        │  (Supabase 기본 제공)
-│  ─────────────────  │
-│  id (UUID) PK       │
-│  email              │
-│  created_at         │
-└──────────┬──────────┘
-           │
-           │ 1:N
-           │
-    ┌──────┴──────────────┬──────────────────┐
-    │                     │                  │
-    ▼                     ▼                  ▼
-┌─────────────────┐  ┌──────────────┐  ┌─────────────┐
-│ allowed_emails  │  │    posts     │  │  comments   │
-│ ─────────────── │  │ ──────────── │  │ ─────────── │
-│ id (UUID) PK    │  │ id (str) PK  │  │ id (UUID)   │
-│ email (unique)  │  │ title        │  │ post_id FK  │
-│ added_at        │  │ content      │  │ author_id FK│
-│ added_by FK ────┤  │ author_id FK─┤  │ content     │
-└─────────────────┘  │ ...          │  │ created_at  │
-                     └──────────────┘  └─────────────┘
+auth.users
+    │
+    │ (트리거 자동 동기화)
+    ▼
+public.users ──────────────────────────────────────┐
+    │                                               │
+    ├─ posts (author_id)                            │
+    │     │                                         │
+    │     ├─ comments (post_id) ◄── author_id ──────┤
+    │     ├─ post_tags ──► tags                     │
+    │     ├─ post_images (post_id)                  │
+    │     ├─ post_views (post_id)                   │
+    │     └─ bookmarks (post_id) ◄── user_id ───────┤
+    │                                               │
+    ├─ notifications (user_id / actor_id) ──────────┤
+    │                                               │
+    └─ allowed_emails (added_by) ───────────────────┘
 ```
 
 ---
 
-## 다음 단계
-
-### 즉시 작업
-1. ✅ allowed_emails 테이블 생성 완료
-2. ✅ posts 테이블에 author_id 추가 완료
-3. ⏭️ TypeScript 타입 정의
-4. ⏭️ AuthContext 구현
-5. ⏭️ 로그인/회원가입 UI
-
-### 추후 작업
-- [ ] posts 테이블 RLS 정책 추가 (본인 글만 수정/삭제)
-- [ ] allowed_emails 관리를 위한 관리자 정책 추가
-- [ ] 기존 게시글에 author_id 할당 (마이그레이션)
-- [ ] CASCADE 옵션 검토 (사용자 삭제 시 처리)
-
----
-
-## 참고 자료
+## 참고
 
 - [Supabase Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
-- [PostgreSQL CREATE POLICY](https://www.postgresql.org/docs/current/sql-createpolicy.html)
-- [PostgreSQL Indexes](https://www.postgresql.org/docs/current/indexes.html)
-- [Supabase Auth Users Table](https://supabase.com/docs/guides/auth/managing-user-data)
-
----
-
-**문서 작성일**: 2026년 2월 1일  
-**작성자**: 진  
-**버전**: 1.0.0
+- [Supabase Realtime](https://supabase.com/docs/guides/realtime)
+- [Supabase Storage](https://supabase.com/docs/guides/storage)

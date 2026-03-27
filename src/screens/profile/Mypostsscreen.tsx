@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoMark from '../../component/LogoMark';
 import ProfileDropdown from '../../component/Profiledropdown';
+import NotificationBell from '../../component/NotificationBell';
 import { getSiteName, getCachedSiteName } from '../../api/siteConfigApi';
 import { Post } from '../../types/Post';
 import { readMyPosts, deletePost, deleteMultiplePosts } from '../../api/postApi';
@@ -212,7 +213,10 @@ export const MyPostsScreen = ({ onGoToMain, onEditPost }: MyPostsScreenProps) =>
             <LogoMark size="md" />
             {siteName && <span className="text-base font-bold text-slate-800">{siteName}</span>}
           </button>
-          <ProfileDropdown />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ProfileDropdown />
+          </div>
         </div>
       </header>
 

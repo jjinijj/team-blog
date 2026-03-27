@@ -11,6 +11,7 @@ import { getAbsoluteDay } from '../utils/DataFormat';
 import { readPostById, recordView } from '../api/postApi';
 import { toggleBookmark, checkIsBookmarked } from '../api/bookmarkApi';
 import ProfileDropdown from '../component/Profiledropdown';
+import NotificationBell from '../component/NotificationBell';
 import SiteFooter from '../component/SiteFooter';
 import { ROUTES } from '../types/routes';
 
@@ -230,10 +231,11 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
               </div>
             )}
 
-            {/* 구분선 + 프로필 드롭다운 */}
+            {/* 구분선 + 알림 + 프로필 드롭다운 */}
             {user && (
               <>
                 <div className="h-6 w-px bg-slate-200 mx-2" />
+                <NotificationBell />
                 <ProfileDropdown />
               </>
             )}
@@ -319,7 +321,7 @@ const PostDetailScreen = ( {onEdit, onDelete }: PostDetailScreenProps) => {
         </article>
 
         {/* Comments */}
-        <CommentsSection postId={post.id} />
+        <CommentsSection postId={post.id} postAuthorId={post.author_id} />
       </main>
 
       <SiteFooter />

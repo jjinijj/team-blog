@@ -6,6 +6,7 @@ import { getSiteName, getCachedSiteName } from '../api/siteConfigApi';
 import { ROUTES } from '../types/routes';
 import LogoMark from './LogoMark';
 import ProfileDropdown from './Profiledropdown';
+import NotificationBell from './NotificationBell';
 
 const ProfileLayout = () => {
   const { user, avatarColor, signOut } = useAuth();
@@ -37,7 +38,10 @@ const ProfileLayout = () => {
             <LogoMark size="md" />
             {siteName && <span className="text-base font-bold text-slate-800">{siteName}</span>}
           </button>
-          <ProfileDropdown />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ProfileDropdown />
+          </div>
         </div>
       </header>
 
