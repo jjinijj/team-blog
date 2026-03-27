@@ -28,6 +28,7 @@ import TeamPage from './screens/TeamPage';
 import ContactPage from './screens/ContactPage';
 import ComingSoonPage from './screens/ComingSoonPage';
 import BookmarksScreen from './screens/BookmarksScreen';
+import MyCommentsScreen from './screens/MyCommentsScreen';
 import ScrollToTop from './component/ScrollToTop';
 import { ROUTES } from './types/routes';
 
@@ -215,6 +216,9 @@ const handleUpdatePost = async (
 
         {/* 북마크 */}
         <Route path={ROUTES.BOOKMARKS} element={<BookmarksScreen />} />
+
+        {/* 내 댓글 */}
+        <Route path={ROUTES.MY_COMMENTS} element={<MyCommentsScreen />} />
       </Route>
 
       {/* 관리자 라우트 - 중첩 구조 */}
