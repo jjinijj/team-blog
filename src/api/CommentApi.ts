@@ -51,7 +51,7 @@ export const createComment = async (
       })
       .select(`
         *,
-        author:public.users!author_id(email)
+        author:users!author_id(email, display_name, avatar_color)
       `)
       .single();
 
@@ -61,7 +61,9 @@ export const createComment = async (
     const result = data as any;
     return {
       ...result,
-      author_email: result.author?.email
+      author_email: result.author?.email,
+      author_name: result.author?.display_name ?? null,
+      author_color: result.author?.avatar_color ?? '#3b82f6',
     };
   } catch (e) {
     console.error('Error creating comment:', e);
@@ -86,7 +88,7 @@ export const updateComment = async (
       .eq('id', commentId)
       .select(`
         *,
-        author:public.users!author_id(email)
+        author:users!author_id(email, display_name, avatar_color)
       `)
       .single();
 
@@ -96,7 +98,9 @@ export const updateComment = async (
     const result = data as any;
     return {
       ...result,
-      author_email: result.author?.email
+      author_email: result.author?.email,
+      author_name: result.author?.display_name ?? null,
+      author_color: result.author?.avatar_color ?? '#3b82f6',
     };
   } catch (e) {
     console.error('Error updating comment:', e);
