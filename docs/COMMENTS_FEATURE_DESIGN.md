@@ -81,13 +81,15 @@ create policy "Users can delete own comments"
 export interface Comment {
   id: string;
   post_id: string;
-  author_id: string;
+  author_id: string | null;
   content: string;
   created_at: string;
   updated_at: string;
-  
+
   // JOIN으로 가져올 필드
-  author_email?: string;
+  author_email?: string | null;
+  author_name?: string | null;    // display_name (없으면 이메일 앞부분 표시)
+  author_color?: string | null;   // avatar_color (없으면 기본 #3b82f6)
 }
 ```
 
@@ -253,17 +255,19 @@ const fetchComments = async () => {
       .from('comments')
       .select(`
         *,
-        author:public.users!author_id(email)
+        author:users!author_id(email, display_name, avatar_color)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    // author 객체를 author_email로 평탄화
+    // author 객체 평탄화
     const flattenedData = data.map(comment => ({
       ...comment,
-      author_email: comment.author?.email
+      author_email: comment.author?.email ?? null,
+      author_name: comment.author?.display_name ?? null,
+      author_color: comment.author?.avatar_color ?? null,
     }));
     
     setComments(flattenedData);
@@ -289,7 +293,7 @@ const handleCreate = async (content: string) => {
       })
       .select(`
         *,
-        author:public.users!author_id(email)
+        author:users!author_id(email, display_name, avatar_color)
       `)
       .single();
     
@@ -297,7 +301,12 @@ const handleCreate = async (content: string) => {
     
     // 새 댓글을 목록 맨 위에 추가 (최신순)
     setComments([
-      { ...data, author_email: data.author?.email },
+      {
+        ...data,
+        author_email: data.author?.email ?? null,
+        author_name: data.author?.display_name ?? null,
+        author_color: data.author?.avatar_color ?? null,
+      },
       ...comments
     ]);
   } catch (error) {
@@ -447,43 +456,38 @@ const handleDelete = async (commentId: string) => {
 
 ## 6. 구현 순서
 
-### Phase 1: DB 설정 (15분)
-- [ ] Supabase Dashboard에서 comments 테이블 생성
-- [ ] RLS 정책 적용
-- [ ] 인덱스 추가
-- [ ] 테스트 데이터 입력
+### Phase 1: DB 설정 ✅
+- [x] Supabase Dashboard에서 comments 테이블 생성
+- [x] RLS 정책 적용
+- [x] 인덱스 추가
 
-### Phase 2: 타입 & 유틸 (15분)
-- [ ] `src/types/Comment.ts` 생성
-- [ ] Comment 인터페이스 정의
-- [ ] CommentFormData 타입 정의
+### Phase 2: 타입 & 유틸 ✅
+- [x] `src/types/Comment.ts` 생성
+- [x] Comment 인터페이스 정의 (author_name, author_color 포함)
 
-### Phase 3: 기본 컴포넌트 (1시간)
-- [ ] `components/comments/` 폴더 생성
-- [ ] CommentsSection.tsx (컨테이너)
-- [ ] CommentForm.tsx (작성 폼)
-- [ ] CommentList.tsx (목록)
-- [ ] CommentItem.tsx (개별 댓글)
+### Phase 3: 기본 컴포넌트 ✅
+- [x] `component/comments/` 폴더 생성
+- [x] CommentsSection.tsx (컨테이너, postAuthorId prop 포함)
+- [x] CommentForm.tsx (작성 폼, 아바타 표시)
+- [x] CommentList.tsx (목록)
+- [x] CommentItem.tsx (개별 댓글)
 
-### Phase 4: CRUD 구현 (1시간)
-- [ ] fetchComments 구현
-- [ ] createComment 구현
-- [ ] updateComment 구현
-- [ ] deleteComment 구현
+### Phase 4: CRUD 구현 ✅
+- [x] fetchComments 구현 (`src/api/CommentApi.ts`)
+- [x] createComment 구현
+- [x] updateComment 구현
+- [x] deleteComment 구현
 
-### Phase 5: 권한 & UX (30분)
-- [ ] 본인 댓글만 수정/삭제 버튼 표시
-- [ ] 수정 모드 전환 로직
-- [ ] 삭제 확인 다이얼로그
-- [ ] 에러 처리 및 토스트 메시지
+### Phase 5: 권한 & UX ✅
+- [x] 본인 댓글만 수정/삭제 버튼 표시
+- [x] 수정 모드 전환 로직
+- [x] 삭제 확인 다이얼로그
 
-### Phase 6: 통합 & 테스트 (30분)
-- [ ] PostDetailScreen에 CommentsSection 통합
-- [ ] 엣지 케이스 테스트
-  - [ ] 빈 댓글 작성 시도
-  - [ ] 본인 아닌 댓글 수정/삭제 시도 (RLS 확인)
-  - [ ] 글 삭제 시 댓글도 삭제되는지 확인
-- [ ] 스타일링 마무리
+### Phase 6: 통합 & 테스트 ✅
+- [x] PostDetailScreen에 CommentsSection 통합
+- [x] 빈 댓글 방지
+- [x] RLS 기반 권한 보호
+- [x] 알림 연동 (`createCommentNotification`)
 
 ---
 
@@ -587,7 +591,7 @@ try {
 // JOIN으로 한 번에 가져오기 (N+1 쿼리 방지)
 .select(`
   *,
-  author:public.users!author_id(email)
+  author:users!author_id(email, display_name, avatar_color)
 `)
 ```
 
@@ -640,7 +644,8 @@ await supabase.from('comments').insert(newComment); // 실제 저장
 
 ---
 
-**문서 작성일**: 2026-02-14  
-**작성자**: Claude & 진  
-**버전**: 1.0.0  
-**상태**: 설계 완료, 구현 대기
+**문서 작성일**: 2026-02-14
+**최종 업데이트**: 2026-03-27
+**작성자**: Claude & 진
+**버전**: 1.2.0
+**상태**: 구현 완료 (author_name/author_color 포함, 알림 연동)

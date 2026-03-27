@@ -47,10 +47,11 @@ Draft status는 "이 글의 공개 상태"라서 개념 자체가 다릅니다.
 ```typescript
 interface DraftData {
   title: string;
-  content: string;                        // HTML (richtext) or plain text (markdown)
-  content_json: DocumentNode[] | null;    // richtext 전용
+  content: string;                        // 마크다운 원문 (에디터는 markdown 전용, richtext 레거시 하위호환 유지)
+  content_json: DocumentNode | null;      // richtext 레거시 전용
   content_type: 'richtext' | 'markdown';
-  savedAt: string;                        // ISO timestamp — "3시간 전 임시저장" 표시용
+  uploadedImageIds?: string[];            // 저장 전 업로드된 이미지 UUID 목록 (linkImagesToPost 복원용)
+  savedAt: string;                        // ISO timestamp — "3시간 전 임시저장" 표시용 (7일 만료 기준)
 }
 ```
 
@@ -161,30 +162,30 @@ getDraftKey(postId?: string): string
 
 ---
 
-## 9. 구현 순서
+## 9. 구현 순서 ✅ 완료
 
-| 단계 | 작업 | 예상 소요 |
-|------|------|----------|
-| 1 | `DraftData` 타입 정의 | 10분 |
-| 2 | `draftUtils.ts` 순수 함수 구현 | 20분 |
-| 3 | `useDraft.ts` 커스텀 훅 구현 | 30분 |
-| 4 | `DraftRecoveryBanner.tsx` UI 컴포넌트 | 20분 |
-| 5 | `EditorScreen`에 통합 | 30분 |
-| 6 | 테스트 (새 글 / 수정 / 만료 정리) | 20분 |
-
-**총 예상 소요**: 2시간
+| 단계 | 작업 | 상태 |
+|------|------|------|
+| 1 | `DraftData` 타입 정의 | ✅ |
+| 2 | `draftUtils.ts` 순수 함수 구현 | ✅ |
+| 3 | `useDraft.ts` 커스텀 훅 구현 | ✅ |
+| 4 | `DraftRecoveryBanner.tsx` UI 컴포넌트 | ✅ |
+| 5 | `EditorScreen`에 통합 | ✅ |
+| 6 | `uploadedImageIds` 복원 지원 추가 | ✅ |
 
 ---
 
 ## 10. 테스트 시나리오
 
-- [ ] 새 글 작성 중 → 창 닫기 → 재진입 → 배너 표시 → 이어서 작성
-- [ ] 기존 글 수정 중 → 창 닫기 → 재진입 → 배너 표시 → 이어서 작성
-- [ ] 발행 완료 → draft 삭제 확인
-- [ ] "무시" 클릭 → 배너만 숨겨지고 draft는 유지
-- [ ] 7일 이상 된 draft → 자동 삭제 확인
+- [x] 새 글 작성 중 → 창 닫기 → 재진입 → 배너 표시 → 이어서 작성
+- [x] 기존 글 수정 중 → 창 닫기 → 재진입 → 배너 표시 → 이어서 작성
+- [x] 발행 완료 → draft 삭제 확인
+- [x] "무시" 클릭 → 배너만 숨겨지고 draft는 유지
+- [x] 7일 이상 된 draft → 자동 삭제 확인
+- [x] 이미지 포함 글 임시저장 → 복원 후 저장 시 `linkImagesToPost` 정상 동작
 
 ---
 
 **문서 작성일**: 2026-02-18
-**버전**: 1.0.0
+**최종 업데이트**: 2026-03-27
+**버전**: 1.1.0 (구현 완료, uploadedImageIds 추가)
