@@ -109,6 +109,29 @@ export const updateComment = async (
 };
 
 /**
+ * 내가 작성한 댓글 목록 조회 (글 제목 포함)
+ */
+export const fetchMyComments = async (userId: string): Promise<Comment[]> => {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(`*, posts!post_id(id, title)`)
+      .eq('author_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return ((data as any[]) || []).map((comment: any) => ({
+      ...comment,
+      post_title: comment.posts?.title ?? null,
+    }));
+  } catch (e) {
+    console.error('Error fetching my comments:', e);
+    throw e;
+  }
+};
+
+/**
  * 댓글 삭제
  */
 export const deleteComment = async (commentId: string): Promise<void> => {

@@ -178,7 +178,7 @@
   - [x] `ProfileDropdown` "내 글 보기" 버튼 연결
 - [x] 사용자 정보 표시 (이름, 이메일)
 - [x] 프로필 수정 폼 (이름 변경, 비밀번호 변경)
-- [ ] 내가 쓴 댓글 목록
+- [x] 내가 쓴 댓글 목록 (`/my-comments`, `fetchMyComments`, `MyCommentsScreen`)
 - [ ] 통계 (글 수, 댓글 수)
 
 ---

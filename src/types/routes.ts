@@ -23,4 +23,5 @@ export const ROUTES = {
   PROFILE_PASSWORD: '/profile/password',
 
   BOOKMARKS: '/bookmarks',
+  MY_COMMENTS: '/my-comments',
 };
